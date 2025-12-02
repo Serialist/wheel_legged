@@ -63,20 +63,8 @@ pid_type_def chassis_motor_pid[10];
 pid_type_def pid_tpl = {0}, pid_tpr = {0};
 
 pid_type_def chassis_motor_pid[10];
-// float momentum_COFFICIENT;
-kalman speed_filter;
-pid_type_def angle_pid;
-pid_type_def l02_pid;
-pid_type_def angle2_pid;
-pid_type_def phi5_pid;
-pid_type_def shell_pid;
-
-pid_type_def m3508_test_pid;
-int16_t m3508_test_value;
 
 /**********  变量定义 结束 *************/
-fp32 phi1_ak = 0;
-fp32 phi1_ak2 = 0;
 float T_AK_set_left[2];
 float T_AK_set_right[2];
 
@@ -84,21 +72,7 @@ struct Wheel_Leg_Target set;
 Leg_Pos_t legpos[2];
 struct VMC_Leg leg_l, leg_r;
 
-float leg_length_ratio = 0.05;
-float upnum = 0;
-float anglenum = 0;
-int flag_ak = 1;
-int aak = 0;
-float AK1_set = 0;
-float AK2_set = 0;
-
-float legak_set = 0;
-float legak2_set = 0;
-float AK_current_set[6];
-float target_x = 0;
-float delta_t = 0;
-uint32_t balance_dwt_cnt = 0;
-float add_angle = 0;
+/* ======================== 测试代码使用的变量 ======================== */
 
 float lefttp_test;
 float leftforce_test;
@@ -129,6 +103,8 @@ float legR_phi4;
 uint8_t left_flag;
 uint8_t right_flag;
 uint8_t leg_flag;
+
+/* ======================== 测试代码使用的变量 ======================== */
 
 float tplqrl;
 float tplqrr;
@@ -274,12 +250,6 @@ static void ChassisInit(void)
 	chassis_motor_pid[7].Kd = 4;
 	chassis_motor_pid[7].max_out = 2400;
 	chassis_motor_pid[7].max_iout = 2400;
-
-	m3508_test_pid.Kp = 0;
-	m3508_test_pid.Ki = 0;
-	m3508_test_pid.Kd = 0;
-	m3508_test_pid.max_out = 0;
-	m3508_test_pid.max_iout = 0;
 
 	// ================================================================
 	/**
@@ -456,7 +426,6 @@ void chassis_torque_sent(Chassis_t *ch)
 					   0,
 					   HEXROLL_TORQUE_TO_CURRENT(ch->ak_set[4].torset),
 					   HEXROLL_TORQUE_TO_CURRENT(ch->ak_set[5].torset),
-					   //    (int16_t)PID_Calc(&m3508_test_pid, (fp32)m3508_test_value, (fp32)m3508[1].speed), /// @date 2025-11-30
 					   0);
 
 	// 伺服模式下电流发送
