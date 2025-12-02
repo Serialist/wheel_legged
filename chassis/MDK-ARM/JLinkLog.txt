@@ -1,0 +1,64 @@
+T29A8 000:036.847   SEGGER J-Link V6.86 Log File
+T29A8 000:036.969   DLL Compiled: Sep 24 2020 17:31:31
+T29A8 000:036.974   Logging started @ 2020-12-05 07:30
+T29A8 000:036.978 - 36.980ms
+T29A8 000:036.987 JLINK_SetWarnOutHandler(...)
+T29A8 000:036.992 - 0.007ms
+T29A8 000:036.996 JLINK_OpenEx(...)
+T29A8 000:038.076   Firmware: J-Link V9 compiled Dec 13 2019 11:14:50
+T29A8 000:038.219   Decompressing FW timestamp took 126 us
+T29A8 000:044.703   Hardware: V9.30
+T29A8 000:044.718   S/N: 59300616
+T29A8 000:044.724   OEM: SEGGER
+T29A8 000:044.730   Feature(s): RDI, FlashBP, FlashDL, JFlash, GDB
+T29A8 000:045.921   TELNET listener socket opened on port 19021
+T29A8 000:046.027   WEBSRV Starting webserver
+T29A8 000:046.177   WEBSRV Webserver running on local port 19080
+T29A8 000:046.185 - 9.190ms returns "O.K."
+T29A8 000:046.198 JLINK_SetErrorOutHandler(...)
+T29A8 000:046.203 - 0.006ms
+T29A8 000:046.228 JLINK_ExecCommand("ProjectFile = "C:\Users\HP\Desktop\µ÷ÊÔ\µ×ÅÌ¿ØÖÆ\2020.12.03-gimbal-chassis_control\MDK-ARM\JLinkSettings.ini"", ...). 
+T29A8 000:053.758   Ref file found at: E:\MDK5\ARM\Segger\JLinkDevices.ref
+T29A8 000:053.823   XML referenced by ref file: F:\J-Link\JLinkDevices.xml
+T29A8 000:054.473   F:\J-Link\JLinkDevices.xml evaluated successfully.
+T29A8 000:063.166 - 16.943ms returns 0x00
+T29A8 000:068.302 JLINK_ExecCommand("Device = STM32F407IGHx", ...). 
+T29A8 000:074.256   Device "STM32F407IG" selected.
+T29A8 000:074.582 - 6.269ms returns 0x00
+T29A8 000:074.636 JLINK_GetHardwareVersion()
+T29A8 000:074.643 - 0.010ms returns 93000
+T29A8 000:074.662 JLINK_GetDLLVersion()
+T29A8 000:074.668 - 0.009ms returns 68600
+T29A8 000:074.675 JLINK_GetOEMString(...)
+T29A8 000:074.683 JLINK_GetFirmwareString(...)
+T29A8 000:074.689 - 0.009ms
+T29A8 000:086.087 JLINK_GetDLLVersion()
+T29A8 000:086.100 - 0.015ms returns 68600
+T29A8 000:086.105 JLINK_GetCompileDateTime()
+T29A8 000:086.109 - 0.006ms
+T29A8 000:088.643 JLINK_GetFirmwareString(...)
+T29A8 000:088.655 - 0.013ms
+T29A8 000:090.753 JLINK_GetHardwareVersion()
+T29A8 000:090.770 - 0.020ms returns 93000
+T29A8 000:093.312 JLINK_GetSN()
+T29A8 000:093.325 - 0.014ms returns 59300616
+T29A8 000:096.743 JLINK_GetOEMString(...)
+T29A8 000:098.844 JLINK_TIF_Select(JLINKARM_TIF_SWD)
+T29A8 000:099.570 - 0.732ms returns 0x00
+T29A8 000:099.581 JLINK_HasError()
+T29A8 000:099.595 JLINK_SetSpeed(20000)
+T29A8 000:099.668 - 0.076ms
+T29A8 000:099.676 JLINK_GetId()
+T29A8 001:143.199   STM32 (connect): Can not attach to CPU. Trying connect under reset.
+T29A8 001:300.038   
+  ***** Error: 
+T29A8 001:300.080   STM32: Connecting to CPU via connect under reset failed.
+T29A8 001:530.627   STM32 (connect): Can not attach to CPU. Trying connect under reset.
+T29A8 001:686.201   
+  ***** Error: 
+T29A8 001:686.224   STM32: Connecting to CPU via connect under reset failed.
+T29A8 001:736.835 - 1637.201ms returns 0x00000000
+T29A8 003:051.707 JLINK_Close()
+T29A8 003:062.744 - 11.063ms
+T29A8 003:062.775   
+T29A8 003:062.780   Closed

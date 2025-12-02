@@ -1,0 +1,12 @@
+gimbal_task\legpos.o: ..\components\leg_control\LegPos.c
+gimbal_task\legpos.o: ..\components\leg_control\LegPos.h
+gimbal_task\legpos.o: D:\keil\keil\ARM\ARMCC\Bin\..\include\stdint.h
+gimbal_task\legpos.o: D:\keil\keil\ARM\ARMCC\Bin\..\include\stddef.h
+gimbal_task\legpos.o: D:\keil\keil\ARM\ARMCC\Bin\..\include\stdlib.h
+gimbal_task\legpos.o: D:\keil\keil\ARM\ARMCC\Bin\..\include\math.h
+gimbal_task\legpos.o: ..\components\algorithm\Include\arm_math.h
+gimbal_task\legpos.o: ../Drivers/CMSIS/Include/core_cm4.h
+gimbal_task\legpos.o: ../Drivers/CMSIS/Include/cmsis_version.h
+gimbal_task\legpos.o: ../Drivers/CMSIS/Include/cmsis_compiler.h
+gimbal_task\legpos.o: ../Drivers/CMSIS/Include/cmsis_armcc.h
+gimbal_task\legpos.o: D:\keil\keil\ARM\ARMCC\Bin\..\include\string.h
