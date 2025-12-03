@@ -43,18 +43,18 @@
 #define DJI_MOTOR_CURRENT(rxData) ((rxData)->current)
 #define DJI_MOTOR_TEMP(rxData) ((rxData)->temp)
 
-#define HEXROLL_TORQUE_TO_CURRENT(torque) ((int16_t)(torque / (268.0f / 17.0f) / (0.01462f) / (20.0f / 16384.0f))))
+#define HEXROLL_TORQUE_TO_CURRENT(torque) ((int16_t)(torque / (268.0f / 17.0f) / (0.01462f) / (20.0f / 16384.0f)))
 #define HEXROLL_CURRENT_TO_TORQUE(curren) ((float)curren * 0.00030059168198529415f)
 
 /* ================================================================ struct ================================================================ */
 
-typedef struct M3508_RxData_Def_t
+struct DJI_RxData
 {
     int32_t angle;
     int16_t speed;
     int16_t current;
     uint8_t temp;
-} DJI_RxData_Def_t;
+};
 
 // typedef struct DJI_Motor_Def_t
 // {
@@ -68,6 +68,6 @@ typedef struct M3508_RxData_Def_t
 
 void DJI_Motor_Transmit(CAN_HandleTypeDef *hcan, uint32_t tx_id, int16_t current1, int16_t current2, int16_t current3, int16_t current4);
 
-void DJI_Motor_Receive(DJI_RxData_Def_t *rxData, uint8_t *data);
+void DJI_Motor_Receive(struct DJI_RxData *rxData, uint8_t *data);
 
 #endif

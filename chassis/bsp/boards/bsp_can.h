@@ -19,7 +19,7 @@
 #define M_PI_2 1.57079632679489661923
 #define SUPER_POWER 0x211
 
-extern DJI_RxData_Def_t m3508[2];
+extern struct DJI_RxData m3508[2];
 
 // 获取电机数据
 // void GetMotorFdb(Motor_Feedback_t* motor, uint32_t* trans_time, uint8_t num, uint8_t start_num);

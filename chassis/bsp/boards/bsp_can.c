@@ -26,7 +26,7 @@ AK_motor_fdb_t AK_motor[6];
 AK_motor_ctrl_fdb_t ak_motion[6];
 
 struct Motor_AK_Rx_Data ak10[4];
-DJI_RxData_Def_t m3508[2];
+struct DJI_RxData m3508[2];
 
 static fp32 chassis_speed_set[2];
 

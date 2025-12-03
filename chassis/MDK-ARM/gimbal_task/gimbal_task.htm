@@ -3,7 +3,7 @@
 <title>Static Call Graph - [gimbal_task\gimbal_task.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image gimbal_task\gimbal_task.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060960: Last Updated: Tue Dec 02 13:39:56 2025
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060960: Last Updated: Wed Dec 03 19:49:08 2025
 <BR><P>
 <H3>Maximum Stack Usage =        312 bytes + Unknown(Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -531,10 +531,10 @@ Global Symbols
 <LI><a href="#[b2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_ADC_MspInit
 <LI><a href="#[fd]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_UART_MspInit
 <LI><a href="#[103]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Kalman_Filter_Init
+<LI><a href="#[13a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;OLS_Init
 <LI><a href="#[61]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;IMU_QuaternionEKF_SetH
 <LI><a href="#[11c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Kalman_Filter_Measure
 <LI><a href="#[ff]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;H_K_R_Adjustment
-<LI><a href="#[13a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;OLS_Init
 </UL>
 
 <P><STRONG><a name="[1c9]"></a>__aeabi_memclr8</STRONG> (Thumb, 0 bytes, Stack size 0 bytes, memseta.o(.text), UNUSED)
@@ -1911,6 +1911,7 @@ Global Symbols
 <BR><BR>[Stack]<UL><LI>Max Depth = 48<LI>Call Chain = PID_Calculate &rArr; DWT_GetDeltaT &rArr; DWT_CNT_Update
 </UL>
 <BR>[Calls]<UL><LI><a href="#[9a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;DWT_GetDeltaT
+<LI><a href="#[139]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;OLS_Derivative
 <LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;f_Trapezoid_Intergral
 <LI><a href="#[144]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;f_Proportion_Limit
 <LI><a href="#[13c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;f_PID_ErrorHandle
@@ -1920,7 +1921,6 @@ Global Symbols
 <LI><a href="#[13f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;f_Derivative_On_Measurement
 <LI><a href="#[140]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;f_Derivative_Filter
 <LI><a href="#[13e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;f_Changing_Integration_Rate
-<LI><a href="#[139]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;OLS_Derivative
 </UL>
 <BR>[Called By]<UL><LI><a href="#[10f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;IMU_Temperature_Ctrl
 </UL>
@@ -2069,10 +2069,10 @@ Global Symbols
 <P><STRONG><a name="[10d]"></a>__hardfp_acosf</STRONG> (Thumb, 234 bytes, Stack size 16 bytes, acosf.o(i.__hardfp_acosf))
 <BR><BR>[Stack]<UL><LI>Max Depth = 32<LI>Call Chain = __hardfp_acosf &rArr; sqrtf
 </UL>
-<BR>[Calls]<UL><LI><a href="#[153]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;sqrtf
-<LI><a href="#[155]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__set_errno
-<LI><a href="#[156]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__mathlib_flt_invalid
+<BR>[Calls]<UL><LI><a href="#[156]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__mathlib_flt_invalid
 <LI><a href="#[154]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__mathlib_flt_infnan
+<LI><a href="#[153]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;sqrtf
+<LI><a href="#[155]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__set_errno
 </UL>
 <BR>[Called By]<UL><LI><a href="#[62]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;IMU_QuaternionEKF_xhatUpdate
 </UL>
@@ -2080,12 +2080,12 @@ Global Symbols
 <P><STRONG><a name="[108]"></a>__hardfp_asinf</STRONG> (Thumb, 258 bytes, Stack size 16 bytes, asinf.o(i.__hardfp_asinf))
 <BR><BR>[Stack]<UL><LI>Max Depth = 32<LI>Call Chain = __hardfp_asinf &rArr; sqrtf
 </UL>
-<BR>[Calls]<UL><LI><a href="#[153]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;sqrtf
-<LI><a href="#[155]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__set_errno
-<LI><a href="#[158]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__mathlib_flt_underflow
+<BR>[Calls]<UL><LI><a href="#[158]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__mathlib_flt_underflow
 <LI><a href="#[156]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__mathlib_flt_invalid
 <LI><a href="#[154]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__mathlib_flt_infnan
 <LI><a href="#[157]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__ARM_fpclassifyf
+<LI><a href="#[153]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;sqrtf
+<LI><a href="#[155]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__set_errno
 </UL>
 <BR>[Called By]<UL><LI><a href="#[105]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;IMU_QuaternionEKF_Update
 </UL>
@@ -2093,10 +2093,10 @@ Global Symbols
 <P><STRONG><a name="[107]"></a>__hardfp_atan2f</STRONG> (Thumb, 594 bytes, Stack size 32 bytes, atan2f.o(i.__hardfp_atan2f))
 <BR><BR>[Stack]<UL><LI>Max Depth = 32<LI>Call Chain = __hardfp_atan2f
 </UL>
-<BR>[Calls]<UL><LI><a href="#[155]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__set_errno
-<LI><a href="#[158]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__mathlib_flt_underflow
+<BR>[Calls]<UL><LI><a href="#[158]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__mathlib_flt_underflow
 <LI><a href="#[159]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__mathlib_flt_infnan2
 <LI><a href="#[157]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__ARM_fpclassifyf
+<LI><a href="#[155]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__set_errno
 </UL>
 <BR>[Called By]<UL><LI><a href="#[14f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;VMC_calc_1
 <LI><a href="#[105]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;IMU_QuaternionEKF_Update
@@ -2234,7 +2234,7 @@ Global Symbols
 </UL>
 
 <P><STRONG><a name="[68]"></a>chassis_task</STRONG> (Thumb, 74 bytes, Stack size 0 bytes, chassis_task.o(i.chassis_task))
-<BR><BR>[Stack]<UL><LI>Max Depth = 124<LI>Call Chain = chassis_task &rArr; chassis_torque_sent &rArr; pack_cmd &rArr; HAL_CAN_AddTxMessage
+<BR><BR>[Stack]<UL><LI>Max Depth = 132<LI>Call Chain = chassis_task &rArr; chassis_torque_sent &rArr; pack_cmd &rArr; HAL_CAN_AddTxMessage
 </UL>
 <BR>[Calls]<UL><LI><a href="#[11a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;osDelay
 <LI><a href="#[166]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;VMC_init
@@ -2247,8 +2247,8 @@ Global Symbols
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> freertos.o(.constdata)
 </UL>
-<P><STRONG><a name="[169]"></a>chassis_torque_sent</STRONG> (Thumb, 238 bytes, Stack size 16 bytes, chassis_task.o(i.chassis_torque_sent))
-<BR><BR>[Stack]<UL><LI>Max Depth = 124<LI>Call Chain = chassis_torque_sent &rArr; pack_cmd &rArr; HAL_CAN_AddTxMessage
+<P><STRONG><a name="[169]"></a>chassis_torque_sent</STRONG> (Thumb, 272 bytes, Stack size 24 bytes, chassis_task.o(i.chassis_torque_sent))
+<BR><BR>[Stack]<UL><LI>Max Depth = 132<LI>Call Chain = chassis_torque_sent &rArr; pack_cmd &rArr; HAL_CAN_AddTxMessage
 </UL>
 <BR>[Calls]<UL><LI><a href="#[16b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;delay_ms
 <LI><a href="#[16a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;pack_cmd
@@ -2473,10 +2473,10 @@ Global Symbols
 <BR><BR>[Stack]<UL><LI>Max Depth = 116<LI>Call Chain = test_task &rArr; xvEstimateKF_Update &rArr; Kalman_Filter_Update &rArr; Kalman_Filter_SetK &rArr; arm_mat_inverse_f32
 </UL>
 <BR>[Calls]<UL><LI><a href="#[11a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;osDelay
+<LI><a href="#[175]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;osDelayUntil
 <LI><a href="#[149]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;xTaskGetTickCount
 <LI><a href="#[176]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;vTaskDelayUntil
 <LI><a href="#[90]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Buzzer_Preset
-<LI><a href="#[175]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;osDelayUntil
 <LI><a href="#[b6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GetTick
 <LI><a href="#[1aa]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;RC_Offline_Detection
 <LI><a href="#[1ab]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Motor_Offline_Detection
@@ -2823,9 +2823,9 @@ Global Symbols
 
 <P><STRONG><a name="[149]"></a>xTaskGetTickCount</STRONG> (Thumb, 6 bytes, Stack size 0 bytes, tasks.o(i.xTaskGetTickCount))
 <BR><BR>[Called By]<UL><LI><a href="#[19b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;prvSampleTimeNow
+<LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Sbus_Parse
 <LI><a href="#[66]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;test_task
 <LI><a href="#[52]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;USART6_IRQHandler
-<LI><a href="#[148]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Sbus_Parse
 </UL>
 
 <P><STRONG><a name="[1b8]"></a>xTaskIncrementTick</STRONG> (Thumb, 282 bytes, Stack size 24 bytes, tasks.o(i.xTaskIncrementTick))
