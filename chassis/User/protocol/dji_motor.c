@@ -47,7 +47,7 @@ void DJI_Motor_Transmit(CAN_HandleTypeDef *hcan, uint32_t tx_id, int16_t current
     HAL_CAN_AddTxMessage(hcan, &txHeader, buf, &txMailbox);
 }
 
-void DJI_Motor_Receive(DJI_RxData_Def_t *rxData, uint8_t *data)
+void DJI_Motor_Receive(struct DJI_RxData *rxData, uint8_t *data)
 {
     rxData->angle = (int16_t)((data[0] << 8) | data[1]);
     rxData->speed = (int16_t)((data[2] << 8) | data[3]);

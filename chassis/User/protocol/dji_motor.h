@@ -31,7 +31,7 @@
 #define DJI_MOTOR_CURRENT(rxData) ((rxData)->current)
 #define DJI_MOTOR_TEMP(rxData) ((rxData)->temp)
 
-#define HEXROLL_TORQUE_TO_CURRENT(torque) (int16_t)(torque * 3554.3214161749397f)
+#define HEXROLL_TORQUE_TO_CURRENT(torque) ((int16_t)(torque / (268.0f / 17.0f) / (0.01462f) / (20.0f / 16384.0f))))
 #define HEXROLL_CURRENT_TO_TORQUE(curren) ((float)curren * 0.00030059168198529415f)
 
 /* ================================================================ struct ================================================================ */
