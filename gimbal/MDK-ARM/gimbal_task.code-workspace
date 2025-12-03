@@ -1,0 +1,37 @@
+{
+    "folders": [
+        {
+            "path": "."
+        }
+    ],
+    "settings": {
+        "files.associations": {
+            "limits": "c",
+            "bit": "c",
+            "compare": "c",
+            "new": "c",
+            "main.h": "c",
+            "memory": "c",
+            "streambuf": "c",
+            "cstddef": "c",
+            "string": "c",
+            "optional": "c",
+            "functional": "c",
+            "remote_control.h": "c",
+            "cstdint": "c",
+            "algorithm": "c",
+            "system_error": "c",
+            "array": "c",
+            "tuple": "c",
+            "type_traits": "c",
+            "utility": "c",
+            "random": "c",
+            "string_view": "c",
+            "struct_typedef.h": "c",
+            "dma.h": "c",
+            "shoot_task.h": "c",
+            "user_lib.h": "c"
+        }
+    },
+    "extensions": {}
+}

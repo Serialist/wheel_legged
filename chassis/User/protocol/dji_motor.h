@@ -26,6 +26,18 @@
 #define PI 3.141592653589793f
 #endif
 
+#ifndef RPM_RADS
+#define RPM_RADS 0.104719755f
+#endif
+
+#ifndef RADS_RPM
+#define RADS_RPM 57.2957795f
+#endif
+
+#ifndef RAD_DEG
+#define RAD_DEG 57.2957795f
+#endif
+
 #define DJI_MOTOR_ANGLE(rxData) ((float)(rxData)->angle / 8191.0f * 2 * PI)
 #define DJI_MOTOR_SPEED(rxData) ((float)(rxData)->speed / 60.0f * 2 * PI / (268.0f / 17.0f))
 #define DJI_MOTOR_CURRENT(rxData) ((rxData)->current)

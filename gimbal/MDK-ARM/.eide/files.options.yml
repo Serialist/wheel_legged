@@ -1,0 +1,66 @@
+##########################################################################################
+#                        Append Compiler Options For Source Files
+##########################################################################################
+
+# syntax:
+#   <your pattern>: <compiler options>
+# For get pattern syntax, please refer to: https://www.npmjs.com/package/micromatch
+#
+# examples:
+#   'main.cpp':           --cpp11 -Og ...
+#   'src/*.c':            -gnu -O2 ...
+#   'src/lib/**/*.cpp':   --cpp11 -Os ...
+#   '!Application/*.c':   -O0
+#   '**/*.c':             -O2 -gnu ...
+
+version: "2.1"
+options:
+    gimbal_task:
+        files: {}
+        virtualPathFiles:
+            <virtual_root>/Application/User/iwdg.c: ""
+            <virtual_root>/Application/User/usb_device.c: ""
+            <virtual_root>/Application/User/usbd_conf.c: ""
+            <virtual_root>/Application/User/usbd_desc.c: ""
+            <virtual_root>/Application/User/usbd_cdc_if.c: ""
+            <virtual_root>/Application/User/stm32f4xx_hal_timebase_tim.c: ""
+            <virtual_root>/Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_pcd.c: ""
+            <virtual_root>/Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_pcd_ex.c: ""
+            <virtual_root>/Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_rcc.c: ""
+            <virtual_root>/Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_rcc_ex.c: ""
+            <virtual_root>/Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_flash.c: ""
+            <virtual_root>/Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_flash_ex.c: ""
+            <virtual_root>/Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_flash_ramfunc.c: ""
+            <virtual_root>/Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_gpio.c: ""
+            <virtual_root>/Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_dma_ex.c: ""
+            <virtual_root>/Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_dma.c: ""
+            <virtual_root>/Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_pwr.c: ""
+            <virtual_root>/Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_pwr_ex.c: ""
+            <virtual_root>/Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_cortex.c: ""
+            <virtual_root>/Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal.c: ""
+            <virtual_root>/Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_exti.c: ""
+            <virtual_root>/Drivers/STM32F4xx_HAL_Driver/stm32f4xx_ll_adc.c: ""
+            <virtual_root>/Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_can.c: ""
+            <virtual_root>/Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_i2c.c: ""
+            <virtual_root>/Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_i2c_ex.c: ""
+            <virtual_root>/Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_iwdg.c: ""
+            <virtual_root>/Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_rtc.c: ""
+            <virtual_root>/Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_rtc_ex.c: ""
+            <virtual_root>/Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_spi.c: ""
+            <virtual_root>/Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_tim.c: ""
+            <virtual_root>/Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_tim_ex.c: ""
+            <virtual_root>/Drivers/STM32F4xx_HAL_Driver/stm32f4xx_hal_uart.c: ""
+            <virtual_root>/Middlewares/FreeRTOS/croutine.c: ""
+            <virtual_root>/Middlewares/FreeRTOS/event_groups.c: ""
+            <virtual_root>/Middlewares/FreeRTOS/list.c: ""
+            <virtual_root>/Middlewares/FreeRTOS/queue.c: ""
+            <virtual_root>/Middlewares/FreeRTOS/stream_buffer.c: ""
+            <virtual_root>/Middlewares/FreeRTOS/tasks.c: ""
+            <virtual_root>/Middlewares/FreeRTOS/timers.c: ""
+            <virtual_root>/Middlewares/FreeRTOS/cmsis_os.c: ""
+            <virtual_root>/Middlewares/FreeRTOS/heap_4.c: ""
+            <virtual_root>/Middlewares/FreeRTOS/port.c: ""
+            <virtual_root>/Middlewares/USB_Device_Library/usbd_core.c: ""
+            <virtual_root>/Middlewares/USB_Device_Library/usbd_ctlreq.c: ""
+            <virtual_root>/Middlewares/USB_Device_Library/usbd_ioreq.c: ""
+            <virtual_root>/Middlewares/USB_Device_Library/usbd_cdc.c: ""
