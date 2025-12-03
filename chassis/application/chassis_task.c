@@ -111,7 +111,7 @@ float tplqrr;
 float tlqrl;
 float tlqrr;
 
-float lqr_k_l[2][6], lqr_k_r[2][6], kl[2][6], xl[6], kr[2][6], xr[6];
+float lqr_k_l[2][6], lqr_k_r[2][6], xl[6], xr[6];
 
 float t_ratiol;
 float tp_ratiol;
