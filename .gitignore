@@ -1,7 +1,14 @@
 chassis/MDK-ARM/.vscode/c_cpp_properties.json
 *.o
+*.d
 *.crf
 *.axf
 *.log
 *.log.lock
-*.build_log.htm
+*.htm
+*.hex
+*.map
+*.sct
+*.lst
+*.lnp
+*.dep

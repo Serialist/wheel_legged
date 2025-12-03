@@ -117,7 +117,6 @@ float t_ratiol;
 float tp_ratiol;
 float t_ratior;
 float tp_ratior;
-float angle_real[6];
 
 /// @brief 离地检测滤波
 struct Filter_Average ground_detection_filter_l, ground_detection_filter_r;
@@ -383,13 +382,6 @@ void phase_update(Chassis_t *ch)
 	{ // 根据pitch角度判断倒地自起是否完成
 		ch->recover_flag = 0;
 	}
-
-	angle_real[0] = ch->st.thetal * 57.3f;
-	angle_real[1] = legpos[LEFT].angle * 57.3f;
-	angle_real[2] = ch->st.thetar * 57.3f;
-	angle_real[3] = legpos[RIGHT].angle * 57.3f;
-	angle_real[4] = ch->st.alphal * 57.3f;
-	angle_real[5] = ch->st.alphar * 57.3f;
 }
 
 // 扭矩发送
