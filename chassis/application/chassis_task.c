@@ -121,12 +121,8 @@ float tp_ratior;
 /// @brief 离地检测滤波
 struct Filter_Average ground_detection_filter_l, ground_detection_filter_r;
 
-// typedef uint8_t My_Status_Def;
-
-// typedef enum Robo_Status_Def_e
-// {
-// 	ROBO_INIT = 0
-// } Robo_Status_Def_e;
+pid_type_def motor_test_pid;
+float motor_test_speed = 0;
 
 /********** 函数声明 开始 *************/
 
@@ -249,6 +245,12 @@ static void ChassisInit(void)
 	chassis_motor_pid[7].Kd = 4;
 	chassis_motor_pid[7].max_out = 2400;
 	chassis_motor_pid[7].max_iout = 2400;
+
+	motor_test_pid.Kp = 5;
+	motor_test_pid.Ki = 0;
+	motor_test_pid.Kd = 0.1;
+	motor_test_pid.max_out = 3000;
+	motor_test_pid.max_iout = 0;
 
 	// ================================================================
 	/**
@@ -408,15 +410,11 @@ void chassis_torque_sent(Chassis_t *ch)
 	pack_cmd(3, 0, 0, 0, 0, ch->ak_set[2].torset);
 	delay_ms(1);
 
-	/// @brief 不用这个轮毂电机
-	// pack_cmd(5, 0, 0, 0, 0, ch->ak_set[4].torset);
-	// pack_cmd(6, 0, 0, 0, 0, ch->ak_set[5].torset);
-	// delay_ms(1);
-
 	/// @brief 用 3508
 	DJI_Motor_Transmit(&hcan1, M3508_TX_ID_2,
 					   0,
 					   HEXROLL_TORQUE_TO_CURRENT(ch->ak_set[4].torset),
+					   //    PID_Calc(&motor_test_pid, motor_test_speed, m3508[1].speed),
 					   HEXROLL_TORQUE_TO_CURRENT(ch->ak_set[5].torset),
 					   0);
 
@@ -706,9 +704,9 @@ void balancephase(Chassis_t *ch)
 			for (i = 0; i < 12; i++)
 			{
 				if (i == 6 || i == 7)
-					kx[i] = 0;
-				else
 					kx[i] = KK[i % 6];
+				else
+					kx[i] = 0;
 			}
 			my_debug.no_yaw_flag = TRUE;
 		}

@@ -60,6 +60,7 @@ bool Filter_Average_Init(struct Filter_Average *filter, uint8_t width)
 float Filter_Average_Update(struct Filter_Average *filter, float calibrate)
 {
     static uint16_t reCalc_cnt = 0; // 定期重新计算计数
+    uint8_t i;
 
     /// @brief 防止输入过大数据
     if (calibrate > 1e20f || calibrate < -1e20f)
@@ -76,9 +77,13 @@ float Filter_Average_Update(struct Filter_Average *filter, float calibrate)
     else
     {
         filter->average = 0;
-        for (uint8_t i = filter->index; i < (filter->index + filter->width) % filter->width; i++)
+        for (i = 0; i < filter->width; i++)
         {
             filter->average += filter->window[i] / filter->width;
+        }
+        for (i = 0; i < filter->width; i++)
+        {
+            filter->average = filter->average;
         }
         reCalc_cnt = 0;
     }

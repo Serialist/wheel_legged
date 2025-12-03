@@ -106,7 +106,7 @@ struct Robo_Wheel_Legged_Attitude
     float theta;   // 腿 角度
     float v_theta; // 腿 角速度
     float x;       // 机体 位置
-    float v;     // 机体 速度
+    float v;       // 机体 速度
     float pitch;   // 机体 俯仰角
     float v_pitch; // 机体 俯仰角速度
 
@@ -114,4 +114,20 @@ struct Robo_Wheel_Legged_Attitude
     float t_hip; // 髋 力矩
     float f_hip; // 髋 推力
     float t_hub; // 脚 力矩
+};
+
+struct Robo_Wheel_Legged_Flag
+{
+    bool above;
+    bool jump_speed;
+    bool yaw_ctrl;
+    bool roll_ctrl;
+    bool pitch_ctrl;
+    bool legLength_ctrl;
+    bool theta_ctrl;
+};
+
+struct Robo_Wheel_Legged_State
+{
+    bool test;
 };
