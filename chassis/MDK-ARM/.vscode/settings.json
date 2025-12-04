@@ -53,6 +53,7 @@
         "motor.h": "c",
         "span": "c",
         "chassis.h": "c",
-        "bsp_dwt.h": "c"
+        "bsp_dwt.h": "c",
+        "c2g.h": "c"
     }
 }

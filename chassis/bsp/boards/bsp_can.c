@@ -19,7 +19,7 @@
 extern struct Wheel_Leg_Target set;
 extern Chassis_t chassis;
 
-MOTOR_RECEIVE_DATA chassis_motor_fdb;
+struct DJI_RxData yaw_data;
 MOTOR_TRANSMIT_DATA gimbal_motor_set;
 
 AK_motor_fdb_t AK_motor[6];
@@ -30,7 +30,7 @@ struct DJI_RxData m3508[2];
 
 static fp32 chassis_speed_set[2];
 
-uint8_t can_rx_data[8];
+uint8_t canRxBuf[8];
 
 /// @brief CAN 回调函数注册结构体
 /// @date 2025-10-30
@@ -68,14 +68,14 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 	CAN_RxHeaderTypeDef rx_message;
 	if (hcan == &hcan1)
 	{
-		if (HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &rx_message, can_rx_data) == HAL_OK) // 获得接收到的数据头和数据
+		if (HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &rx_message, canRxBuf) == HAL_OK) // 获得接收到的数据头和数据
 		{
 			if (rx_message.StdId == YAW_ID)
 			{
-				chassis_motor_fdb.ecd_fdb = (can_rx_data[0] << 8) | can_rx_data[1];
-				chassis_motor_fdb.speed_rpm_fdb = (can_rx_data[2] << 8) | can_rx_data[3];
-				chassis_motor_fdb.current_fdb = (can_rx_data[4] << 8) | can_rx_data[5];
-				chassis_motor_fdb.temperate_fdb = can_rx_data[6];
+				yaw_data.angle = (canRxBuf[0] << 8) | canRxBuf[1];
+				yaw_data.speed = (canRxBuf[2] << 8) | canRxBuf[3];
+				yaw_data.current = (canRxBuf[4] << 8) | canRxBuf[5];
+				yaw_data.temp = canRxBuf[6];
 			}
 			/**
 			 * @brief M3508 轮毂 接收
@@ -84,89 +84,89 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 			/******** M3508 ********/
 			else if (rx_message.StdId == M3508_WHELL_ID_1)
 			{
-				DJI_Motor_Receive(&m3508[0], can_rx_data);
+				DJI_Motor_Receive(&m3508[0], canRxBuf);
 				motor_status.receive_flag[4] = true;
 			}
 			else if (rx_message.StdId == M3508_WHELL_ID_2)
 			{
-				DJI_Motor_Receive(&m3508[1], can_rx_data);
+				DJI_Motor_Receive(&m3508[1], canRxBuf);
 				motor_status.receive_flag[5] = true;
 			}
 			/******** / M3508 ********/
 			else if (rx_message.ExtId == 0x2967)
 			{
-				int16_t pos_int = (can_rx_data[0] << 8) | (can_rx_data[1]);
-				int16_t spd_int = (can_rx_data[2] << 8) | (can_rx_data[3]);
-				int16_t cur_int = (can_rx_data[4] << 8) | (can_rx_data[5]);
+				int16_t pos_int = (canRxBuf[0] << 8) | (canRxBuf[1]);
+				int16_t spd_int = (canRxBuf[2] << 8) | (canRxBuf[3]);
+				int16_t cur_int = (canRxBuf[4] << 8) | (canRxBuf[5]);
 				AK_motor[2].motor_pos = (float)(pos_int * 0.1f);  // 电机位置
 				AK_motor[2].motor_spd = (float)(spd_int * 10.0f); // 电机速度
 				AK_motor[2].motor_cur = (float)(cur_int * 0.01f); // 电机电流
-				AK_motor[2].motor_temp = can_rx_data[6];		  // 电机温度
-				AK_motor[2].motor_error = can_rx_data[7];		  // 电机故障码
+				AK_motor[2].motor_temp = canRxBuf[6];			  // 电机温度
+				AK_motor[2].motor_error = canRxBuf[7];			  // 电机故障码
 			}
 			else if (rx_message.ExtId == 0x2968)
 			{
-				int16_t pos_int = (can_rx_data[0] << 8) | (can_rx_data[1]);
-				int16_t spd_int = (can_rx_data[2] << 8) | (can_rx_data[3]);
-				int16_t cur_int = (can_rx_data[4] << 8) | (can_rx_data[5]);
+				int16_t pos_int = (canRxBuf[0] << 8) | (canRxBuf[1]);
+				int16_t spd_int = (canRxBuf[2] << 8) | (canRxBuf[3]);
+				int16_t cur_int = (canRxBuf[4] << 8) | (canRxBuf[5]);
 				AK_motor[3].motor_pos = (float)(pos_int * 0.1f);  // 电机位置
 				AK_motor[3].motor_spd = (float)(spd_int * 10.0f); // 电机速度
 				AK_motor[3].motor_cur = (float)(cur_int * 0.01f); // 电机电流
-				AK_motor[3].motor_temp = can_rx_data[6];		  // 电机温度
-				AK_motor[3].motor_error = can_rx_data[7];		  // 电机故障码
+				AK_motor[3].motor_temp = canRxBuf[6];			  // 电机温度
+				AK_motor[3].motor_error = canRxBuf[7];			  // 电机故障码
 			}
 			else if (rx_message.ExtId == 0x2966)
 			{
-				int16_t pos_int = (can_rx_data[0] << 8) | (can_rx_data[1]);
-				int16_t spd_int = (can_rx_data[2] << 8) | (can_rx_data[3]);
-				int16_t cur_int = (can_rx_data[4] << 8) | (can_rx_data[5]);
+				int16_t pos_int = (canRxBuf[0] << 8) | (canRxBuf[1]);
+				int16_t spd_int = (canRxBuf[2] << 8) | (canRxBuf[3]);
+				int16_t cur_int = (canRxBuf[4] << 8) | (canRxBuf[5]);
 				AK_motor[1].motor_pos = (float)(pos_int * 0.1f);  // 电机位置
 				AK_motor[1].motor_spd = (float)(spd_int * 10.0f); // 电机速度
 				AK_motor[1].motor_cur = (float)(cur_int * 0.01f); // 电机电流
-				AK_motor[1].motor_temp = can_rx_data[6];		  // 电机温度
-				AK_motor[1].motor_error = can_rx_data[7];		  // 电机故障码
+				AK_motor[1].motor_temp = canRxBuf[6];			  // 电机温度
+				AK_motor[1].motor_error = canRxBuf[7];			  // 电机故障码
 			}
 			else if (rx_message.ExtId == 0x2965)
 			{
-				int16_t pos_int = (can_rx_data[0] << 8) | (can_rx_data[1]);
-				int16_t spd_int = (can_rx_data[2] << 8) | (can_rx_data[3]);
-				int16_t cur_int = (can_rx_data[4] << 8) | (can_rx_data[5]);
+				int16_t pos_int = (canRxBuf[0] << 8) | (canRxBuf[1]);
+				int16_t spd_int = (canRxBuf[2] << 8) | (canRxBuf[3]);
+				int16_t cur_int = (canRxBuf[4] << 8) | (canRxBuf[5]);
 				AK_motor[0].motor_pos = (float)(pos_int * 0.1f);  // 电机位置
 				AK_motor[0].motor_spd = (float)(spd_int * 10.0f); // 电机速度
 				AK_motor[0].motor_cur = (float)(cur_int * 0.01f); // 电机电流
-				AK_motor[0].motor_temp = can_rx_data[6];		  // 电机温度
-				AK_motor[0].motor_error = can_rx_data[7];		  // 电机故障
+				AK_motor[0].motor_temp = canRxBuf[6];			  // 电机温度
+				AK_motor[0].motor_error = canRxBuf[7];			  // 电机故障
 			}
 			else if (rx_message.ExtId == 0x2964)
 			{
-				int16_t pos_int = (can_rx_data[0] << 8) | (can_rx_data[1]);
-				int16_t spd_int = (can_rx_data[2] << 8) | (can_rx_data[3]);
-				int16_t cur_int = (can_rx_data[4] << 8) | (can_rx_data[5]);
+				int16_t pos_int = (canRxBuf[0] << 8) | (canRxBuf[1]);
+				int16_t spd_int = (canRxBuf[2] << 8) | (canRxBuf[3]);
+				int16_t cur_int = (canRxBuf[4] << 8) | (canRxBuf[5]);
 				AK_motor[4].motor_pos = (float)(pos_int * 0.1f);  // 电机位置
 				AK_motor[4].motor_spd = (float)(spd_int * 10.0f); // 电机速度
 				AK_motor[4].motor_cur = (float)(cur_int * 0.01f); // 电机电流
-				AK_motor[4].motor_temp = can_rx_data[6];		  // 电机温度
-				AK_motor[4].motor_error = can_rx_data[7];		  // 电机故障码
+				AK_motor[4].motor_temp = canRxBuf[6];			  // 电机温度
+				AK_motor[4].motor_error = canRxBuf[7];			  // 电机故障码
 			}
 			else if (rx_message.ExtId == 0x2963)
 			{
-				int16_t pos_int = (can_rx_data[0] << 8) | (can_rx_data[1]);
-				int16_t spd_int = (can_rx_data[2] << 8) | (can_rx_data[3]);
-				int16_t cur_int = (can_rx_data[4] << 8) | (can_rx_data[5]);
+				int16_t pos_int = (canRxBuf[0] << 8) | (canRxBuf[1]);
+				int16_t spd_int = (canRxBuf[2] << 8) | (canRxBuf[3]);
+				int16_t cur_int = (canRxBuf[4] << 8) | (canRxBuf[5]);
 				AK_motor[5].motor_pos = (float)(pos_int * 0.1f);  // 电机位置
 				AK_motor[5].motor_spd = (float)(spd_int * 10.0f); // 电机速度
 				AK_motor[5].motor_cur = (float)(cur_int * 0.01f); // 电机电流
-				AK_motor[5].motor_temp = can_rx_data[6];		  // 电机温度
-				AK_motor[5].motor_error = can_rx_data[7];		  // 电机故障码
+				AK_motor[5].motor_temp = canRxBuf[6];			  // 电机温度
+				AK_motor[5].motor_error = canRxBuf[7];			  // 电机故障码
 			}
 			else if (rx_message.StdId == 0x05)
 			{
 
-				int id = can_rx_data[0]; // 驱动 ID 号
-				int p_int = (can_rx_data[1] << 8) | (can_rx_data[2]);
-				int v_int = (can_rx_data[3] << 4) | (can_rx_data[4] >> 4);
-				int i_int = ((can_rx_data[4] & 0xF) << 8) | (can_rx_data[5]);
-				int T_int = can_rx_data[6];
+				int id = canRxBuf[0]; // 驱动 ID 号
+				int p_int = (canRxBuf[1] << 8) | (canRxBuf[2]);
+				int v_int = (canRxBuf[3] << 4) | (canRxBuf[4] >> 4);
+				int i_int = ((canRxBuf[4] & 0xF) << 8) | (canRxBuf[5]);
+				int T_int = canRxBuf[6];
 				float p = uint_to_float(p_int, P_MIN, P_MAX, 16);
 				float v = uint_to_float(v_int, -V_MAX_2, V_MAX_2, 12);
 				float i = uint_to_float(i_int, -T_MAX_2, T_MAX_2, 12);
@@ -182,11 +182,11 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 			else if (rx_message.StdId == 0x06)
 			{
 
-				int id = can_rx_data[0]; // 驱动 ID 号
-				int p_int = (can_rx_data[1] << 8) | (can_rx_data[2]);
-				int v_int = (can_rx_data[3] << 4) | (can_rx_data[4] >> 4);
-				int i_int = ((can_rx_data[4] & 0xF) << 8) | (can_rx_data[5]);
-				int T_int = can_rx_data[6];
+				int id = canRxBuf[0]; // 驱动 ID 号
+				int p_int = (canRxBuf[1] << 8) | (canRxBuf[2]);
+				int v_int = (canRxBuf[3] << 4) | (canRxBuf[4] >> 4);
+				int i_int = ((canRxBuf[4] & 0xF) << 8) | (canRxBuf[5]);
+				int T_int = canRxBuf[6];
 				float p = uint_to_float(p_int, P_MIN, P_MAX, 16);
 				float v = uint_to_float(v_int, -V_MAX_2, V_MAX_2, 12);
 				float i = uint_to_float(i_int, -T_MAX_2, T_MAX_2, 12);
@@ -203,14 +203,14 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 			else if (rx_message.StdId == 0x01)
 			{
 				/////////////////////////////////////////////////////////////////
-				Motor_AK_MIT_Decode(&ak10[0], can_rx_data, P_MIN, V_MAX, T_MAX);
+				Motor_AK_MIT_Decode(&ak10[0], canRxBuf, P_MIN, V_MAX, T_MAX);
 				/////////////////////////////////////////////////////////////////
 
-				int id = can_rx_data[0]; // 驱动 ID 号
-				int p_int = (can_rx_data[1] << 8) | (can_rx_data[2]);
-				int v_int = (can_rx_data[3] << 4) | (can_rx_data[4] >> 4);
-				int i_int = ((can_rx_data[4] & 0xF) << 8) | (can_rx_data[5]);
-				int T_int = can_rx_data[6];
+				int id = canRxBuf[0]; // 驱动 ID 号
+				int p_int = (canRxBuf[1] << 8) | (canRxBuf[2]);
+				int v_int = (canRxBuf[3] << 4) | (canRxBuf[4] >> 4);
+				int i_int = ((canRxBuf[4] & 0xF) << 8) | (canRxBuf[5]);
+				int T_int = canRxBuf[6];
 				float p = uint_to_float(p_int, P_MIN, P_MAX, 16);
 				float v = uint_to_float(v_int, V_MIN, V_MAX, 12);
 				float i = uint_to_float(i_int, -T_MAX, T_MAX, 12);
@@ -227,14 +227,14 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 			else if (rx_message.StdId == 0x02)
 			{
 				/////////////////////////////////////////////////////////////////
-				Motor_AK_MIT_Decode(&ak10[1], can_rx_data, P_MIN, V_MAX, T_MAX);
+				Motor_AK_MIT_Decode(&ak10[1], canRxBuf, P_MIN, V_MAX, T_MAX);
 				/////////////////////////////////////////////////////////////////
 
-				int id = can_rx_data[0]; // 驱动 ID 号
-				int p_int = (can_rx_data[1] << 8) | (can_rx_data[2]);
-				int v_int = (can_rx_data[3] << 4) | (can_rx_data[4] >> 4);
-				int i_int = ((can_rx_data[4] & 0xF) << 8) | (can_rx_data[5]);
-				int T_int = can_rx_data[6];
+				int id = canRxBuf[0]; // 驱动 ID 号
+				int p_int = (canRxBuf[1] << 8) | (canRxBuf[2]);
+				int v_int = (canRxBuf[3] << 4) | (canRxBuf[4] >> 4);
+				int i_int = ((canRxBuf[4] & 0xF) << 8) | (canRxBuf[5]);
+				int T_int = canRxBuf[6];
 				float p = uint_to_float(p_int, P_MIN, P_MAX, 16);
 				float v = uint_to_float(v_int, V_MIN, V_MAX, 12);
 				float i = uint_to_float(i_int, -T_MAX, T_MAX, 12);
@@ -251,16 +251,16 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 			else if (rx_message.StdId == 0x03)
 			{
 				/////////////////////////////////////////////////////////////////
-				Motor_AK_MIT_Decode(&ak10[2], can_rx_data, P_MIN, V_MAX, T_MAX);
+				Motor_AK_MIT_Decode(&ak10[2], canRxBuf, P_MIN, V_MAX, T_MAX);
 				ak10[2].position = -ak10[2].position;
 				ak10[2].speed = -ak10[2].speed;
 				/////////////////////////////////////////////////////////////////
 
-				int id = can_rx_data[0]; // 驱动 ID 号
-				int p_int = (can_rx_data[1] << 8) | (can_rx_data[2]);
-				int v_int = (can_rx_data[3] << 4) | (can_rx_data[4] >> 4);
-				int i_int = ((can_rx_data[4] & 0xF) << 8) | (can_rx_data[5]);
-				int T_int = can_rx_data[6];
+				int id = canRxBuf[0]; // 驱动 ID 号
+				int p_int = (canRxBuf[1] << 8) | (canRxBuf[2]);
+				int v_int = (canRxBuf[3] << 4) | (canRxBuf[4] >> 4);
+				int i_int = ((canRxBuf[4] & 0xF) << 8) | (canRxBuf[5]);
+				int T_int = canRxBuf[6];
 				float p = uint_to_float(p_int, P_MIN, P_MAX, 16);
 				float v = uint_to_float(v_int, V_MIN, V_MAX, 12);
 				float i = uint_to_float(i_int, -T_MAX, T_MAX, 12);
@@ -277,16 +277,16 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 			else if (rx_message.StdId == 0x04)
 			{
 				/////////////////////////////////////////////////////////////////
-				Motor_AK_MIT_Decode(&ak10[3], can_rx_data, P_MIN, V_MAX, T_MAX);
+				Motor_AK_MIT_Decode(&ak10[3], canRxBuf, P_MIN, V_MAX, T_MAX);
 				ak10[3].position = -ak10[3].position;
 				ak10[3].speed = -ak10[3].speed;
 				/////////////////////////////////////////////////////////////////
 
-				int id = can_rx_data[0]; // 驱动 ID 号
-				int p_int = (can_rx_data[1] << 8) | (can_rx_data[2]);
-				int v_int = (can_rx_data[3] << 4) | (can_rx_data[4] >> 4);
-				int i_int = ((can_rx_data[4] & 0xF) << 8) | (can_rx_data[5]);
-				int T_int = can_rx_data[6];
+				int id = canRxBuf[0]; // 驱动 ID 号
+				int p_int = (canRxBuf[1] << 8) | (canRxBuf[2]);
+				int v_int = (canRxBuf[3] << 4) | (canRxBuf[4] >> 4);
+				int i_int = ((canRxBuf[4] & 0xF) << 8) | (canRxBuf[5]);
+				int T_int = canRxBuf[6];
 				float p = uint_to_float(p_int, P_MIN, P_MAX, 16);
 				float v = uint_to_float(v_int, V_MIN, V_MAX, 12);
 				float i = uint_to_float(i_int, -T_MAX, T_MAX, 12);
@@ -301,48 +301,43 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 				}
 			}
 
-			// Reg_Run(&can_callback_reg, rx_message.StdId, can_rx_data);
+			// Reg_Run(&can_callback_reg, rx_message.StdId, canRxBuf);
 		}
 	}
 	else if (hcan == &hcan2)
 	{
 
 		Float_Transform_u float_temp;
-		if (HAL_CAN_GetRxMessage(&hcan2, CAN_RX_FIFO0, &rx_message, can_rx_data) == HAL_OK) // 获得接收到的数据头和数据
+		if (HAL_CAN_GetRxMessage(&hcan2, CAN_RX_FIFO0, &rx_message, canRxBuf) == HAL_OK) // 获得接收到的数据头和数据
 		{
 
 			if (rx_message.StdId == CHASSIS_Y_ID)
 			{
 				// chassis_speed_set_time[CHASSIS_Y] = xTaskGetTickCount();
-				float_temp.data[0] = can_rx_data[4];
-				float_temp.data[1] = can_rx_data[5];
-				float_temp.data[2] = can_rx_data[6];
-				float_temp.data[3] = can_rx_data[7];
+				float_temp.data[0] = canRxBuf[4];
+				float_temp.data[1] = canRxBuf[5];
+				float_temp.data[2] = canRxBuf[6];
+				float_temp.data[3] = canRxBuf[7];
 				chassis_speed_set[CHASSIS_Y] = float_temp.data_raw;
 			}
 			else if (rx_message.StdId == CHASSIS_Z_ID)
 			{
 				// chassis_speed_set_time[CHASSIS_Z] = xTaskGetTickCount();
-				float_temp.data[0] = can_rx_data[0];
-				float_temp.data[1] = can_rx_data[1];
-				float_temp.data[2] = can_rx_data[2];
-				float_temp.data[3] = can_rx_data[3];
+				float_temp.data[0] = canRxBuf[0];
+				float_temp.data[1] = canRxBuf[1];
+				float_temp.data[2] = canRxBuf[2];
+				float_temp.data[3] = canRxBuf[3];
 				chassis_speed_set[CHASSIS_Z] = float_temp.data_raw;
 			}
 			else if (rx_message.StdId == GIMBAL_TO_CHASSIS)
 			{
-				gimbal_motor_set.motor_current_set = (can_rx_data[0] << 8) | can_rx_data[1];
-				set.mode_state = can_rx_data[2];
-				set.rotate_state = can_rx_data[3];
-				set.shoot_state = can_rx_data[4];
+				gimbal_motor_set.motor_current_set = (canRxBuf[0] << 8) | canRxBuf[1];
+				set.mode_state = canRxBuf[2];
+				set.rotate_state = canRxBuf[3];
+				set.shoot_state = canRxBuf[4];
 			}
 		}
 	}
-}
-
-void GetgimbalmotorFdb(MOTOR_RECEIVE_DATA *motor)
-{
-	*motor = chassis_motor_fdb;
 }
 
 void GetChassisYSpeedSet(fp32 *set)
@@ -392,30 +387,6 @@ float uint_to_float(int x_int, float x_min, float x_max, int bits)
 	float span = x_max - x_min;
 	float offset = x_min;
 	return ((float)x_int) * span / ((float)((1 << bits) - 1)) + offset;
-}
-
-// 云底通信 发送301，接收302
-void Sent_YAW_Data(void)
-{
-
-	uint8_t YAW_Data[8];
-	CAN_TxHeaderTypeDef YAW_TX_message;
-	uint32_t YAW_send_mail_box;
-	YAW_TX_message.StdId = 0x301;
-	YAW_TX_message.DLC = 0x08;
-	YAW_TX_message.IDE = CAN_ID_STD;
-	YAW_TX_message.RTR = CAN_RTR_DATA;
-
-	YAW_Data[0] = chassis_motor_fdb.ecd_fdb >> 8;
-	YAW_Data[1] = chassis_motor_fdb.ecd_fdb & 0xFF;
-	YAW_Data[2] = chassis_motor_fdb.speed_rpm_fdb >> 8;
-	YAW_Data[3] = chassis_motor_fdb.speed_rpm_fdb & 0xFF;
-	YAW_Data[4] = chassis_motor_fdb.current_fdb >> 8;
-	YAW_Data[5] = chassis_motor_fdb.current_fdb & 0xFF;
-	YAW_Data[6] = chassis_motor_fdb.temperate_fdb;
-	YAW_Data[7] = 0;
-
-	HAL_CAN_AddTxMessage(&hcan2, &YAW_TX_message, YAW_Data, &YAW_send_mail_box);
 }
 
 /***********************************************

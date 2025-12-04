@@ -883,6 +883,11 @@
               <FileType>1</FileType>
               <FilePath>..\User\protocol\fsi6.c</FilePath>
             </File>
+            <File>
+              <FileName>c2g.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\protocol\c2g.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

@@ -43,6 +43,7 @@
 #include "debug.h"
 #include "filter.h"
 #include "motor.h"
+#include "c2g.h"
 
 /* ================================================================ macro ================================================================*/
 
@@ -161,7 +162,7 @@ void chassis_task(void const *argument)
 		/* ================================ 发送数据 ================================  */
 
 		chassis_torque_sent(&chassis);
-		// Sent_YAW_Data(); // 暂时没用
+		C2G_Transmit(&yaw_data);
 
 		osDelay(1);
 	}
@@ -292,7 +293,6 @@ static void Fdb_Update(Chassis_t *ch)
 {
 	ch->time_last = ch->time_now;
 	// 获取电机数据
-	GetgimbalmotorFdb(&ch->gimbal_motor_fdb);
 	GetAKMotor1Fdb(&ch->AK_fdb[0], &ch->ak_fdb_ctrl[0]);
 	GetAKMotor2Fdb(&ch->AK_fdb[1], &ch->ak_fdb_ctrl[1]);
 	GetAKMotor3Fdb(&ch->AK_fdb[2], &ch->ak_fdb_ctrl[2]);

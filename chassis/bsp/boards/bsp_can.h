@@ -20,10 +20,10 @@
 #define SUPER_POWER 0x211
 
 extern struct DJI_RxData m3508[2];
+extern struct DJI_RxData yaw_data;
 
 // 获取电机数据
 // void GetMotorFdb(Motor_Feedback_t* motor, uint32_t* trans_time, uint8_t num, uint8_t start_num);
-void GetgimbalmotorFdb(MOTOR_RECEIVE_DATA *motor);
 void GetAKMotor1Fdb(AK_motor_fdb_t *motor1, AK_motor_ctrl_fdb_t *motor2);
 void GetAKMotor2Fdb(AK_motor_fdb_t *motor1, AK_motor_ctrl_fdb_t *motor2);
 void GetAKMotor3Fdb(AK_motor_fdb_t *motor1, AK_motor_ctrl_fdb_t *motor2);
@@ -42,8 +42,6 @@ void TransmitSuperPower(float power_);
 
 void comm_can_set_current(uint8_t controller_id, float current);
 void comm_can_set_rpm(uint8_t controller_id, float rpm);
-
-void Sent_YAW_Data(void);
 
 /***********************************************
  **                                           **
