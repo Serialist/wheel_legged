@@ -12,7 +12,6 @@
 #include "DM_VMC_test.h"
 
 extern Chassis_t chassis;
-extern Leg_Pos_t legpos[2];
 extern struct Wheel_Leg_Target set;
 extern struct VMC_Leg leg_l, leg_r;
 

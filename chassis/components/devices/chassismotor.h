@@ -257,14 +257,14 @@ typedef struct
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-typedef enum Robo_Status_Def
+enum Robo_Status_Def
 {
 	ROBO_STATUS_INIT,	   // 初始化
 	ROBO_STATUS_RUN,	   // 运行
 	ROBO_STATUS_STOP,	   // 停止
 	ROBO_STATUS_EMERGENCY, // 急停
-	ROBO_STATUS_
-} Robo_Status_Def;
+	ROBO_STATUS_STAND,
+};
 
 typedef enum Robo_Behavior_Def
 {
@@ -288,7 +288,7 @@ struct Wheel_Leg_Flag
 
 struct Robo_Status
 {
-	Robo_Status_Def status;
+	enum Robo_Status_Def status;
 
 	Robo_Behavior_Def last_behavior;
 	Robo_Behavior_Def behavior;
