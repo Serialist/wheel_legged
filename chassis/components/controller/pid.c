@@ -25,70 +25,56 @@
         }                      \
     }
 
-/**
- * @brief          pid struct data init
- * @param[out]     pid: PID struct data point
- * @param[in]      mode: PID_POSITION: normal pid
- *                 PID_DELTA: delta pid
- * @param[in]      PID: 0: kp, 1: ki, 2:kd
- * @param[in]      max_out: pid max out
- * @param[in]      max_iout: pid max iout
- * @retval         none
- */
-/**
- * @brief          pid struct data init
- * @param[out]     pid: PID结构数据指针
- * @param[in]      mode: PID_POSITION:普通PID
- *                 PID_DELTA: 差分PID
- * @param[in]      PID: 0: kp, 1: ki, 2:kd
- * @param[in]      max_out: pid最大输出
- * @param[in]      max_iout: pid最大积分输出
- * @retval         none
- */
-void PID_init(pid_type_def *pid, uint8_t mode, const fp32 PID[3], fp32 max_out, fp32 max_iout)
+/************************
+ * @brief pid init
+ *
+ * @param pid 结构数据指针
+ * @param mode PID_POSITION:普通 PID_DELTA: 差分
+ * @param kp
+ * @param ki
+ * @param kd
+ * @param max_out 最大输出
+ * @param max_iout 最大积分输出
+ ************************/
+void PID_init(struct PID_Def *pid, enum PID_MODE mode, const float kp, const float ki, const float kd, fp32 max_out, fp32 max_iout)
 {
-    if (pid == NULL || PID == NULL)
+    if (pid == NULL)
     {
         return;
     }
     pid->mode = mode;
-    pid->Kp = PID[0];
-    pid->Ki = PID[1];
-    pid->Kd = PID[2];
+    pid->Kp = kp;
+    pid->Ki = ki;
+    pid->Kd = kd;
     pid->max_out = max_out;
     pid->max_iout = max_iout;
     pid->Dbuf[0] = pid->Dbuf[1] = pid->Dbuf[2] = 0.0f;
     pid->error[0] = pid->error[1] = pid->error[2] = pid->Pout = pid->Iout = pid->Dout = pid->out = 0.0f;
 }
 
-/**
- * @brief          pid calculate
- * @param[out]     pid: PID struct data point
- * @param[in]      ref: feedback data
- * @param[in]      set: set point
- * @retval         pid out
- */
-/**
- * @brief          pid计算
- * @param[out]     pid: PID结构数据指针
- * @param[in]      ref: 反馈数据
- * @param[in]      set: 设定值
- * @retval         pid输出
- */
-// fp32 PID_Calc(pid_type_def *pid, fp32 ref, fp32 set)
-
-fp32 PID_Calc(pid_type_def *pid, fp32 set, fp32 ref)
+/************************
+ * @brief 计算
+ *
+ * @param pid 数据
+ * @param set 设定值
+ * @param ref 反馈数据
+ * @return fp32 pid输出
+ ************************/
+fp32 PID_Update(struct PID_Def *pid, fp32 set, fp32 ref)
 {
     if (pid == NULL)
     {
         return 0.0f;
     }
 
+    /* ================================ 更新变量 ================================ */
     pid->error[2] = pid->error[1];
     pid->error[1] = pid->error[0];
     pid->set = set;
     pid->fdb = ref;
     pid->error[0] = set - ref;
+
+    /* ================================ 位置式 ================================ */
     if (pid->mode == PID_POSITION)
     {
 
@@ -101,22 +87,10 @@ fp32 PID_Calc(pid_type_def *pid, fp32 set, fp32 ref)
         pid->Dout = pid->Kd * pid->Dbuf[0];
         LimitMax(pid->Iout, pid->max_iout);
 
-        //		if(fabs(pid->error[0]) <= pid->err_up)
-        //		{
-        //			pid->cnt_ki++;
-        //		}
-        //		else{
-        //			pid->cnt_ki = 0;
-        //		}
-        //		if(pid->cnt_ki > pid->max_cnt_ki)
-        //		{
-        //			pid->Iout = 0;
-        //			pid->cnt_ki = 0;
-        //		}
-
         pid->out = pid->Pout + pid->Iout + pid->Dout;
         LimitMax(pid->out, pid->max_out);
     }
+    /* ================================ 差分式 ================================ */
     else if (pid->mode == PID_DELTA)
     {
         pid->Pout = pid->Kp * (pid->error[0] - pid->error[1]);
@@ -128,15 +102,18 @@ fp32 PID_Calc(pid_type_def *pid, fp32 set, fp32 ref)
         pid->out += pid->Pout + pid->Iout + pid->Dout;
         LimitMax(pid->out, pid->max_out);
     }
+
+    /* ================================ 返回 ================================ */
     return pid->out;
 }
+
 float err_limit = 23.0f;
 float kp_max = 35.0f;
 float a_k = 1;
 float b_k = 1;
 int n_d = 3;
 float kp;
-fp32 ExpKp_PID_Calc(pid_type_def *pid, fp32 set, fp32 ref)
+fp32 ExpKp_PID_Calc(struct PID_Def *pid, fp32 set, fp32 ref)
 {
     if (pid == NULL)
     {
@@ -172,9 +149,6 @@ fp32 ExpKp_PID_Calc(pid_type_def *pid, fp32 set, fp32 ref)
             E = a_k * fabs(pid->error[0]) - b_k * (pid->error[0] - pid->error[1]);
         }
     }
-
-    // float a = (kp_max - pid->Kp) / pow(err_limit, n_d);
-    // float kp = a * pow(fabs(pid->error[0]) / err_limit, n_d) + pid->Kp;
 
     float a = (kp_max - pid->Kp) / pow(err_limit, n_d);
     kp = a * pow(E, n_d) + pid->Kp;
@@ -277,7 +251,7 @@ fp32 Piece3_PID_Calc(piece3_pid_type_def *pid3, fp32 set, fp32 ref)
     return pid3->out;
 }
 
-fp32 anglePidCalc(pid_type_def *pid, fp32 set, fp32 get, fp32 gyro)
+fp32 anglePidCalc(struct PID_Def *pid, fp32 set, fp32 get, fp32 gyro)
 {
     if (pid == NULL)
     {
@@ -315,7 +289,7 @@ fp32 anglePidCalc(pid_type_def *pid, fp32 set, fp32 get, fp32 gyro)
  * @param[out]     pid: PID结构数据指针
  * @retval         none
  */
-void PID_clear(pid_type_def *pid)
+void PID_clear(struct PID_Def *pid)
 {
     if (pid == NULL)
     {

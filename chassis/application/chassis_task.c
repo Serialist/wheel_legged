@@ -54,15 +54,15 @@
 
 /**********  变量定义 开始 *************/
 Chassis_t chassis;
-pid_type_def chassis_motor_pid[10];
+struct PID_Def chassis_motor_pid[10];
 
 /**
  * @brief VMC腿摆角扭矩pid，用于板凳模型
  * @date 2025-10-16
  */
-pid_type_def pid_tpl = {0}, pid_tpr = {0};
+struct PID_Def pid_tpl, pid_tpr;
 
-pid_type_def chassis_motor_pid[10];
+struct PID_Def chassis_motor_pid[10];
 
 /**********  变量定义 结束 *************/
 float T_AK_set_left[2];
@@ -121,7 +121,7 @@ float tp_ratior;
 /// @brief 离地检测滤波
 struct Filter_Average ground_detection_filter_l, ground_detection_filter_r;
 
-pid_type_def motor_test_pid;
+struct PID_Def motor_test_pid;
 float motor_test_speed = 0;
 
 /********** 函数声明 开始 *************/
@@ -414,7 +414,7 @@ void chassis_torque_sent(Chassis_t *ch)
 	DJI_Motor_Transmit(&hcan1, M3508_TX_ID_2,
 					   0,
 					   HEXROLL_TORQUE_TO_CURRENT(ch->ak_set[4].torset),
-					   //    PID_Calc(&motor_test_pid, motor_test_speed, m3508[1].speed),
+					   //    PID_Update(&motor_test_pid, motor_test_speed, m3508[1].speed),
 					   HEXROLL_TORQUE_TO_CURRENT(ch->ak_set[5].torset),
 					   0);
 
@@ -668,8 +668,8 @@ void balancephase(Chassis_t *ch)
 		turn_t = chassis_motor_pid[YAW_PID].Kp * (set.yaw - total_yaw) - chassis_motor_pid[YAW_PID].Kd * ch->IMU_DATA.yawspd; // 这样计算更稳一点
 		mySaturate(&turn_t, -1.0f, 1.0f);
 	}
-	// leg_tp = PID_Calc(&chassis_motor_pid[TP_PID], 0.0f, ch->st.angle_err);					// 防劈叉pid计算
-	set.roll_set_now = PID_Calc(&chassis_motor_pid[ROLL_PID], set.roll, ch->IMU_DATA.roll); // roll 补偿
+	// leg_tp = PID_Update(&chassis_motor_pid[TP_PID], 0.0f, ch->st.angle_err);					// 防劈叉pid计算
+	set.roll_set_now = PID_Update(&chassis_motor_pid[ROLL_PID], set.roll, ch->IMU_DATA.roll); // roll 补偿
 
 	/* ================================ LQR 控制 ================================ */
 
@@ -827,23 +827,23 @@ void balancephase(Chassis_t *ch)
 	{
 		jumpphase(ch);
 		leg_l.F0 = fn_forward_l +
-				   PID_Calc(&chassis_motor_pid[0], set.left_length, leg_l.L0);
+				   PID_Update(&chassis_motor_pid[0], set.left_length, leg_l.L0);
 		leg_r.F0 = fn_forward_r +
-				   PID_Calc(&chassis_motor_pid[1], set.right_length, leg_r.L0);
+				   PID_Update(&chassis_motor_pid[1], set.right_length, leg_r.L0);
 	}
 	else
 	{
 		leg_l.F0 = fn_forward_l +
-				   PID_Calc(&chassis_motor_pid[0], set.left_length + set.roll_set_now, leg_l.L0);
+				   PID_Update(&chassis_motor_pid[0], set.left_length + set.roll_set_now, leg_l.L0);
 		leg_r.F0 = fn_forward_r +
-				   PID_Calc(&chassis_motor_pid[1], set.right_length - set.roll_set_now, leg_r.L0);
+				   PID_Update(&chassis_motor_pid[1], set.right_length - set.roll_set_now, leg_r.L0);
 	}
 
 	/// @brief 杆扭矩 PID
 	if (my_debug.no_tp_flag)
 	{
-		tplqrl = PID_Calc(&pid_tpl, PI / 2.0f, leg_l.phi0);
-		tplqrr = PID_Calc(&pid_tpr, PI / 2.0f, leg_r.phi0);
+		tplqrl = PID_Update(&pid_tpl, PI / 2.0f, leg_l.phi0);
+		tplqrr = PID_Update(&pid_tpr, PI / 2.0f, leg_r.phi0);
 	}
 
 	/// @brief 安全无力
@@ -904,8 +904,8 @@ void balancephase_one_rod(Chassis_t *ch)
 	// 	set.yaw = total_yaw;
 	// 	turn_t = chassis_motor_pid[YAW_PID].Kp * (set.yaw - total_yaw) - chassis_motor_pid[YAW_PID].Kd * ch->IMU_DATA.yawspd; // 这样计算更稳一点
 	// 	mySaturate(&turn_t, -0.5f, 0.5f);
-	// 	leg_tp = PID_Calc(&chassis_motor_pid[TP_PID], 0.0f, ch->st.angle_err);					// 防劈叉pid计算
-	// 	set.roll_set_now = PID_Calc(&chassis_motor_pid[ROLL_PID], set.roll, ch->IMU_DATA.roll); // 前馈pd
+	// 	leg_tp = PID_Update(&chassis_motor_pid[TP_PID], 0.0f, ch->st.angle_err);					// 防劈叉pid计算
+	// 	set.roll_set_now = PID_Update(&chassis_motor_pid[ROLL_PID], set.roll, ch->IMU_DATA.roll); // 前馈pd
 
 	/* ================================ LQR 和 T ================================ */
 
@@ -956,19 +956,19 @@ void balancephase_one_rod(Chassis_t *ch)
 	/* ================================ 定腿 ================================ */
 
 	/// @brief 杆扭矩 PID
-	leg_l.Tp = PID_Calc(&pid_tpl, 0, ch->st.thetal);
-	leg_r.Tp = -PID_Calc(&pid_tpr, 0, ch->st.thetar);
+	leg_l.Tp = PID_Update(&pid_tpl, 0, ch->st.thetal);
+	leg_r.Tp = -PID_Update(&pid_tpr, 0, ch->st.thetar);
 
 	/// @brief 杆推力 PID
 	// #define NO_FN_FORWORD
 #ifndef NO_FN_FORWORD
-	leg_l.F0 = PID_Calc(&chassis_motor_pid[0], set.left_length, leg_l.L0) +	 // 前馈
+	leg_l.F0 = PID_Update(&chassis_motor_pid[0], set.left_length, leg_l.L0) +	 // 前馈
 			   +55.0f / arm_cos_f32(leg_l.theta);							 // 立直重力前馈
-	leg_r.F0 = PID_Calc(&chassis_motor_pid[1], set.right_length, leg_r.L0) + // 前馈
+	leg_r.F0 = PID_Update(&chassis_motor_pid[1], set.right_length, leg_r.L0) + // 前馈
 			   +55.0f / arm_cos_f32(leg_r.theta);							 // 立直重力前馈
 #else
-	leg_l.F0 = PID_Calc(&chassis_motor_pid[0], set.left_length, leg_l.L0);
-	leg_r.F0 = PID_Calc(&chassis_motor_pid[1], set.right_length, leg_r.L0);
+	leg_l.F0 = PID_Update(&chassis_motor_pid[0], set.left_length, leg_l.L0);
+	leg_r.F0 = PID_Update(&chassis_motor_pid[1], set.right_length, leg_r.L0);
 #endif
 
 	/// @brief 正 VMC
@@ -1080,19 +1080,19 @@ void protection_L(float TP_ctrl_L_input)
 {
 	if (leg_l.phi0 <= 1.22f && (TP_ctrl_L_input >= 0))
 	{
-		set.left_leg_angle = PID_Calc(&chassis_motor_pid[2], 1.22f, leg_l.phi0) - leg_tp;
+		set.left_leg_angle = PID_Update(&chassis_motor_pid[2], 1.22f, leg_l.phi0) - leg_tp;
 	}
 	else if (leg_l.phi0 <= 1.50f && (legpos[LEFT].dAngle <= -0.1f))
 	{
-		set.left_leg_angle = -PID_Calc(&chassis_motor_pid[2], 1.22f, leg_l.phi0) - leg_tp;
+		set.left_leg_angle = -PID_Update(&chassis_motor_pid[2], 1.22f, leg_l.phi0) - leg_tp;
 	}
 	else if (leg_l.phi0 >= 1.92f && (TP_ctrl_L_input <= 0))
 	{
-		set.left_leg_angle = PID_Calc(&chassis_motor_pid[2], 1.92f, leg_l.phi0) - leg_tp;
+		set.left_leg_angle = PID_Update(&chassis_motor_pid[2], 1.92f, leg_l.phi0) - leg_tp;
 	}
 	else if (leg_l.phi0 >= 1.64f && (legpos[LEFT].dAngle >= 0.1f))
 	{
-		set.left_leg_angle = -PID_Calc(&chassis_motor_pid[2], 1.92f, leg_l.phi0) - leg_tp;
+		set.left_leg_angle = -PID_Update(&chassis_motor_pid[2], 1.92f, leg_l.phi0) - leg_tp;
 	}
 	else
 	{
@@ -1104,19 +1104,19 @@ void protection_R(float TP_ctrl_R_input)
 {
 	if (leg_r.phi0 <= 1.22f && (TP_ctrl_R_input >= 0))
 	{
-		set.right_leg_angle = PID_Calc(&chassis_motor_pid[3], 1.22f, leg_r.phi0) + leg_tp;
+		set.right_leg_angle = PID_Update(&chassis_motor_pid[3], 1.22f, leg_r.phi0) + leg_tp;
 	}
 	else if (leg_r.phi0 <= 1.50f && (legpos[RIGHT].dAngle <= -0.1f))
 	{
-		set.right_leg_angle = -PID_Calc(&chassis_motor_pid[3], 1.22f, leg_r.phi0) + leg_tp;
+		set.right_leg_angle = -PID_Update(&chassis_motor_pid[3], 1.22f, leg_r.phi0) + leg_tp;
 	}
 	else if (leg_r.phi0 >= 1.92f && (TP_ctrl_R_input <= 0))
 	{
-		set.right_leg_angle = PID_Calc(&chassis_motor_pid[3], 1.92f, leg_r.phi0) + leg_tp;
+		set.right_leg_angle = PID_Update(&chassis_motor_pid[3], 1.92f, leg_r.phi0) + leg_tp;
 	}
 	else if (leg_r.phi0 >= 1.64f && (legpos[RIGHT].dAngle >= 0.1f))
 	{
-		set.right_leg_angle = -PID_Calc(&chassis_motor_pid[3], 1.92f, leg_r.phi0) + leg_tp;
+		set.right_leg_angle = -PID_Update(&chassis_motor_pid[3], 1.92f, leg_r.phi0) + leg_tp;
 	}
 	else
 	{
@@ -1143,12 +1143,12 @@ void chassis_VMC_pid(Chassis_t *ch)
 	leftforce_test = (ch->rc_data.rc.ch[L_Y] * 0.01f) / 66 + 0.13f;
 	lefttp_test = kk + (ch->rc_data.rc.ch[L_X] * kk) / 660;
 	righttp_test = kk + (ch->rc_data.rc.ch[L_X] * kk) / 660;
-	leg_tp = PID_Calc(&chassis_motor_pid[TP_PID], 0.0f, legpos[LEFT].angle - legpos[RIGHT].angle);
+	leg_tp = PID_Update(&chassis_motor_pid[TP_PID], 0.0f, legpos[LEFT].angle - legpos[RIGHT].angle);
 
-	set.left_length = PID_Calc(&chassis_motor_pid[0], leftforce_test, legpos[LEFT].length);
-	set.right_length = PID_Calc(&chassis_motor_pid[1], leftforce_test, legpos[RIGHT].length);
-	set.left_leg_angle = PID_Calc(&chassis_motor_pid[2], lefttp_test, legpos[LEFT].angle) - leg_tp;
-	set.right_leg_angle = PID_Calc(&chassis_motor_pid[3], righttp_test, legpos[RIGHT].angle) + leg_tp;
+	set.left_length = PID_Update(&chassis_motor_pid[0], leftforce_test, legpos[LEFT].length);
+	set.right_length = PID_Update(&chassis_motor_pid[1], leftforce_test, legpos[RIGHT].length);
+	set.left_leg_angle = PID_Update(&chassis_motor_pid[2], lefttp_test, legpos[LEFT].angle) - leg_tp;
+	set.right_leg_angle = PID_Update(&chassis_motor_pid[3], righttp_test, legpos[RIGHT].angle) + leg_tp;
 
 	protection(ch->rc_data.rc.ch[L_X]);
 
