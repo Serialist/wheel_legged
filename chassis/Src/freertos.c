@@ -29,7 +29,6 @@
 
 #include "chassis_task.h"
 #include "INS_task.h"
-#include "current_task.h"
 #include "update_task.h"
 /* USER CODE END Includes */
 
@@ -40,7 +39,6 @@
 //osThreadId detect_handle;
 osThreadId testHandle;
 osThreadId chassisTaskHandle;
-osThreadId currentTaskHandle;
 osThreadId imuTaskHandle;
 osThreadId updateTaskHandle;
 
@@ -68,7 +66,7 @@ osThreadId updateTaskHandle;
 /* USER CODE END FunctionPrototypes */
 
 void test_task(void const * argument);
-void update_task(void const * argument);
+void Update_Task(void const * argument);
 extern void INS_task(void const * argument); 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -138,14 +136,11 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
 	
-	osThreadDef(updateTask, update_task,osPriorityHigh, 0, 512);
+	osThreadDef(updateTask, Update_Task,osPriorityHigh, 0, 512);
   updateTaskHandle = osThreadCreate(osThread(updateTask), NULL);
 	
 	osThreadDef(chassisTask, chassis_task,osPriorityHigh, 0, 512);
   chassisTaskHandle = osThreadCreate(osThread(chassisTask), NULL);
-	
-	osThreadDef(currentTask, current_task, osPriorityNormal, 0, 512);
-  currentTaskHandle = osThreadCreate(osThread(currentTask), NULL);
 
   osThreadDef(imuTask, INS_task, osPriorityRealtime, 0, 1024);
   imuTaskHandle = osThreadCreate(osThread(imuTask), NULL);

@@ -5,11 +5,7 @@
 #include "pid.h"
 #include "INS_task.h"
 #include <math.h>
-#include "leg_conv_1.h"
-#include "leg_spd_1.h"
-#include "leg_pos_1.h"
-#include "LQR_K.h"
-#include "DM_VMC_test.h"
+#include "vmc.h"
 
 extern Chassis_t chassis;
 extern struct Wheel_Leg_Target set;
@@ -19,18 +15,18 @@ static int32_t last_pos = 0; // 唯一状态变量
 float v;
 /**********  函数声明 开始 *************/
 void chassis_sys_calc(Chassis_t *ch);
-void phase_update(Chassis_t *ch);
+void Phase_Update(Chassis_t *ch);
 float GetSpeed(float current_pos);
 /**********  函数声明 结束 *************/
 
-void update_task(void const *argument)
+void Update_Task(void const *argument)
 {
 
   while (1)
   {
     vTaskDelay(pdMS_TO_TICKS(3));
     chassis_sys_calc(&chassis);
-    phase_update(&chassis);
+    Phase_Update(&chassis);
     osDelay(1);
   }
 }

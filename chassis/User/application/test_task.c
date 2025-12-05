@@ -17,7 +17,7 @@
 #include "bsp_buzzer.h"
 #include "remote_control.h"
 #include "kalman_filter.h"
-#include "DM_VMC_test.h"
+#include "vmc.h"
 #include "bsp_can.h"
 #include "chassismotor.h"
 #include "bsp_buzzer.h"

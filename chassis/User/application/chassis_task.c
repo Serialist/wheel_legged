@@ -33,12 +33,8 @@
 #include <math.h>
 #include "bsp_dwt.h"
 #include "remote_control.h"
-#include "leg_conv_1.h"
-#include "leg_spd_1.h"
-#include "leg_pos_1.h"
-#include "LQR_K.h"
 #include "user_lib.h"
-#include "DM_VMC_test.h"
+#include "vmc.h"
 #include "can.h"
 #include "debug.h"
 #include "filter.h"
@@ -100,7 +96,7 @@ float motor_test_speed = 0;
 
 /* ================================================================ proto ================================================================*/
 
-static void ChassisInit(void);
+static void Chassis_Init(void);
 
 static void Fdb_Update(Chassis_t *ch);
 static void chassis_torque_sent(Chassis_t *ch);
@@ -129,9 +125,10 @@ void chassis_task(void const *argument)
 {
 	/* ================================ 初始化 ================================ */
 
-	ChassisInit();
-	VMC_init(&leg_l);
-	VMC_init(&leg_r);
+	Chassis_Init();
+
+	VMC_Init(&leg_l);
+	VMC_Init(&leg_r);
 
 	// 等待整车初始化完成
 	while (chassis.robo_status.status == ROBO_STATUS_INIT)
@@ -151,18 +148,18 @@ void chassis_task(void const *argument)
 
 		if (chassis.robo_status.status == ROBO_STATUS_STAND)
 		{
-			standphase(&chassis);
+			standphase(&chassis); // 起立过程
 		}
 
-		balancephase(&chassis);
+		balancephase(&chassis); // 平衡处理
 		// balancephase_one_rod(&chassis);
 
-		Safe_Control(&chassis);
+		Safe_Control(&chassis); // 安全控制
 
 		/* ================================ 发送数据 ================================  */
 
-		chassis_torque_sent(&chassis);
-		C2G_Transmit(&yaw_data);
+		chassis_torque_sent(&chassis); // 底盘电机发送
+		C2G_Transmit(&yaw_data);	   // 云底通信
 
 		osDelay(1);
 	}
@@ -170,7 +167,7 @@ void chassis_task(void const *argument)
 
 //************************基础控制器*********************************/
 // 系统初始化
-static void ChassisInit(void)
+static void Chassis_Init(void)
 {
 	// 腿部运动PID初始化
 	// 腿长PID左
@@ -324,7 +321,7 @@ void chassis_sys_calc(Chassis_t *ch)
 	VMC_calc_1(&leg_r, &chassis, 3.0f / 1000.0f);
 }
 
-void phase_update(Chassis_t *ch)
+void Phase_Update(Chassis_t *ch)
 {
 	ch->st.phi = ch->IMU_DATA.pitch;
 	ch->st.dPhi = ch->IMU_DATA.pitchspd;
@@ -523,6 +520,9 @@ void FloatLimit(float *in, float min, float max)
 	}
 }
 
+float test__ = 0.0f;
+float t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0;
+
 #define GROUND_DETECTION_THRESHOLD 15.0f // threshold 阈值
 /************************
  * @brief 触地检测器 right
@@ -530,21 +530,21 @@ void FloatLimit(float *in, float min, float max)
  * @param ch
  * @return uint8_t 离地 1 触地 0
  ************************/
-float test__ = 0.0f;
 uint8_t Ground_Detection_R(Chassis_t *ch, struct VMC_Leg *leg)
 {
 	my_debug.ground_det.f0r = leg->F0 * arm_cos_f32(leg->theta);
 	my_debug.ground_det.tpr = leg->Tp * arm_sin_f32(leg->theta) / leg->L0;
+	t1 = ch->IMU_DATA.az;
+	t2 = -leg->dd_L0 * arm_cos_f32(leg->theta);
+	t3 = 2.0f * leg->d_L0 * leg->d_theta * arm_sin_f32(leg->theta);
+	t4 = leg->L0 * leg->dd_theta * arm_sin_f32(leg->theta);
+	t5 = leg->L0 * leg->d_theta * leg->d_theta * arm_cos_f32(leg->theta);
 
-	ch->st.FNr = my_debug.ground_det.f0r + my_debug.ground_det.tpr;
+	ch->st.FNr = my_debug.ground_det.f0r +
+				 my_debug.ground_det.tpr +
+				 test__ * (t1 + t2 + t3 + t4 + t5);
 
 	ch->st.FNr = Filter_Average_Update(&ground_detection_filter_r, ch->st.FNr);
-
-	//  0.6f * (-ch->IMU_DATA.az -
-	// 		 leg->dd_L0 * arm_cos_f32(leg->theta) +
-	// 		 2.0f * leg->d_L0 * leg->d_theta * arm_sin_f32(leg->theta) +
-	// 		 leg->L0 * leg->dd_theta * arm_sin_f32(leg->theta) +
-	// 		 leg->L0 * leg->d_theta * leg->d_theta * arm_cos_f32(leg->theta));
 
 	return (ch->st.FNr < GROUND_DETECTION_THRESHOLD) ? 1 : 0;
 }
@@ -560,15 +560,15 @@ uint8_t Ground_Detection_L(Chassis_t *ch, struct VMC_Leg *leg)
 	my_debug.ground_det.f0l = leg->F0 * arm_cos_f32(leg->theta);
 	my_debug.ground_det.tpl = leg->Tp * arm_sin_f32(leg->theta) / leg->L0;
 
-	ch->st.FNl = my_debug.ground_det.f0l + my_debug.ground_det.tpl;
+	ch->st.FNl = my_debug.ground_det.f0l +
+				 my_debug.ground_det.tpl +
+				 test__ * (ch->IMU_DATA.az -
+						   leg->dd_L0 * arm_cos_f32(leg->theta) +
+						   2.0f * leg->d_L0 * leg->d_theta * arm_sin_f32(leg->theta) +
+						   leg->L0 * leg->dd_theta * arm_sin_f32(leg->theta) +
+						   leg->L0 * leg->d_theta * leg->d_theta * arm_cos_f32(leg->theta));
 
 	ch->st.FNl = Filter_Average_Update(&ground_detection_filter_l, ch->st.FNl);
-
-	//  0.6f * (-ch->IMU_DATA.az -
-	// 		 leg->dd_L0 * arm_cos_f32(leg->theta) +
-	// 		 2.0f * leg->d_L0 * leg->d_theta * arm_sin_f32(leg->theta) +
-	// 		 leg->L0 * leg->dd_theta * arm_sin_f32(leg->theta) +
-	// 		 leg->L0 * leg->d_theta * leg->d_theta * arm_cos_f32(leg->theta));
 
 	return (ch->st.FNl < GROUND_DETECTION_THRESHOLD) ? 1 : 0;
 }
@@ -672,7 +672,7 @@ void balancephase(Chassis_t *ch)
 
 	/// @brief 核心 LQR 计算，公式 u = - K * x。分左右腿
 
-	if (my_debug.no_above_det_flag != TRUE)
+	if (my_debug.no_above_det_flag != true)
 	{
 		uint8_t i = 0;
 		if (ch->robo_status.flag.above == true)
@@ -684,7 +684,7 @@ void balancephase(Chassis_t *ch)
 				else
 					kx[i] = 0;
 			}
-			my_debug.no_yaw_flag = TRUE;
+			my_debug.no_yaw_flag = true;
 		}
 		else
 		{
@@ -692,7 +692,7 @@ void balancephase(Chassis_t *ch)
 			{
 				kx[i] = KK[i % 6];
 			}
-			my_debug.no_yaw_flag = FALSE;
+			my_debug.no_yaw_flag = false;
 		}
 	}
 
@@ -780,15 +780,8 @@ void balancephase(Chassis_t *ch)
 			tplqrl = lqr_l_[6] + lqr_l_[7];
 			tplqrr = lqr_r_[6] + lqr_r_[7];
 
-			// if (leg_l.L0 >= (set.left_length + 10.0f))
-			// 	fn_forward_l *= -1.5f;
-			// else if (leg_l.L0 < (set.left_length + 10.0f))
-			// 	fn_forward_l = 0;
-
-			// if (leg_r.L0 >= (set.right_length + 10.0f))
-			// 	fn_forward_r *= -1.5f;
-			// else if (leg_r.L0 < (set.right_length + 10.0f))
-			// 	fn_forward_r = 0;
+			fn_forward_l = -10.0f;
+			fn_forward_r = -25.0f;
 		}
 		else
 		{
@@ -802,6 +795,13 @@ void balancephase(Chassis_t *ch)
 	if (ch->robo_status.behavior == ROBO_BX_JUMP)
 	{
 		jumpphase(ch);
+		leg_l.F0 = fn_forward_l +
+				   PID_Update(&chassis_motor_pid[0], set.left_length, leg_l.L0);
+		leg_r.F0 = fn_forward_r +
+				   PID_Update(&chassis_motor_pid[1], set.right_length, leg_r.L0);
+	}
+	else if (ch->robo_status.flag.above == true)
+	{
 		leg_l.F0 = fn_forward_l +
 				   PID_Update(&chassis_motor_pid[0], set.left_length, leg_l.L0);
 		leg_r.F0 = fn_forward_r +

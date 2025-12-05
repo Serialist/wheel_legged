@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F407xx,USE_HAL_DRIVER,STM32F407xx,ARM_MATH_CM4,__FPU_USED=1U,__FPU_PRESENT=1U,__CC_ARM,ARM_MATH_MATRIX_CHECK,ARM_MATH_ROUNDING</Define>
               <Undefine></Undefine>
-              <IncludePath>../Inc;../Drivers/STM32F4xx_HAL_Driver/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;../Middlewares/Third_Party/FreeRTOS/Source/include;../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F;../Drivers/CMSIS/Device/ST/STM32F4xx/Include;../Drivers/CMSIS/Include;..\bsp\boards;..\application;..\components\algorithm;..\components\algorithm\Include;..\components\controller;..\components\devices;..\components\visualization;..\components\leg_control;..\bsp\boards\dwt;..\User\protocol;..\User\utils;..\User\algo;..\User\device</IncludePath>
+              <IncludePath>../Inc;../Drivers/STM32F4xx_HAL_Driver/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;../Middlewares/Third_Party/FreeRTOS/Source/include;../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F;../Drivers/CMSIS/Device/ST/STM32F4xx/Include;../Drivers/CMSIS/Include;..\components\algorithm;..\components\algorithm\Include;..\components\controller;..\components\devices;..\User\bsp;..\User\application;..\User\protocol;..\User\utils;..\User\algo;..\User\device;..\User\module</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -651,141 +651,6 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>board</GroupName>
-          <Files>
-            <File>
-              <FileName>bsp_buzzer.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\bsp\boards\bsp_buzzer.c</FilePath>
-            </File>
-            <File>
-              <FileName>bsp_can.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\bsp\boards\bsp_can.c</FilePath>
-            </File>
-            <File>
-              <FileName>bsp_delay.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\bsp\boards\bsp_delay.c</FilePath>
-            </File>
-            <File>
-              <FileName>bsp_flash.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\bsp\boards\bsp_flash.c</FilePath>
-            </File>
-            <File>
-              <FileName>bsp_imu_pwm.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\bsp\boards\bsp_imu_pwm.c</FilePath>
-            </File>
-            <File>
-              <FileName>bsp_spi.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\bsp\boards\bsp_spi.c</FilePath>
-            </File>
-            <File>
-              <FileName>bsp_adc.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\bsp\boards\bsp_adc.c</FilePath>
-            </File>
-            <File>
-              <FileName>bsp_i2c.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\bsp\boards\bsp_i2c.c</FilePath>
-            </File>
-            <File>
-              <FileName>bsp_usart.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\bsp\boards\bsp_usart.c</FilePath>
-            </File>
-            <File>
-              <FileName>bsp_rc.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\bsp\boards\bsp_rc.c</FilePath>
-            </File>
-            <File>
-              <FileName>bsp_dwt.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\bsp\boards\dwt\bsp_dwt.c</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
-          <GroupName>application</GroupName>
-          <Files>
-            <File>
-              <FileName>INS_task.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\application\INS_task.c</FilePath>
-            </File>
-            <File>
-              <FileName>test_task.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\application\test_task.c</FilePath>
-            </File>
-            <File>
-              <FileName>chassis_task.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\application\chassis_task.c</FilePath>
-            </File>
-            <File>
-              <FileName>current_task.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\application\current_task.c</FilePath>
-            </File>
-            <File>
-              <FileName>remote_control.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\application\remote_control.c</FilePath>
-            </File>
-            <File>
-              <FileName>update_task.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\application\update_task.c</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
-          <GroupName>devices</GroupName>
-          <Files>
-            <File>
-              <FileName>BMI088driver.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\components\devices\BMI088driver.c</FilePath>
-            </File>
-            <File>
-              <FileName>BMI088Middleware.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\components\devices\BMI088Middleware.c</FilePath>
-            </File>
-            <File>
-              <FileName>ist8310driver.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\components\devices\ist8310driver.c</FilePath>
-            </File>
-            <File>
-              <FileName>ist8310driver_middleware.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\components\devices\ist8310driver_middleware.c</FilePath>
-            </File>
-            <File>
-              <FileName>chassismotor.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\components\devices\chassismotor.c</FilePath>
-            </File>
-            <File>
-              <FileName>kalman_filter.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\components\devices\kalman_filter.c</FilePath>
-            </File>
-            <File>
-              <FileName>QuaternionEKF.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\components\devices\QuaternionEKF.c</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
           <GroupName>algorithm</GroupName>
           <Files>
             <File>
@@ -831,6 +696,46 @@
           </Files>
         </Group>
         <Group>
+          <GroupName>devices</GroupName>
+          <Files>
+            <File>
+              <FileName>BMI088driver.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\components\devices\BMI088driver.c</FilePath>
+            </File>
+            <File>
+              <FileName>BMI088Middleware.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\components\devices\BMI088Middleware.c</FilePath>
+            </File>
+            <File>
+              <FileName>ist8310driver.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\components\devices\ist8310driver.c</FilePath>
+            </File>
+            <File>
+              <FileName>ist8310driver_middleware.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\components\devices\ist8310driver_middleware.c</FilePath>
+            </File>
+            <File>
+              <FileName>chassismotor.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\components\devices\chassismotor.c</FilePath>
+            </File>
+            <File>
+              <FileName>kalman_filter.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\components\devices\kalman_filter.c</FilePath>
+            </File>
+            <File>
+              <FileName>QuaternionEKF.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\components\devices\QuaternionEKF.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
           <GroupName>controller</GroupName>
           <Files>
             <File>
@@ -841,32 +746,32 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>leg_control</GroupName>
+          <GroupName>User/application</GroupName>
           <Files>
             <File>
-              <FileName>leg_spd_1.c</FileName>
+              <FileName>chassis_task.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\components\leg_control\leg_spd_1.c</FilePath>
+              <FilePath>..\User\application\chassis_task.c</FilePath>
             </File>
             <File>
-              <FileName>LQR_K.c</FileName>
+              <FileName>remote_control.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\components\leg_control\LQR_K.c</FilePath>
+              <FilePath>..\User\application\remote_control.c</FilePath>
             </File>
             <File>
-              <FileName>leg_conv_1.c</FileName>
+              <FileName>test_task.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\components\leg_control\leg_conv_1.c</FilePath>
+              <FilePath>..\User\application\test_task.c</FilePath>
             </File>
             <File>
-              <FileName>leg_pos_1.c</FileName>
+              <FileName>update_task.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\components\leg_control\leg_pos_1.c</FilePath>
+              <FilePath>..\User\application\update_task.c</FilePath>
             </File>
             <File>
-              <FileName>DM_VMC_test.c</FileName>
+              <FileName>INS_task.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\components\leg_control\DM_VMC_test.c</FilePath>
+              <FilePath>..\User\application\INS_task.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -927,6 +832,71 @@
               <FileName>chassis.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\User\module\chassis.c</FilePath>
+            </File>
+            <File>
+              <FileName>vmc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\module\vmc.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>User/bsp</GroupName>
+          <Files>
+            <File>
+              <FileName>bsp_adc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\bsp\bsp_adc.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_buzzer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\bsp\bsp_buzzer.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_can.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\bsp\bsp_can.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_delay.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\bsp\bsp_delay.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_flash.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\bsp\bsp_flash.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_i2c.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\bsp\bsp_i2c.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_imu_pwm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\bsp\bsp_imu_pwm.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_rc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\bsp\bsp_rc.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_spi.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\bsp\bsp_spi.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_usart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\bsp\bsp_usart.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_dwt.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\bsp\bsp_dwt.c</FilePath>
             </File>
           </Files>
         </Group>
