@@ -1,3 +1,15 @@
+/************************
+ * @file gimbal_task.c
+ * @author Serialist (ba3pt@chd.edu.cn)
+ * @brief
+ * @version 0.1.0
+ * @date 2025-12-05
+ *
+ * @copyright Copyright (c) Serialist 2025
+ *
+ ************************/
+
+/* ================================================================ include ================================================================*/
 
 // 系统层
 #include "main.h"
@@ -7,10 +19,12 @@
 #include "arm_math.h"
 #include "AHRS_MiddleWare.h"
 #include "cmsis_os.h"
+
 // 外设层
 #include "iwdg.h"
 #include "usart.h"
 #include "can.h"
+
 // 数学运算层
 #include "user_lib.h"
 #include "constrain_calc.h"
@@ -18,6 +32,7 @@
 #include "average_filter.h"
 #include "kalman_filter.h"
 #include "pid.h"
+
 // 应用硬件层
 #include "bsp_buzzer.h"
 #include "bsp_delay.h"
@@ -26,13 +41,20 @@
 #include "bsp_referee.h"
 #include "usbd_cdc_if.h"
 #include "remote_control.h"
+
 // 任务层
 #include "vision.h"
 #include "INS_task.h"
 #include "shoot_task.h"
 #include "INS_task.h"
 #include "gimbal_task.h"
-/*********************************************************/
+
+/* ================================================================ macro ================================================================*/
+
+/* ================================================================ typedef ================================================================*/
+
+/* ================================================================ variable ================================================================*/
+
 Gimbal_t gimbal;		   // 云台数据大结构体
 remote_data_t New_Rc_Data; // 2025赛季RM官方提供的新遥控器数据结构体
 Referee_info_t Gimbal_REF; // 云台裁判系统结构体
@@ -66,7 +88,8 @@ median_Ave_type_def_t M_Ave;
 median_Ave_type_def_t M_pitch_stab_Ave;
 // 各种均值和均值中位数滤波初始化
 
-/*********************************************************/
+/* ================================================================ prototype ================================================================*/
+
 static void GimbalInit(Gimbal_t *gimbal_init);
 static void GetDataFdb(Gimbal_t *gimbal_fdb);
 static void GimbalModeSet(Gimbal_t *gimbal_mode_set);
@@ -81,7 +104,8 @@ static void pidCalc(Gimbal_t *pid_calc, Axis_e axis);
 static void sentChassis(void);
 void AGV_speed_set(Gimbal_t *speed_set);
 void Key_Press(void);
-/*********************************************************/
+
+/* ================================================================ function ================================================================*/
 
 void gimbal_task(void const *pvParameters)
 {
@@ -125,9 +149,12 @@ void gimbal_task(void const *pvParameters)
 		osDelay(1);
 	}
 }
-/*****************************GimbalInit*******************************************/
 
-//****************云台初始化*****************//
+/************************
+ * @brief 云台初始化
+ *
+ * @param gimbal_init
+ ************************/
 static void GimbalInit(Gimbal_t *gimbal_init)
 {
 	fp32 PID[3];
@@ -192,9 +219,12 @@ static void GimbalInit(Gimbal_t *gimbal_init)
 	PID[2] = FOLLOW_PID_KD;
 	PID_init(&follow_pid, PID_POSITION, PID, FOLLOW_PID_MAX_OUT, FOLLOW_PID_MAX_IOUT);
 }
-//****************云台初始化*****************//
 
-//*******获取各种数据***********//
+/************************
+ * @brief 获取各种数据
+ *
+ * @param gimbal_fdb
+ ************************/
 static void GetDataFdb(Gimbal_t *gimbal_fdb)
 {
 
@@ -239,8 +269,12 @@ static void GetDataFdb(Gimbal_t *gimbal_fdb)
 	Get_New_Rc_data(&New_Rc_Data);
 	Get_vision_Data(&(gimbal_fdb->vision));
 }
-//*******???????????***********//
 
+/************************
+ * @brief 获取模式
+ *
+ * @param gimbal_mode_set
+ ************************/
 static void GimbalModeSet(Gimbal_t *gimbal_mode_set)
 {
 	// P轴和Y轴模式切换和模式赋值
@@ -293,12 +327,14 @@ static void GimbalModeSet(Gimbal_t *gimbal_mode_set)
 			gimbal_mode_set->chassis_mode = CHASSIS_FOLLOW_GIMBAL_MODE;
 		}
 	}
-	//***********?????????***********//
 }
 
 float absolte_angle_zero[3] = {0};
-
-//*******控制整车模式切换******//
+/************************
+ * @brief 控制整车模式切换
+ *
+ * @param mode_change
+ ************************/
 static void GimbalModeChangeControlTransit(Gimbal_t *mode_change)
 {
 
@@ -345,9 +381,12 @@ static void GimbalModeChangeControlTransit(Gimbal_t *mode_change)
 		mode_change->angle.absolute_set[YAW] = mode_change->angle.absolute_fdb[YAW];
 	}
 }
-//*******控制整车模式切换******//
 
-// 根据模式的不同，在不同模式下选择不同增量值//
+/************************
+ * @brief 根据模式的不同，在不同模式下选择不同增量值
+ *
+ * @param angle_set
+ ************************/
 static void PitchAngleRefSet(Gimbal_t *angle_set)
 {
 	float add_angle = 0;
@@ -375,7 +414,11 @@ static void PitchAngleRefSet(Gimbal_t *angle_set)
 	}
 }
 
-// 根据模式的不同，在不同模式下选择不同增量值//
+/************************
+ * @brief 根据模式的不同，在不同模式下选择不同增量值
+ *
+ * @param angle_set
+ ************************/
 static void YawAngleRefSet(Gimbal_t *angle_set)
 {
 	float add_angle = 0.0f;
@@ -402,10 +445,11 @@ static void YawAngleRefSet(Gimbal_t *angle_set)
 	}
 }
 
-//
-// 在不同模式下选择的计算方式不同，但其实具体的选择在其下层函数pidCalc(pitch_pid_calc, PITCH)已有体现
-//
-//
+/************************
+ * @brief 在不同模式下选择的计算方式不同，但其实具体的选择在其下层函数pidCalc(pitch_pid_calc, PITCH)已有体现
+ *
+ * @param pitch_pid_calc
+ ************************/
 
 static void PitchPidCalc(Gimbal_t *pitch_pid_calc)
 {
@@ -426,10 +470,12 @@ static void PitchPidCalc(Gimbal_t *pitch_pid_calc)
 		pidCalc(pitch_pid_calc, PITCH);
 	}
 }
-//
-// 在不同模式下选择的计算方式不同，但其实具体的选择在其下层函数pidCalc(yaw_pid_calc, YAW);, PITCH)已有体现
-//
-//
+
+/************************
+ * @brief 在不同模式下选择的计算方式不同，但其实具体的选择在其下层函数pidCalc(pitch_pid_calc, PITCH)已有体现
+ *
+ * @param yaw_pid_calc
+ ************************/
 
 static void YawPidCalc(Gimbal_t *yaw_pid_calc)
 {
@@ -452,10 +498,12 @@ static void YawPidCalc(Gimbal_t *yaw_pid_calc)
 	}
 }
 
-//
-// 给PITCH设定值增量的函数,具体的增量是什么依赖上层的函数
-// 增量式的设定值，加到absolute_set里面
-//
+/************************
+ * @brief 给PITCH设定值增量的函数,具体的增量是什么依赖上层的函数，增量式的设定值，加到absolute_set里面
+ *
+ * @param pitch
+ * @param add
+ ************************/
 static void addPitchAngle(Gimbal_t *pitch, float add)
 {
 	// 用IMU解算的pitch轴角度值做电控限位
@@ -513,10 +561,12 @@ static void addPitchAngle(Gimbal_t *pitch, float add)
 	}
 }
 
-//
-// 给YAW设定值的函数，具体的增量是什么依赖上层的函数
-// 增量式的设定值，加到absolute_set里面
-//
+/************************
+ * @brief 给YAW设定值的函数，具体的增量是什么依赖上层的函数，增量式的设定值，加到absolute_set里面
+ *
+ * @param yaw
+ * @param add
+ ************************/
 static void addYawAngle(Gimbal_t *yaw, float add)
 {
 	if (yaw->motor_mode[YAW] == ABSOLUTE_MODE)
@@ -539,6 +589,12 @@ static void addYawAngle(Gimbal_t *yaw, float add)
 }
 
 uint8_t turn_round_flag;
+/************************
+ * @brief pid计算函数
+ *
+ * @param pid_calc
+ * @param axis
+ ************************/
 static void pidCalc(Gimbal_t *pid_calc, Axis_e axis)
 {
 	float angle_set = 0.0f;
@@ -636,17 +692,21 @@ static void pidCalc(Gimbal_t *pid_calc, Axis_e axis)
 		}
 	}
 }
-/*
-函数作用：根据云台模式和遥控器或键盘的控制信息解算出底盘此时三个方向（XYW）的速度值
 
-函数说明：
-  开小陀螺的时候旋转矩阵不断变化,会有以下影响
-1.斜坡函数的加速度要给大，如果给太小还没加速完旋转矩阵已经变了，运动起来就会和正方向有很大的偏差
-2.要给用编码器解算的角度加一个前馈量，因为编码器给的值传输速率低，如果小陀螺转速大，
-当前解算的角度到传给电机时角度已经又增大了，所以加一个固定值补偿，该值应与转速和前进速度成某种关系，
-2025赛季并未仔细测量，只是给一个固定值。
-*/
 float angle_kff = 8;
+/************************
+ * @brief 根据云台模式和遥控器或键盘的控制信息解算出底盘此时三个方向（XYW）的速度值
+ *
+ * @param speed_set
+ *
+ * @note
+ * 开小陀螺的时候旋转矩阵不断变化,会有以下影响
+ *
+ * 1. 斜坡函数的加速度要给大，如果给太小还没加速完旋转矩阵已经变了，运动起来就会和正方向有很大的偏差
+ * 2. 要给用编码器解算的角度加一个前馈量，因为编码器给的值传输速率低，如果小陀螺转速大，
+ *    当前解算的角度到传给电机时角度已经又增大了，所以加一个固定值补偿，该值应与转速和前进速度成某种关系，
+ *    2025赛季并未仔细测量，只是给一个固定值。
+ ************************/
 void AGV_speed_set(Gimbal_t *speed_set)
 {
 
@@ -767,6 +827,13 @@ void AGV_speed_set(Gimbal_t *speed_set)
 	}
 }
 
+/************************
+ * @brief 新遥控器模式
+ *
+ * @param sw_label
+ * @param new_rc_sw_flag
+ * @param new_rc_sw_state
+ ************************/
 void new_rc_sw_press(uint64_t sw_label, uint8_t new_rc_sw_flag, uint8_t new_rc_sw_state)
 {
 	if (sw_label == 1)
@@ -787,6 +854,13 @@ void new_rc_sw_press(uint64_t sw_label, uint8_t new_rc_sw_flag, uint8_t new_rc_s
 	}
 }
 
+/************************
+ * @brief 按键模式
+ *
+ * @param Key_label
+ * @param key_press_flag
+ * @param key_press_state
+ ************************/
 void key_mode_press(uint16_t Key_label, uint8_t key_press_flag, uint8_t key_press_state)
 {
 	if (((gimbal.rc_data.key.v & Key_label) > 0) || ((Gimbal_REF.RemoteControl.keyboard_value & Key_label) > 0))
@@ -807,7 +881,10 @@ void key_mode_press(uint16_t Key_label, uint8_t key_press_flag, uint8_t key_pres
 	}
 }
 
-// 类别只有两种，第一个是DT7映射的键鼠，另一个是裁判系统映射的键鼠，新图传上的按键是和上面两个类别分开的
+/************************
+ * @brief 类别只有两种，第一个是DT7映射的键鼠，另一个是裁判系统映射的键鼠，新图传上的按键是和上面两个类别分开的
+ *
+ ************************/
 void Key_Press(void)
 {
 	key_mode_press(KEY_PRESSED_OFFSET_Q, gimbal.key_press_flag[key_Q], gimbal.key_state[key_Q]); // 枪口热量控制
@@ -821,19 +898,22 @@ void Key_Press(void)
 	//	  new_rc_sw_press(New_Rc_Data.fn_2,gimbal.new_rc_sw_flag[fr_2],gimbal.new_rc_sw_state[fr_2]);
 	//    new_rc_sw_press(New_Rc_Data.Pause,gimbal.new_rc_sw_flag[Pause],gimbal.new_rc_sw_state[Pause]);
 }
-/*
-函数作用：刷新看门狗，2025赛季已配置但未使用
-函数说明：
-*/
+
+/************************
+ * @brief 刷新看门狗，2025赛季已配置但未使用
+ *
+ ************************/
 void robot_iwdg_reset(void)
 {
 	HAL_IWDG_Refresh(&hiwdg);
 }
 
-/*
-函数作用：发送底盘控制数据，包括各种标志位和控制标志位，YAW轴电流和YAW轴和PITCH轴编码器角度值
-函数说明：发送所有标志位只用一个八位的数据，因为标志位只有零和一两种状态，则用位运算将他们合在一个八位数据发送
-*/
+/************************
+ * @brief 发送底盘控制数据，包括各种标志位和控制标志位，YAW轴电流和YAW轴和PITCH轴编码器角度值
+ *
+ * @note
+ * 发送所有标志位只用一个八位的数据，因为标志位只有零和一两种状态，则用位运算将他们合在一个八位数据发送
+ ************************/
 static void sentChassis()
 {
 	static fp32 temp_gimbal_angle[2];
@@ -907,16 +987,31 @@ static void sentChassis()
 	HAL_CAN_AddTxMessage(&hcan2, &tx_message, gimbal_data, &send_mail_box);
 }
 
-// 获取按键E是否按下，按键E控制摩擦轮的状态
+/************************
+ * @brief 获取按键E是否按下，按键E控制摩擦轮的状态
+ *
+ * @param FR_State
+ ************************/
 void Get_FR_State(uint8_t *FR_State)
 {
 	*FR_State = (gimbal.key_state[key_E]);
 }
 
+/************************
+ * @brief 新图传上的按键E是否按下，按键E控制摩擦轮的状态
+ *
+ * @param FR_State
+ ************************/
 void Get_New_rc_FR_State(uint8_t *FR_State)
 {
 	*FR_State = (gimbal.new_rc_sw_state[fr_1]);
 }
+
+/************************
+ * @brief 蜂鸣器
+ *
+ * @param buzzer_det
+ ************************/
 void Cali_buzzer(Gimbal_t *buzzer_det)
 {
 	if (!buzzer_det->Cali_flag)

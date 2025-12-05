@@ -1394,7 +1394,7 @@
 
   <Group>
     <GroupName>User/module</GroupName>
-    <tvExp>0</tvExp>
+    <tvExp>1</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <RteFlg>0</RteFlg>
@@ -1405,8 +1405,8 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\User\module\chassis.c</PathWithFileName>
-      <FilenameWithoutPath>chassis.c</FilenameWithoutPath>
+      <PathWithFileName>..\User\module\vmc.c</PathWithFileName>
+      <FilenameWithoutPath>vmc.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>
@@ -1417,8 +1417,8 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\User\module\vmc.c</PathWithFileName>
-      <FilenameWithoutPath>vmc.c</FilenameWithoutPath>
+      <PathWithFileName>..\User\module\robo_behavior.c</PathWithFileName>
+      <FilenameWithoutPath>robo_behavior.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>

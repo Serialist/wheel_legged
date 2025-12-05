@@ -829,14 +829,14 @@
           <GroupName>User/module</GroupName>
           <Files>
             <File>
-              <FileName>chassis.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\User\module\chassis.c</FilePath>
-            </File>
-            <File>
               <FileName>vmc.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\User\module\vmc.c</FilePath>
+            </File>
+            <File>
+              <FileName>robo_behavior.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\module\robo_behavior.c</FilePath>
             </File>
           </Files>
         </Group>
