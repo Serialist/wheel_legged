@@ -39,7 +39,7 @@
 #include "debug.h"
 #include "filter.h"
 #include "motor.h"
-#include "c2g.h"
+#include "gimbal_chassis_comm.h"
 
 /* ================================================================ macro ================================================================*/
 

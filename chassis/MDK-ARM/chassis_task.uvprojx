@@ -789,9 +789,9 @@
               <FilePath>..\User\protocol\fsi6.c</FilePath>
             </File>
             <File>
-              <FileName>c2g.c</FileName>
+              <FileName>gimbal_chassis_comm.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\User\protocol\c2g.c</FilePath>
+              <FilePath>..\User\protocol\gimbal_chassis_comm.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -802,6 +802,16 @@
               <FileName>debug.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\User\utils\debug.c</FilePath>
+            </File>
+            <File>
+              <FileName>fsm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\utils\fsm.c</FilePath>
+            </File>
+            <File>
+              <FileName>register.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\utils\register.c</FilePath>
             </File>
           </Files>
         </Group>
