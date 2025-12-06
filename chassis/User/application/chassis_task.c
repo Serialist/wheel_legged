@@ -101,7 +101,6 @@ static uint8_t Ground_Detection_L(Chassis_t *ch, struct VMC_Leg *leg);
 static uint8_t Ground_Detection_R(Chassis_t *ch, struct VMC_Leg *leg);
 static void Safe_Control(Chassis_t *ch);
 static void Get_Order(Chassis_t *ch);
-static void FloatLimit(float *in, float min, float max);
 static void LQR_K_Calc(float k[2][6], float coe[12][4], float len);
 static void Motor_Init(void);
 
@@ -404,9 +403,9 @@ void Get_Order(Chassis_t *ch)
 		{
 			ch->robo_status.behavior = ROBO_BX_NORMAL;
 
-			set.speed_cmd = ch->rc_data.rc.ch[L_Y] * REMOTE_CHANNLE_TO_CHASSIS_SPEED;						// 目标速度
-			set.yaw += -ch->rc_data.rc.ch[L_X] * REMOTE_CHANNLE_TO_CHASSIS_SPEED;							// 目标 yaw
-			set.left_length = set.right_length = MAX((ch->rc_data.rc.ch[R_Y] * 0.01f) / 66 + 0.15f, 0.10f); // 目标腿长
+			set.speed_cmd = ch->rc_data.rc.ch[L_Y] * REMOTE_CHANNLE_TO_CHASSIS_SPEED;								 // 目标速度
+			set.yaw += -ch->rc_data.rc.ch[L_X] * REMOTE_CHANNLE_TO_CHASSIS_SPEED;									 // 目标 yaw
+			set.left_length = set.right_length = LIMIT((ch->rc_data.rc.ch[R_Y] * 0.01f) / 66 + 0.15f, 0.10f, 0.35f); // 目标腿长
 
 			// 行进时不关注位置
 			if (set.speed_cmd != 0)
@@ -450,19 +449,6 @@ void Safe_Control(Chassis_t *ch)
 		{
 			Motor_Init();
 		}
-	}
-}
-
-// 限幅
-void FloatLimit(float *in, float min, float max)
-{
-	if (*in < min)
-	{
-		*in = min;
-	}
-	else if (*in > max)
-	{
-		*in = max;
 	}
 }
 
@@ -559,19 +545,22 @@ float fn_forward_l = 0;
 /// @date 2025-11-28 11:55 20:12
 /// @date 2025-11-29 23:10
 /// @date 2025-12-06 16:30 19:11
+/// @date 2025-12-06 21:29
+/// @date 2025-12-06 22:05
+/// @date 2025-12-06 22:42
 float lqr_coe[12][4] = {
-	{-60.102164429241427, -135.336838024192190, 365.401729878159188, -1.352984453596531},
-	{162.678884906536808, -386.299454939575526, 241.371655817494599, -4.701803616665175},
-	{-5.297166239241865, -45.524561610593871, 78.472353164422941, -0.137454844301961},
-	{15.151238573656430, -28.758565969855209, -9.041951740703862, -0.636586468493063},
-	{1.811736504047578, -181.420076346488088, 407.005897925769204, -4.690985791418420},
-	{145.414613249041111, -537.966375622524538, 645.878073291700048, -9.935791229472974},
-	{9.703878284184221, -165.635608496121392, 341.273566601903326, -4.658446964784035},
-	{119.953290862918493, -473.827511470626689, 613.744848396480847, -7.757476637421235},
-	{-144.564075084140086, 44.923935425378687, 179.915264837359501, 62.631290142139058},
-	{413.129456531893879, -832.942458085625162, 589.680433053138700, 63.858246242459622},
-	{-11.984807223437270, 41.078016756888623, -65.749740600472919, 4.833366052227232},
-	{-0.795700903768118, 50.507864824261482, -93.725683794450518, 5.560546977999910}};
+	{-231.227889580588311, 496.052364399720318, -455.571668472231579, 2.235341858052133},
+	{357.996901499281421, -1592.184420514264957, 2253.054824659212954, -0.581959965234939},
+	{-12.702365836943169, -14.729889797149809, 28.739422469544760, -0.257575788263792},
+	{20.112293197641542, -63.243564959912852, 50.508720757417720, -1.404318419529429},
+	{12.687996287527939, -163.914838645566306, 338.098195378229775, -10.094268887983841},
+	{269.991032729346102, -1121.021491261677966, 1576.994028918450113, -20.924321587473020},
+	{47.345270685277868, -260.367539778938692, 445.895043070423185, -13.983102484486301},
+	{319.985169271764676, -1377.507002019784977, 2015.714369992829006, -24.795520003208821},
+	{-206.365336666372599, 231.590465146013713, -10.250115776995870, 68.981224479666409},
+	{410.085750976084228, -836.514767363972851, 548.789259352081672, 68.400906049807176},
+	{-23.732802233380880, 73.931652380853620, -103.281845952447199, 7.059871192024643},
+	{-42.895442286669500, 241.462591914458898, -393.569914082211710, 9.207437351524851}};
 
 /***********************************************
  * @brief 平衡行驶过程(左右两腿分别进行LQR运算)
@@ -693,10 +682,10 @@ void balancephase(Chassis_t *ch)
 	/// @brief 限幅
 #define TPLQR_MAX 15.0f
 #define TLQR_MAX 2.5f
-	FloatLimit(&tplqrl, -TPLQR_MAX, TPLQR_MAX);
-	FloatLimit(&tplqrr, -TPLQR_MAX, TPLQR_MAX);
-	FloatLimit(&tlqrl, -TLQR_MAX, TLQR_MAX);
-	FloatLimit(&tlqrr, -TLQR_MAX, TLQR_MAX);
+	tplqrl = LIMIT(tplqrl, -TPLQR_MAX, TPLQR_MAX);
+	tplqrr = LIMIT(tplqrr, -TPLQR_MAX, TPLQR_MAX);
+	tlqrl = LIMIT(tlqrl, -TLQR_MAX, TLQR_MAX);
+	tlqrr = LIMIT(tlqrr, -TLQR_MAX, TLQR_MAX);
 
 	/* ================================ 轮 解算 ================================ */
 
@@ -795,12 +784,12 @@ void balancephase(Chassis_t *ch)
 	/// @brief 限幅
 #define HIP_TORQUE_MAX 15.0f
 #define HUB_TORQUE_MAX 2.5f
-	FloatLimit(&set.set_cal_real[0], -HIP_TORQUE_MAX, HIP_TORQUE_MAX);
-	FloatLimit(&set.set_cal_real[1], -HIP_TORQUE_MAX, HIP_TORQUE_MAX);
-	FloatLimit(&set.set_cal_real[2], -HIP_TORQUE_MAX, HIP_TORQUE_MAX);
-	FloatLimit(&set.set_cal_real[3], -HIP_TORQUE_MAX, HIP_TORQUE_MAX);
-	FloatLimit(&set.set_cal_real[4], -HUB_TORQUE_MAX, HUB_TORQUE_MAX);
-	FloatLimit(&set.set_cal_real[5], -HUB_TORQUE_MAX, HUB_TORQUE_MAX);
+	set.set_cal_real[0] = LIMIT(set.set_cal_real[0], -HIP_TORQUE_MAX, HIP_TORQUE_MAX);
+	set.set_cal_real[1] = LIMIT(set.set_cal_real[1], -HIP_TORQUE_MAX, HIP_TORQUE_MAX);
+	set.set_cal_real[2] = LIMIT(set.set_cal_real[2], -HIP_TORQUE_MAX, HIP_TORQUE_MAX);
+	set.set_cal_real[3] = LIMIT(set.set_cal_real[3], -HIP_TORQUE_MAX, HIP_TORQUE_MAX);
+	set.set_cal_real[4] = LIMIT(set.set_cal_real[4], -HUB_TORQUE_MAX, HUB_TORQUE_MAX);
+	set.set_cal_real[5] = LIMIT(set.set_cal_real[5], -HUB_TORQUE_MAX, HUB_TORQUE_MAX);
 
 	/// @brief 发送
 	ch->ak_set[0].torset = -set.set_cal_real[0];
@@ -820,7 +809,7 @@ uint8_t jump_status = 0;
  ************************/
 void Jump_Phase(Chassis_t *ch)
 {
-	if (ch->robo_status.last_behavior != ROBO_BX_JUMP && ch->robo_status.behavior == ROBO_BX_JUMP)
+	if (ch->robo_status.last_behavior != ROBO_BX_JUMP && ch->robo_status.behavior == ROBO_BX_JUMP && jump_status == 0)
 	{
 		jump_status = 1;
 		chassis_motor_pid[0].Kp = chassis_motor_pid[1].Kp = 1500.0f;

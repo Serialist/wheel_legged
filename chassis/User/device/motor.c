@@ -27,7 +27,7 @@ void Motor_Offline_Detection(struct Motor_Status *motor_status, uint32_t dt)
 
     motor_status->offline_flag = false;
 
-    for (i = 0; i < 4; i++)
+    for (i = 0; i < 6; i++)
     {
         if (motor_status->receive_flag[i] == true)
         {

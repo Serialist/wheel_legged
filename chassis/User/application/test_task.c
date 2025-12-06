@@ -123,48 +123,7 @@ void test_task(void const *argument)
 
   xvEstimateKF_Init(&vaEstimateKF);
 
-  Buzzer_Preset();
-
-  // // 零漂校准计数器初始化
-  // uint32_t zero_drift_calibration_count = 0;
-  // const uint32_t CALIBRATION_SAMPLES = 2000; // 500个样本校准零漂
-
-  // while (1)
-  // {
-  //   uint32_t current_time_ms = HAL_GetTick();
-
-  //   // 速度弥补计算
-  //   // // 右轮
-  //   // current_pos_r = normalize_position(chassis.ak_fdb_ctrl[5].motor_ctrlpos);
-  //   motor_vel_r = calculate_velocity(&vel_calc_r, current_pos_r, current_time_ms);
-  //   // // 左轮
-  //   // current_pos_l = normalize_position(chassis.ak_fdb_ctrl[4].motor_ctrlpos);
-  //   // motor_vel_l = calculate_velocity(&vel_calc_l, current_pos_l, current_time_ms);
-
-  //   // 右轮
-  //   // current_pos_r = DJI_MOTOR_ANGLE(&m3508[0]);
-  //   // 左轮
-  //   motor_vel_r = DJI_MOTOR_SPEED(&m3508[0]);
-  //   // current_pos_l = DJI_MOTOR_ANGLE(&m3508[1]);
-  //   motor_vel_l = DJI_MOTOR_SPEED(&m3508[1]);
-
-  //   // 零漂校准阶段
-  //   if (zero_drift_calibration_count < CALIBRATION_SAMPLES)
-  //   {
-  //     // 累积零漂偏移
-  //     vel_calc_r.zero_drift_offset += motor_vel_r;
-  //     vel_calc_l.zero_drift_offset += motor_vel_l;
-
-  //     zero_drift_calibration_count++;
-  //   }
-  //   // 校准完成后计算平均值
-  //   else if (zero_drift_calibration_count == CALIBRATION_SAMPLES)
-  //   {
-  //     vel_calc_r.zero_drift_offset /= CALIBRATION_SAMPLES;
-  //     vel_calc_l.zero_drift_offset /= CALIBRATION_SAMPLES;
-  //     break;
-  //   }i
-  // }
+  // Buzzer_Preset();
 
   for (i = 0; i < 4000; i += TASK_PERIOD_MS)
   {
