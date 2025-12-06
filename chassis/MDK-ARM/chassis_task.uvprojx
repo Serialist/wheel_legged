@@ -823,6 +823,11 @@
               <FileType>1</FileType>
               <FilePath>..\User\algo\filter.c</FilePath>
             </File>
+            <File>
+              <FileName>misc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\algo\misc.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

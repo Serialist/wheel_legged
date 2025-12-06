@@ -257,44 +257,7 @@ typedef struct
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-enum Robo_Status_Def
-{
-	ROBO_STATUS_INIT,	   // 初始化
-	ROBO_STATUS_RUN,	   // 运行
-	ROBO_STATUS_STOP,	   // 停止
-	ROBO_STATUS_EMERGENCY, // 急停
-	ROBO_STATUS_STAND,
-};
-
-typedef enum Robo_Behavior_Def
-{
-	ROBO_BX_OFF = 0,
-	ROBO_BX_STOP,
-	ROBO_BX_FOLLOW,
-	ROBO_BX_ON_FREE,
-	ROBO_BX_JUMP,
-	ROBO_BX_ABOVE_GROUND,
-	ROBO_BX_DEBUG,
-} Robo_Behavior_Def;
-
-struct Wheel_Leg_Flag
-{
-
-	uint8_t above_left;
-	uint8_t above_right;
-	uint8_t above;
-	uint8_t jump_v_reach;
-};
-
-struct Robo_Status
-{
-	enum Robo_Status_Def status;
-
-	Robo_Behavior_Def last_behavior;
-	Robo_Behavior_Def behavior;
-
-	struct Wheel_Leg_Flag flag;
-};
+#include "robo_behavior.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -365,7 +328,7 @@ struct Wheel_Leg_Target
 	float left_leg_angle, right_leg_angle; // rad 期望达到的目标腿角
 	float set_cal_real[6];
 
-	float v_yaw;
+	float vyaw;
 
 	float mode_state;
 	float rotate_state;

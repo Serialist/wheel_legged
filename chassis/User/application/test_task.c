@@ -94,7 +94,7 @@ float position_increment = 0;
 
 /**************************************************************** proto ****************************************************************/
 
-void phase_update(Chassis_t *ch);
+void Phase_Update(Chassis_t *ch);
 void xvEstimateKF_Init(KalmanFilter_t *EstimateKF);
 void xvEstimateKF_Update(KalmanFilter_t *EstimateKF, float acc, float vel);
 // static float normalize_position(float position);
@@ -109,11 +109,10 @@ void xvEstimateKF_Update(KalmanFilter_t *EstimateKF, float acc, float vel);
  ********************************/
 void test_task(void const *argument)
 {
+  uint32_t i = 0;
   TickType_t xLastWakeTime;
 
-  uint8_t i = 0;
-
-  chassis.robo_status.status = ROBO_STATUS_INIT;
+  chassis.robo_status.status = ROBO_STATE_INIT;
 
   xLastWakeTime = xTaskGetTickCount();
   // µ»¥˝º”ÀŸ∂» ’¡≤
@@ -164,10 +163,10 @@ void test_task(void const *argument)
   //     vel_calc_r.zero_drift_offset /= CALIBRATION_SAMPLES;
   //     vel_calc_l.zero_drift_offset /= CALIBRATION_SAMPLES;
   //     break;
-  //   }
+  //   }i
   // }
 
-  for (i = 0; i < 1000; i += TASK_PERIOD_MS)
+  for (i = 0; i < 4000; i += TASK_PERIOD_MS)
   {
     /// @brief ºÏ≤‚
     RC_Offline_Detection(&rc_ctrl, TASK_PERIOD_MS);
@@ -176,11 +175,11 @@ void test_task(void const *argument)
     /// @brief º±Õ£≈–∂œ
     if (RC_IS_OFFLINE(&rc_ctrl) || MOTOR_IS_OFFLINE(&motor_status) || (chassis.st.thetal >= (PI / 2)) || (chassis.st.thetar >= (PI / 2)))
     {
-      chassis.robo_status.status = ROBO_STATUS_EMERGENCY;
+      chassis.robo_status.status = ROBO_STATE_EMERGENCY;
     }
     else
     {
-      chassis.robo_status.status = ROBO_STATUS_RUN;
+      chassis.robo_status.status = ROBO_STATE_RUN;
     }
 
     osDelayUntil(&xLastWakeTime, TASK_PERIOD_MS);
@@ -229,13 +228,13 @@ void test_task(void const *argument)
     /// @brief º±Õ£≈–∂œ
     if (RC_IS_OFFLINE(&rc_ctrl) || MOTOR_IS_OFFLINE(&motor_status) || (chassis.st.thetal >= (PI / 2)) || (chassis.st.thetar >= (PI / 2)))
     {
-      chassis.robo_status.status = ROBO_STATUS_EMERGENCY;
+      chassis.robo_status.status = ROBO_STATE_EMERGENCY;
     }
 
     /// @brief ◊Û“°∏À‘⁄œ¬ ± ‘Õº ÷∂Øª÷∏¥
-    if (chassis.robo_status.status == ROBO_STATUS_EMERGENCY && chassis.rc_data.rc.s[S_L] == DOWN)
+    if (chassis.robo_status.status == ROBO_STATE_EMERGENCY && chassis.rc_data.rc.s[S_L] == DOWN)
     {
-      chassis.robo_status.status = ROBO_STATUS_RUN;
+      chassis.robo_status.status = ROBO_STATE_RUN;
     }
 
     /// @brief ◊¥Ã¨«Â¡„
