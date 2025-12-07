@@ -1,40 +1,47 @@
 /************************
  * @file fsm.c
  * @author Serialist (ba3pt@chd.edu.cn)
- * @brief 
+ * @brief
  * @version 0.1.0
  * @date 2025-12-05
- * 
+ *
  * @copyright Copyright (c) Serialist 2025
- * 
-************************/
+ *
+ ************************/
 
-/* ================================================================ include ================================================================ */
+/* ================================================================ import ================================================================*/
 
 #include "fsm.h"
 
-/* ================================================================ define ================================================================ */
+/* ================================================================ macro ================================================================*/
 
-/* ================================================================ struct ================================================================ */
+/* ================================================================ typedef ================================================================*/
 
-/* ================================================================ proto ================================================================ */
+/* ================================================================ variable ================================================================*/
 
-/* ================================================================ value ================================================================ */
+/* ================================================================ prototype ================================================================*/
 
-/* ================================================================ function ================================================================ */
-
-/************************************************ fsm ************************************************/
+/* ================================================================ function ================================================================*/
 
 /************************
  * @brief 状态机初始化
  *
  * @param fsm
- * @param root_fsmStatus
+ * @param rootState
+ * @return true
+ * @return false
  ************************/
-void FSM_Init(struct FSM_Core *fsm, struct FSM_Status *root_fsmStatus)
+bool FSM_Init(struct FSM_Core *fsm, struct FSM_State *rootState)
 {
-    fsm->root = root_fsmStatus;
-    fsm->now = root_fsmStatus;
+    if (fsm == NULL || rootState == NULL)
+    {
+        return false;
+    }
+
+    fsm->root = rootState;
+    fsm->now = rootState;
+		
+		return true;
 }
 
 /************************
@@ -46,43 +53,35 @@ void FSM_Init(struct FSM_Core *fsm, struct FSM_Status *root_fsmStatus)
  ************************/
 bool FSM_Execution(struct FSM_Core *fsm)
 {
-    /// @brief 切换任务
-    if (fsm->now == NULL)
+    if (fsm->now == NULL || fsm->now->Procedure == NULL)
     {
         fsm->now = fsm->root;
         return false;
     }
-    fsm->now = fsm->now->next;
 
-    /// @brief 执行任务
-    if (fsm->now->Procedure == NULL)
-    {
-        fsm->now = fsm->root;
-        return false;
-    }
-    fsm->now->Procedure();
+    fsm->now = fsm->now->next; // 切换任务
+    fsm->now->Procedure();     // 执行任务
 
     return true;
 }
 
-/************************************************ status ************************************************/
-
 /************************
  * @brief 状态初始化
  *
- * @param status
+ * @param state
  * @param Procedure
  * @return true
  * @return false
  ************************/
-bool FSM_Status_Init(struct FSM_Status *status, FSM_Status_Procedure_t Procedure)
+bool FSM_State_Init(struct FSM_State *state, void (*Procedure)(void))
 {
-    if (status == NULL || Procedure == NULL)
+    if (state == NULL || Procedure == NULL)
     {
         return false;
     }
 
-    status->Procedure = Procedure;
-    status->next = status;
+    state->Procedure = Procedure;
+    state->next = state;
+
     return true;
 }

@@ -199,10 +199,8 @@ void test_task(void const *argument)
     /// @brief ×´Ì¬ÇåÁã
     if (chassis.rc_data.rc.s[S_L] == MID)
     {
-      chassis.st.x_filter = 0;
-      set.position_set = 0;
-      total_yaw = 0;
-      set.yaw = 0;
+      set.position_set = chassis.st.x_filter;
+      set.yaw = total_yaw;
     }
 
     /* ================================================================ / °²È«¼ì²â ================================================================ */

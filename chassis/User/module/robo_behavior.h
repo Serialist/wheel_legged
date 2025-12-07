@@ -41,6 +41,7 @@ enum Robo_Behavior
     ROBO_BX_NONE = 0,
     ROBO_BX_OFF,
     ROBO_BX_STOP,
+    ROBO_BX_NORMAL_O,
     ROBO_BX_NORMAL,
     ROBO_BX_JUMP,
     ROBO_BX_STAND,
