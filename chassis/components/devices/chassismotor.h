@@ -1,12 +1,12 @@
-#ifndef __CHASSISMOTOR_H__
-#define __CHASSISMOTOR_H__
+#ifndef __CHASSISMOTOR_H
+#define __CHASSISMOTOR_H
 
 #include "stdint.h"
 #include "remote_control.h"
 #include "referee_system.h"
 #include "main.h"
 #include "struct_typedef.h"
-// #include "bsp_usart.h"
+#include "robo_behavior.h"
 
 // DJI motors
 #define CHASSIS_MOTOR1_ID 0x201
@@ -51,8 +51,6 @@
 // 扭矩常数
 #define KTAK10 1 / 0.198f
 #define KTAK60 1 / 0.135f
-
-// #define REMOTE_CHANNLE_TO_CHASSIS_SPEED 0.0053f
 
 #define LEFT 0
 #define RIGHT 1
@@ -193,54 +191,22 @@ typedef struct // 超级电容数据
 } Super_Power_t;
 #endif
 
-typedef struct
-{
-	// 机体加速度
-	float ax;
-	float az;
-	// 机体角速度
-	float yawspd;
-	float pitchspd;
-	float rollspd;
-	// 欧拉角
-	float yaw;
-	float toatalyaw;
-	float roll;
-	float pitch;
-} IMU_FDB;
-
-typedef struct Robo_Attitude_Def_t
-{
-	float yaw, v_yaw, a_yaw;
-	float pitch, v_pitch, a_pitch;
-	float roll, v_roll, a_roll;
-
-	float x, v_x, a_x;
-	float y, v_y, a_y;
-	float z, v_z, a_z;
-
-	float f_x, f_y, f_z;
-	float m_x, m_y, m_z;
-} Robo_Attitude_Def_t;
-
-typedef struct Leg_Def_t
+struct Leg_State
 {
 	float theta, v_theta;
 	float alpha, v_lpha;
-
-} Leg_Def_t;
+};
 
 #define LEFT 0
 #define RIGHT 1
 
-typedef struct Chassis_Def_t
+struct Wheel_Legged_Chassis
 {
-	Robo_Attitude_Def_t attitude;
-	Leg_Def_t leg[2];
+	struct Robo_Attitude attitude;
+	struct Leg_State leg[2];
+};
 
-} Chassis_Def_t;
-
-typedef struct
+struct Wheel_Legged_State
 {
 	float thetal, dThetal, thetar, dThetar;
 	float v_filter; // 滤波后的车体速度，单位是m/s
@@ -253,7 +219,7 @@ typedef struct
 	float FNl, FNr;
 	float F0l, F0r;
 	float TPl, TPr;
-} State_Var_s;
+};
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -261,7 +227,7 @@ typedef struct
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-typedef struct
+struct Chassis_State
 {
 	MOTOR_RECEIVE_DATA gimbal_motor_fdb;
 	//	Motor_Feedback_t momentum_motor_fdb[2];
@@ -288,7 +254,7 @@ typedef struct
 	Super_Power_t super_power;
 #endif
 
-	IMU_FDB IMU_DATA;
+	struct Robo_Attitude IMU_DATA;
 
 	Flag no_force_mode;
 
@@ -298,11 +264,10 @@ typedef struct
 
 	uint8_t recover_flag;
 
-	State_Var_s st;
+	struct Wheel_Legged_State state;
 
 	struct Robo_Status robo_status;
-
-} Chassis_t;
+};
 
 typedef struct
 {

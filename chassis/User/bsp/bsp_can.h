@@ -35,7 +35,7 @@ void GetAKMotor6Fdb(AK_motor_fdb_t *motor1, AK_motor_ctrl_fdb_t *motor2);
 void GetChassisYSpeedSet(fp32 *set);
 void GetChassisZSpeedSet(fp32 *set);
 
-void can_filter_init(void);
+void CAN_Bsp_Init(void);
 float uint_to_float(int x_int, float x_min, float x_max, int bits);
 void TransmitChassisMotorCurrent(int16_t o1, int16_t o2);
 void TransmitSuperPower(float power_);

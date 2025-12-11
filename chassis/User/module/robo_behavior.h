@@ -9,8 +9,8 @@
  *
  ************************/
 
-#ifndef __CHASSIS_H
-#define __CHASSIS_H
+#ifndef __ROBO_BEHAVIOR_H
+#define __ROBO_BEHAVIOR_H
 
 #include "user_lib.h"
 

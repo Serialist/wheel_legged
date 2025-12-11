@@ -7,15 +7,15 @@
 #include <math.h>
 #include "vmc.h"
 
-extern Chassis_t chassis;
+extern struct Chassis_State chassis;
 extern struct Wheel_Leg_Target set;
 extern struct VMC_Leg leg_l, leg_r;
 
 static int32_t last_pos = 0; // 唯一状态变量
 float v;
 /**********  函数声明 开始 *************/
-void chassis_sys_calc(Chassis_t *ch);
-void Phase_Update(Chassis_t *ch);
+void chassis_sys_calc(struct Chassis_State *ch);
+void Phase_Update(struct Chassis_State *ch);
 float GetSpeed(float current_pos);
 /**********  函数声明 结束 *************/
 

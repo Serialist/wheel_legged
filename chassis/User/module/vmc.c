@@ -34,12 +34,12 @@ void VMC_Init(struct VMC_Leg *vmc) // 给杆长赋值
 	vmc->first_flag = 0;
 }
 
-void VMC_calc_1(struct VMC_Leg *vmc, Chassis_t *cha, float dt) // 计算theta和d_theta给lqr用，同时也计算腿长L0
+void VMC_calc_1(struct VMC_Leg *vmc, struct Chassis_State *chassis, float dt) // 计算theta和d_theta给lqr用，同时也计算腿长L0
 {
 	static float PitchR = 0.0f;
 	static float PithGyroR = 0.0f;
-	PitchR = cha->IMU_DATA.pitch;
-	PithGyroR = cha->IMU_DATA.pitchspd;
+	PitchR = chassis->IMU_DATA.pitch;
+	PithGyroR = chassis->IMU_DATA.vpitch;
 
 	vmc->YD = vmc->l4 * arm_sin_f32(vmc->phi4);			  // D的y坐标
 	vmc->YB = vmc->l1 * arm_sin_f32(vmc->phi1);			  // B的y坐标

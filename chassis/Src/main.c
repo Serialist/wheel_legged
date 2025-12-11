@@ -67,7 +67,7 @@
 void SystemClock_Config(void);
 void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN PFP */
-extern Chassis_t chassis;
+extern struct Chassis_State chassis;
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -126,7 +126,7 @@ int main(void)
   DWT_Init(168);
   /* USER CODE BEGIN 2 */
 
-  can_filter_init();
+  CAN_Bsp_Init();
   remote_control_init();
   delay_init();
   // visionInit();

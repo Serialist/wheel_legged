@@ -60,6 +60,9 @@ extern uint8_t GlobalDebugMode;
 #define PI 3.14159265354f
 #endif
 
+/// @brief ÊýÖµÓ³Éäº¯Êý
+#define VAULE_MAP(value, inMin, inMax, outMin, outMax) (((value) - (inMin)) * ((outMax) - (outMin)) / ((inMax) - (inMin)) + (outMin))
+
 #define VAL_LIMIT(val, min, max) \
     do                           \
     {                            \

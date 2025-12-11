@@ -813,6 +813,11 @@
               <FileType>1</FileType>
               <FilePath>..\User\utils\register.c</FilePath>
             </File>
+            <File>
+              <FileName>behavior_tree.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\utils\behavior_tree.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

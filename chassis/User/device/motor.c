@@ -12,6 +12,7 @@
 #include "motor.h"
 
 #define MOTOR_TIMEOUT 500u
+#define MOTOR_NUMBER 6
 
 struct Motor_Status motor_status;
 
@@ -27,7 +28,7 @@ void Motor_Offline_Detection(struct Motor_Status *motor_status, uint32_t dt)
 
     motor_status->offline_flag = false;
 
-    for (i = 0; i < 6; i++)
+    for (i = 0; i < MOTOR_NUMBER; i++)
     {
         if (motor_status->receive_flag[i] == true)
         {
@@ -46,6 +47,8 @@ void Motor_Offline_Detection(struct Motor_Status *motor_status, uint32_t dt)
                 motor_status->count[i] += dt;
             }
         }
+
+        // 总离线 flag
         motor_status->offline_flag = motor_status->offline_flag || motor_status->offline[i];
     }
 }

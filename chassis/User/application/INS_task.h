@@ -28,8 +28,8 @@ typedef struct
 {
     float q[4]; // 四元数估计值
 
-    float Gyro[3];  // 角速度
-    float Accel[3]; // 加速度
+    float Gyro[3];          // 角速度
+    float Accel[3];         // 加速度
     float MotionAccel_b[3]; // 机体坐标加速度
     float MotionAccel_n[3]; // 绝对系加速度
 
@@ -51,10 +51,9 @@ typedef struct
     uint8_t ins_flag;
 } INS_t;
 
-
 /**
  * @brief 用于修正安装误差的参数,demo中可无视
- * 
+ *
  */
 typedef struct
 {
@@ -69,7 +68,7 @@ typedef struct
 
 extern INS_t INS;
 
-void chassis_data_fdb(Chassis_t* ch);
+void chassis_data_fdb(struct Chassis_State *ch);
 void INS_Init(void);
 void INS_Task(void);
 void IMU_Temperature_Ctrl(void);

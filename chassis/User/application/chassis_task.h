@@ -10,7 +10,8 @@
 // m3508转化成底盘速度(m/s)的比例
 #define M3508_MOTOR_RPM_TO_VECTOR 0.000415809748903494517209f
 
-#define REMOTE_CHANNLE_TO_CHASSIS_SPEED (3.5f / 660.0f) // 最大速度3.5m/s
+#define RC_RATIO (2.0f / 660.0f)
+#define YAW_RATIO (1.0f / 660.0f)
 
 #define Pi 3.14159265358979323846f
 

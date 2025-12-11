@@ -17,7 +17,7 @@
 #include "motor.h"
 
 extern struct Wheel_Leg_Target set;
-extern Chassis_t chassis;
+extern struct Chassis_State chassis;
 
 struct DJI_RxData yaw_data;
 MOTOR_TRANSMIT_DATA gimbal_motor_set;
@@ -36,26 +36,27 @@ uint8_t canRxBuf[8];
 /// @date 2025-10-30
 Reg_Def_t can_callback_reg;
 
-void can_filter_init(void)
+void CAN_Bsp_Init(void)
 {
+	CAN_FilterTypeDef filter;
 
-	CAN_FilterTypeDef can_filter_st;
-	can_filter_st.FilterActivation = ENABLE;
-	can_filter_st.FilterMode = CAN_FILTERMODE_IDMASK;
-	can_filter_st.FilterScale = CAN_FILTERSCALE_32BIT;
-	can_filter_st.FilterIdHigh = 0x0000;
-	can_filter_st.FilterIdLow = 0x0000;
-	can_filter_st.FilterMaskIdHigh = 0x0000;
-	can_filter_st.FilterMaskIdLow = 0x0000;
-	can_filter_st.FilterBank = 0;
-	can_filter_st.FilterFIFOAssignment = CAN_RX_FIFO0;
-	HAL_CAN_ConfigFilter(&hcan1, &can_filter_st);
+	filter.FilterActivation = ENABLE;
+	filter.FilterMode = CAN_FILTERMODE_IDMASK;
+	filter.FilterScale = CAN_FILTERSCALE_32BIT;
+	filter.FilterIdHigh = 0x0000;
+	filter.FilterIdLow = 0x0000;
+	filter.FilterMaskIdHigh = 0x0000;
+	filter.FilterMaskIdLow = 0x0000;
+	filter.FilterBank = 0;
+	filter.FilterFIFOAssignment = CAN_RX_FIFO0;
+
+	HAL_CAN_ConfigFilter(&hcan1, &filter);
 	HAL_CAN_Start(&hcan1);
 	HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING);
 
-	can_filter_st.SlaveStartFilterBank = 14;
-	can_filter_st.FilterBank = 14;
-	HAL_CAN_ConfigFilter(&hcan2, &can_filter_st);
+	filter.SlaveStartFilterBank = 14;
+	filter.FilterBank = 14;
+	HAL_CAN_ConfigFilter(&hcan2, &filter);
 	HAL_CAN_Start(&hcan2);
 	HAL_CAN_ActivateNotification(&hcan2, CAN_IT_RX_FIFO0_MSG_PENDING);
 

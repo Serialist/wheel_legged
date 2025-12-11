@@ -1,15 +1,15 @@
 /**
-  ******************************************************************************
-  * @file	 user_lib.c
-  * @author  Wang Hongxi
-  * @version V1.0.0
-  * @date    2021/2/18
-  * @brief   
-  ******************************************************************************
-  * @attention
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file	 user_lib.c
+ * @author  Wang Hongxi
+ * @version V1.0.0
+ * @date    2021/2/18
+ * @brief
+ ******************************************************************************
+ * @attention
+ *
+ ******************************************************************************
+ */
 #include "stdlib.h"
 #include "string.h"
 #include "user_lib.h"
@@ -24,7 +24,7 @@
 
 uint8_t GlobalDebugMode = 7;
 
-//快速开方
+// 快速开方
 float Sqrt(float x)
 {
     float y;
@@ -51,7 +51,7 @@ float Sqrt(float x)
     return y;
 }
 
-//快速求平方根倒数
+// 快速求平方根倒数
 /*
 float invSqrt(float num)
 {
@@ -65,14 +65,14 @@ float invSqrt(float num)
 }*/
 
 /**
-  * @brief          斜波函数初始化
-  * @author         RM
-  * @param[in]      斜波函数结构体
-  * @param[in]      间隔的时间，单位 s
-  * @param[in]      最大值
-  * @param[in]      最小值
-  * @retval         返回空
-  */
+ * @brief          斜波函数初始化
+ * @author         RM
+ * @param[in]      斜波函数结构体
+ * @param[in]      间隔的时间，单位 s
+ * @param[in]      最大值
+ * @param[in]      最小值
+ * @retval         返回空
+ */
 void ramp_init(ramp_function_source_t *ramp_source_type, float frame_period, float max, float min)
 {
     ramp_source_type->frame_period = frame_period;
@@ -83,12 +83,12 @@ void ramp_init(ramp_function_source_t *ramp_source_type, float frame_period, flo
 }
 
 /**
-  * @brief          斜波函数计算，根据输入的值进行叠加， 输入单位为 /s 即一秒后增加输入的值
-  * @author         RM
-  * @param[in]      斜波函数结构体
-  * @param[in]      输入值
-  * @retval         返回空
-  */
+ * @brief          斜波函数计算，根据输入的值进行叠加， 输入单位为 /s 即一秒后增加输入的值
+ * @author         RM
+ * @param[in]      斜波函数结构体
+ * @param[in]      输入值
+ * @retval         返回空
+ */
 float ramp_calc(ramp_function_source_t *ramp_source_type, float input)
 {
     ramp_source_type->input = input;
@@ -104,7 +104,7 @@ float ramp_calc(ramp_function_source_t *ramp_source_type, float input)
     return ramp_source_type->out;
 }
 
-//绝对值限制
+// 绝对值限制
 float abs_limit(float num, float Limit)
 {
     if (num > Limit)
@@ -118,7 +118,7 @@ float abs_limit(float num, float Limit)
     return num;
 }
 
-//判断符号位
+// 判断符号位
 float sign(float value)
 {
     if (value >= 0.0f)
@@ -131,7 +131,7 @@ float sign(float value)
     }
 }
 
-//浮点死区
+// 浮点死区
 float float_deadband(float Value, float minValue, float maxValue)
 {
     if (Value < maxValue && Value > minValue)
@@ -141,7 +141,7 @@ float float_deadband(float Value, float minValue, float maxValue)
     return Value;
 }
 
-//int26死区
+// int26死区
 int16_t int16_deadline(int16_t Value, int16_t minValue, int16_t maxValue)
 {
     if (Value < maxValue && Value > minValue)
@@ -151,7 +151,7 @@ int16_t int16_deadline(int16_t Value, int16_t minValue, int16_t maxValue)
     return Value;
 }
 
-//限幅函数
+// 限幅函数
 float float_constrain(float Value, float minValue, float maxValue)
 {
     if (Value < minValue)
@@ -162,7 +162,7 @@ float float_constrain(float Value, float minValue, float maxValue)
         return Value;
 }
 
-//限幅函数
+// 限幅函数
 int16_t int16_constrain(int16_t Value, int16_t minValue, int16_t maxValue)
 {
     if (Value < minValue)
@@ -173,7 +173,7 @@ int16_t int16_constrain(int16_t Value, int16_t minValue, int16_t maxValue)
         return Value;
 }
 
-//循环限幅函数
+// 循环限幅函数
 float loop_float_constrain(float Input, float minValue, float maxValue)
 {
     if (maxValue < minValue)
@@ -200,9 +200,9 @@ float loop_float_constrain(float Input, float minValue, float maxValue)
     return Input;
 }
 
-//弧度格式化为-PI~PI
+// 弧度格式化为-PI~PI
 
-//角度格式化为-180~180
+// 角度格式化为-180~180
 float theta_format(float Ang)
 {
     return loop_float_constrain(Ang, -180.0f, 180.0f);
@@ -220,11 +220,11 @@ int float_rounding(float raw)
 }
 
 /**
-  * @brief          最小二乘法初始化
-  * @param[in]      最小二乘法结构体
-  * @param[in]      样本数
-  * @retval         返回空
-  */
+ * @brief          最小二乘法初始化
+ * @param[in]      最小二乘法结构体
+ * @param[in]      样本数
+ * @retval         返回空
+ */
 void OLS_Init(Ordinary_Least_Squares_t *OLS, uint16_t order)
 {
     OLS->Order = order;
@@ -239,11 +239,11 @@ void OLS_Init(Ordinary_Least_Squares_t *OLS, uint16_t order)
 }
 
 /**
-  * @brief          最小二乘法拟合
-  * @param[in]      最小二乘法结构体
-  * @param[in]      信号新样本距上一个样本时间间隔
-  * @param[in]      信号值
-  */
+ * @brief          最小二乘法拟合
+ * @param[in]      最小二乘法结构体
+ * @param[in]      信号新样本距上一个样本时间间隔
+ * @param[in]      信号值
+ */
 void OLS_Update(Ordinary_Least_Squares_t *OLS, float deltax, float y)
 {
     static float temp = 0;
@@ -281,12 +281,12 @@ void OLS_Update(Ordinary_Least_Squares_t *OLS, float deltax, float y)
 }
 
 /**
-  * @brief          最小二乘法提取信号微分
-  * @param[in]      最小二乘法结构体
-  * @param[in]      信号新样本距上一个样本时间间隔
-  * @param[in]      信号值
-  * @retval         返回斜率k
-  */
+ * @brief          最小二乘法提取信号微分
+ * @param[in]      最小二乘法结构体
+ * @param[in]      信号新样本距上一个样本时间间隔
+ * @param[in]      信号值
+ * @retval         返回斜率k
+ */
 float OLS_Derivative(Ordinary_Least_Squares_t *OLS, float deltax, float y)
 {
     static float temp = 0;
@@ -326,22 +326,22 @@ float OLS_Derivative(Ordinary_Least_Squares_t *OLS, float deltax, float y)
 }
 
 /**
-  * @brief          获取最小二乘法提取信号微分
-  * @param[in]      最小二乘法结构体
-  * @retval         返回斜率k
-  */
+ * @brief          获取最小二乘法提取信号微分
+ * @param[in]      最小二乘法结构体
+ * @retval         返回斜率k
+ */
 float Get_OLS_Derivative(Ordinary_Least_Squares_t *OLS)
 {
     return OLS->k;
 }
 
 /**
-  * @brief          最小二乘法平滑信号
-  * @param[in]      最小二乘法结构体
-  * @param[in]      信号新样本距上一个样本时间间隔
-  * @param[in]      信号值
-  * @retval         返回平滑输出
-  */
+ * @brief          最小二乘法平滑信号
+ * @param[in]      最小二乘法结构体
+ * @param[in]      信号新样本距上一个样本时间间隔
+ * @param[in]      信号值
+ * @retval         返回平滑输出
+ */
 float OLS_Smooth(Ordinary_Least_Squares_t *OLS, float deltax, float y)
 {
     static float temp = 0;
@@ -382,30 +382,27 @@ float OLS_Smooth(Ordinary_Least_Squares_t *OLS, float deltax, float y)
 }
 
 /**
-  * @brief          获取最小二乘法平滑信号
-  * @param[in]      最小二乘法结构体
-  * @retval         返回平滑输出
-  */
+ * @brief          获取最小二乘法平滑信号
+ * @param[in]      最小二乘法结构体
+ * @retval         返回平滑输出
+ */
 float Get_OLS_Smooth(Ordinary_Least_Squares_t *OLS)
 {
     return OLS->k * OLS->x[OLS->Order - 1] + OLS->b;
 }
 
-void slope_following(float *target,float *set,float acc)
+void slope_following(float *target, float *set, float acc)
 {
-	if(*target > *set)
-	{
-		*set = *set + acc;
-		if(*set >= *target)
-		*set = *target;
-	}
-	else if(*target < *set)
-	{
-		*set = *set - acc;
-		if(*set <= *target)
-		*set = *target;
-	}
-
+    if (*target > *set)
+    {
+        *set = *set + acc;
+        if (*set >= *target)
+            *set = *target;
+    }
+    else if (*target < *set)
+    {
+        *set = *set - acc;
+        if (*set <= *target)
+            *set = *target;
+    }
 }
-
-

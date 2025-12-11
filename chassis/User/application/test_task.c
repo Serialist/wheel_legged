@@ -67,7 +67,7 @@ const float vaEstimateKF_H[4] = {1.0f, 0.0f,
                                  0.0f, 1.0f}; // 设置矩阵H为常量
 
 extern INS_t INS;
-extern Chassis_t chassis;
+extern struct Chassis_State chassis;
 extern struct VMC_Leg leg_l, leg_r;
 extern float total_yaw;
 extern struct Wheel_Leg_Target set;
@@ -94,7 +94,7 @@ float position_increment = 0;
 
 /**************************************************************** proto ****************************************************************/
 
-void Phase_Update(Chassis_t *ch);
+void Phase_Update(struct Chassis_State *ch);
 void xvEstimateKF_Init(KalmanFilter_t *EstimateKF);
 void xvEstimateKF_Update(KalmanFilter_t *EstimateKF, float acc, float vel);
 // static float normalize_position(float position);
@@ -132,7 +132,7 @@ void test_task(void const *argument)
     Motor_Offline_Detection(&motor_status, TASK_PERIOD_MS);
 
     /// @brief 急停判断
-    if (RC_IS_OFFLINE(&rc_ctrl) || MOTOR_IS_OFFLINE(&motor_status) || (chassis.st.thetal >= (PI / 2)) || (chassis.st.thetar >= (PI / 2)))
+    if (RC_IS_OFFLINE(&rc_ctrl) || MOTOR_IS_OFFLINE(&motor_status) || (chassis.state.thetal >= (PI / 2)) || (chassis.state.thetar >= (PI / 2)))
     {
       chassis.robo_status.status = ROBO_STATE_EMERGENCY;
     }
@@ -158,7 +158,7 @@ void test_task(void const *argument)
     vrb = wr * wheelRadius + leg_r.L0 * leg_r.d_theta * arm_cos_f32(leg_r.theta) + leg_r.d_L0 * arm_sin_f32(leg_r.theta); // 右机体速度
 
     // 左
-    wl = motor_vel_l + INS.Gyro[0] + chassis.st.d_alphal;                                                                 // 左轮速度
+    wl = motor_vel_l + INS.Gyro[0] + chassis.state.d_alphal;                                                                 // 左轮速度
     vlb = wl * wheelRadius + leg_l.L0 * leg_l.d_theta * arm_cos_f32(leg_l.theta) + leg_l.d_L0 * arm_sin_f32(leg_l.theta); // 左机体速度
 
     // 总体互补滤波
@@ -166,17 +166,17 @@ void test_task(void const *argument)
     xvEstimateKF_Update(&vaEstimateKF, INS.MotionAccel_n[1], aver_v); // ins 加速度 轮毂反馈速度 融合滤波
 
     // 原地自转的过程中v_filter和x_filter应该都是为0
-    chassis.st.v_filter = vel_acc[0]; // 得到卡尔曼滤波后的速度
+    chassis.state.v_filter = vel_acc[0]; // 得到卡尔曼滤波后的速度
 
-    position_increment = chassis.st.v_filter * (TASK_PERIOD_MS * 0.001f);
+    position_increment = chassis.state.v_filter * (TASK_PERIOD_MS * 0.001f);
 
     // 速度死区 //
-    // if (fabsf(chassis.st.v_filter) < 0.005f)
+    // if (fabsf(chassis.state.v_filter) < 0.005f)
     // {
     //   position_increment = 0;
     // }
 
-    chassis.st.x_filter += position_increment;
+    chassis.state.x_filter += position_increment;
 
     /* ================================================================ 安全检测 ================================================================ */
 
@@ -185,7 +185,7 @@ void test_task(void const *argument)
     Motor_Offline_Detection(&motor_status, TASK_PERIOD_MS);
 
     /// @brief 急停判断
-    if (RC_IS_OFFLINE(&rc_ctrl) || MOTOR_IS_OFFLINE(&motor_status) || (chassis.st.thetal >= (PI / 2)) || (chassis.st.thetar >= (PI / 2)))
+    if (RC_IS_OFFLINE(&rc_ctrl) || MOTOR_IS_OFFLINE(&motor_status) || (chassis.state.thetal >= (PI / 2)) || (chassis.state.thetar >= (PI / 2)))
     {
       chassis.robo_status.status = ROBO_STATE_EMERGENCY;
     }
@@ -199,7 +199,7 @@ void test_task(void const *argument)
     /// @brief 状态清零
     if (chassis.rc_data.rc.s[S_L] == MID)
     {
-      set.position_set = chassis.st.x_filter;
+      set.position_set = chassis.state.x_filter;
       set.yaw = total_yaw;
     }
 

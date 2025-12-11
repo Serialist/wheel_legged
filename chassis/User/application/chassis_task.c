@@ -52,12 +52,13 @@ enum Jump_State
 	JUMP_STATE_NONE = 0,
 	JUMP_STATE_RETRACT_GND,
 	JUMP_STATE_TAKEOFF,
-	JUMP_STATE_RETRACT_AIR
+	JUMP_STATE_RETRACT_AIR,
+	JUMP_STATE_LAND
 };
 
 /* ================================================================ variable ================================================================ */
 
-Chassis_t chassis;
+struct Chassis_State chassis;
 struct PID_Def chassis_motor_pid[10];
 
 /**
@@ -102,18 +103,18 @@ enum Jump_State jump_state = JUMP_STATE_NONE;
 
 static void Chassis_Init(void);
 
-static void Fdb_Update(Chassis_t *ch);
-static void chassis_torque_sent(Chassis_t *ch);
+static void Fdb_Update(struct Chassis_State *ch);
+static void chassis_torque_sent(struct Chassis_State *ch);
 
-static void Balance_Produce(Chassis_t *ch);
-void Jump_Phase(Chassis_t *ch);
+static void Balance_Produce(struct Chassis_State *ch);
+void Jump_Phase(struct Chassis_State *ch);
 
-static uint8_t Ground_Detection_L(Chassis_t *ch, struct VMC_Leg *leg);
-static uint8_t Ground_Detection_R(Chassis_t *ch, struct VMC_Leg *leg);
-static void Safe_Control(Chassis_t *ch);
-static void Get_Order(Chassis_t *ch);
+static bool Ground_Detection_L(struct Chassis_State *ch, struct VMC_Leg *leg);
+static bool Ground_Detection_R(struct Chassis_State *ch, struct VMC_Leg *leg);
+static void Safe_Control(struct Chassis_State *ch);
+static void Get_Order(struct Chassis_State *ch);
 static void LQR_K_Calc(float k[2][6], float coe[12][4], float len);
-static void Motor_Init(void);
+static void Motor_Enable(void);
 
 /* ================================================================ function ================================================================*/
 
@@ -255,27 +256,26 @@ static void Chassis_Init(void)
 	Filter_Average_Init(&ground_detection_filter_l, 10);
 	Filter_Average_Init(&ground_detection_filter_r, 10);
 
-	Motor_Init();
+	Motor_Enable();
 
 	// Reg_Add();
 }
 
 /************************
- * @brief 初始化电机控制
+ * @brief 使能电机
  *
+ * @note
+ * 轮毂的 3508 不用初始化
+ * 髋电机需要使能
  ************************/
-void Motor_Init(void)
+void Motor_Enable(void)
 {
-	for (int a = 0; a < 4; a++)
+	uint8_t i;
+
+	for (i = 0; i < 4; i++)
 	{
-		controller_init(a + 1);
-		vTaskDelay(2);
-	}
-	for (int bb = 4; bb < 6; bb++)
-	{
-		controller_init(bb + 1);
-		controller_setorigin(bb + 1);
-		vTaskDelay(2);
+		controller_init(i + 1);
+		osDelay(1);
 	}
 }
 
@@ -284,7 +284,7 @@ void Motor_Init(void)
  *
  * @param ch
  ************************/
-static void Fdb_Update(Chassis_t *ch)
+static void Fdb_Update(struct Chassis_State *ch)
 {
 	ch->time_last = ch->time_now;
 	// 获取电机数据
@@ -304,48 +304,43 @@ static void Fdb_Update(Chassis_t *ch)
 	ch->robo_status.flag.above = (ch->robo_status.flag.above_left == true) && (ch->robo_status.flag.above_right == true);
 }
 
-void chassis_sys_calc(Chassis_t *ch)
+void chassis_sys_calc(struct Chassis_State *ch)
 {
 	leg_l.phi1 = pi / 2.0f - ch->ak_fdb_ctrl[3].motor_ctrlpos;
-	leg_l.phi4 = pi / 2.0f - ch->ak_fdb_ctrl[2].motor_ctrlpos;
+	leg_l.phi4 = pi / 2.0f - ch->ak_fdb_ctrl[2].motor_ctrlpos + 0.229f;
 	leg_r.phi1 = pi / 2.0f - ch->ak_fdb_ctrl[0].motor_ctrlpos;
-	leg_r.phi4 = pi / 2.0f - ch->ak_fdb_ctrl[1].motor_ctrlpos;
+	leg_r.phi4 = pi / 2.0f - ch->ak_fdb_ctrl[1].motor_ctrlpos - 0.9f;
 
 	VMC_calc_1(&leg_l, &chassis, 3.0f / 1000.0f);
 	VMC_calc_1(&leg_r, &chassis, 3.0f / 1000.0f);
 }
 
-void Phase_Update(Chassis_t *ch)
+void Phase_Update(struct Chassis_State *ch)
 {
-	ch->st.phi = ch->IMU_DATA.pitch;
-	ch->st.dPhi = ch->IMU_DATA.pitchspd;
+	ch->state.phi = ch->IMU_DATA.pitch;
+	ch->state.dPhi = ch->IMU_DATA.vpitch;
 
-	ch->st.xr = ch->st.x_filter;
-	ch->st.vr = ch->st.v_filter;
+	ch->state.xr = ch->state.x_filter;
+	ch->state.vr = ch->state.v_filter;
 
-	ch->st.xl = ch->st.x_filter;
-	ch->st.vl = ch->st.v_filter;
+	ch->state.xl = ch->state.x_filter;
+	ch->state.vl = ch->state.v_filter;
 
-	ch->st.thetal = leg_l.theta;
-	ch->st.thetar = leg_r.theta;
+	ch->state.thetal = leg_l.theta;
+	ch->state.thetar = leg_r.theta;
 
-	ch->st.alphal = leg_l.alpha;
-	ch->st.alphar = leg_r.alpha;
+	ch->state.alphal = leg_l.alpha;
+	ch->state.alphar = leg_r.alpha;
 
-	ch->st.angle_err = leg_l.phi0 - leg_r.phi0;
+	ch->state.angle_err = leg_l.phi0 - leg_r.phi0;
 
-	ch->st.dThetal = leg_l.d_theta;
-	ch->st.dThetar = leg_r.d_theta;
+	ch->state.dThetal = leg_l.d_theta;
+	ch->state.dThetar = leg_r.d_theta;
 
-	ch->st.d_alphal = leg_l.d_alpha;
-	ch->st.d_alphar = leg_r.d_alpha;
+	ch->state.d_alphal = leg_l.d_alpha;
+	ch->state.d_alphar = leg_r.d_alpha;
 
-	total_yaw = ch->IMU_DATA.toatalyaw;
-
-	if ((ch->IMU_DATA.pitch < (Pi / 6.0f)) && (ch->IMU_DATA.pitch > (-Pi / 6.0f)))
-	{ // 根据pitch角度判断倒地自起是否完成
-		ch->recover_flag = 0;
-	}
+	total_yaw = ch->IMU_DATA.total_yaw;
 }
 
 // 扭矩发送
@@ -355,7 +350,7 @@ void Phase_Update(Chassis_t *ch)
  *
  * @param ch
  ************************/
-void chassis_torque_sent(Chassis_t *ch)
+void chassis_torque_sent(struct Chassis_State *ch)
 {
 
 	if (ch->robo_status.status != ROBO_STATE_RUN)
@@ -394,24 +389,26 @@ void chassis_torque_sent(Chassis_t *ch)
 
 //************************运动控制器*********************************/
 // 遥控器指令
-void Get_Order(Chassis_t *ch)
+void Get_Order(struct Chassis_State *ch)
 {
 	ch->robo_status.last_behavior = ch->robo_status.behavior;
 
+	// 无力模式
 	if (ch->rc_data.rc.s[S_R] == UP)
 	{
 		ch->robo_status.behavior = ROBO_BX_STOP;
 	}
+	// 一阶倒立摆
 	else if (ch->rc_data.rc.s[S_R] == MID) // 停止模式
 	{
-		set.speed_cmd = ch->rc_data.rc.ch[L_Y] * REMOTE_CHANNLE_TO_CHASSIS_SPEED;								 // 目标速度
-		set.yaw += -ch->rc_data.rc.ch[L_X] * REMOTE_CHANNLE_TO_CHASSIS_SPEED;									 // 目标 yaw
-		set.left_length = set.right_length = LIMIT((ch->rc_data.rc.ch[R_Y] * 0.01f) / 66 + 0.15f, 0.10f, 0.35f); // 目标腿长
+		set.speed_cmd = ch->rc_data.rc.ch[L_Y] * RC_RATIO;												 // 目标速度
+		set.yaw += -ch->rc_data.rc.ch[L_X] * RC_RATIO;													 // 目标 yaw
+		set.left_length = set.right_length = VAULE_MAP(ch->rc_data.rc.ch[R_Y], -660, 660, 0.10f, 0.35f); // 目标腿长
 
 		// 行进时不关注位置
 		if (set.speed_cmd != 0)
 		{
-			set.position_set = ch->st.x_filter;
+			set.position_set = ch->state.x_filter;
 		}
 
 		set.roll = ch->rc_data.rc.ch[R_X] * PI / 2 / 660 / 4;
@@ -420,30 +417,32 @@ void Get_Order(Chassis_t *ch)
 
 		ch->robo_status.behavior = ROBO_BX_NORMAL;
 	}
-	else if (ch->rc_data.rc.s[S_R] == DOWN) // 使能模式//第一次拨动时起立
+	// 二阶倒立摆
+	else if (ch->rc_data.rc.s[S_R] == DOWN)
 	{
+		// 正常运行
 		if (ch->rc_data.rc.ch[R_Y] != -660)
 		{
 			my_debug.no_tp_flag = false;
 
 			ch->robo_status.behavior = ROBO_BX_NORMAL;
 
-			set.speed_cmd = ch->rc_data.rc.ch[L_Y] * REMOTE_CHANNLE_TO_CHASSIS_SPEED;								 // 目标速度
-			set.yaw += -ch->rc_data.rc.ch[L_X] * REMOTE_CHANNLE_TO_CHASSIS_SPEED;									 // 目标 yaw
-			set.left_length = set.right_length = LIMIT((ch->rc_data.rc.ch[R_Y] * 0.01f) / 66 + 0.15f, 0.10f, 0.35f); // 目标腿长
+			set.speed_cmd = ch->rc_data.rc.ch[L_Y] * RC_RATIO;												 // 目标速度
+			set.yaw += -ch->rc_data.rc.ch[L_X] * YAW_RATIO;													 // 目标 yaw
+			set.left_length = set.right_length = VAULE_MAP(ch->rc_data.rc.ch[R_Y], -660, 660, 0.10f, 0.30f); // 目标腿长
 
 			// 行进时不关注位置
 			if (set.speed_cmd != 0)
 			{
-				set.position_set = ch->st.x_filter;
+				set.position_set = ch->state.x_filter;
 			}
 
 			set.roll = ch->rc_data.rc.ch[R_X] * PI / 2 / 660 / 4;
 		}
-		// 右摇杆在最底下
-		else // 跳跃
+		// 跳跃
+		else
 		{
-			ch->robo_status.behavior = ROBO_BX_JUMP; // 开启跳跃 ------------------------------------------------------------------------
+			ch->robo_status.behavior = ROBO_BX_JUMP;
 		}
 	}
 
@@ -451,8 +450,9 @@ void Get_Order(Chassis_t *ch)
 }
 
 // 保险
-void Safe_Control(Chassis_t *ch)
+void Safe_Control(struct Chassis_State *ch)
 {
+	// 如果停止，输出 0
 	if (ch->robo_status.behavior == ROBO_BX_STOP || ch->robo_status.behavior == ROBO_BX_OFF)
 	{
 		ch->ak_set[0].torset = 0.0f;
@@ -463,17 +463,14 @@ void Safe_Control(Chassis_t *ch)
 		ch->ak_set[5].torset = 0.0f;
 	}
 
-	if (ch->robo_status.status == ROBO_STATE_EMERGENCY)
+	// 如果电机离线，尝试重新使能电机
+	if (ch->robo_status.status == ROBO_STATE_EMERGENCY && MOTOR_IS_OFFLINE(&motor_status))
 	{
-		if (MOTOR_IS_OFFLINE(&motor_status))
-		{
-			Motor_Init();
-		}
+		Motor_Enable();
 	}
 }
 
-float test__ = 0.6f;
-float t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0;
+#define OFFGROUND_DETECTION_ACCEL_RATIO 0.6f
 
 #define GROUND_DETECTION_THRESHOLD 15.0f // threshold 阈值
 /************************
@@ -482,23 +479,19 @@ float t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0;
  * @param ch
  * @return uint8_t 离地 1 触地 0
  ************************/
-uint8_t Ground_Detection_R(Chassis_t *ch, struct VMC_Leg *leg)
+bool Ground_Detection_R(struct Chassis_State *ch, struct VMC_Leg *leg)
 {
-	my_debug.ground_det.f0r = leg->F0 * arm_cos_f32(leg->theta);
-	my_debug.ground_det.tpr = leg->Tp * arm_sin_f32(leg->theta) / leg->L0;
-	t1 = ch->IMU_DATA.az;
-	t2 = -leg->dd_L0 * arm_cos_f32(leg->theta);
-	t3 = 2.0f * leg->d_L0 * leg->d_theta * arm_sin_f32(leg->theta);
-	t4 = leg->L0 * leg->dd_theta * arm_sin_f32(leg->theta);
-	t5 = leg->L0 * leg->d_theta * leg->d_theta * arm_cos_f32(leg->theta);
+	ch->state.FNr = leg->F0 * arm_cos_f32(leg->theta) +
+					leg->Tp * arm_sin_f32(leg->theta) / leg->L0 +
+					OFFGROUND_DETECTION_ACCEL_RATIO * (ch->IMU_DATA.az +
+													   (-leg->dd_L0 * arm_cos_f32(leg->theta)) +
+													   2.0f * leg->d_L0 * leg->d_theta * arm_sin_f32(leg->theta) +
+													   leg->L0 * leg->dd_theta * arm_sin_f32(leg->theta) +
+													   leg->L0 * leg->d_theta * leg->d_theta * arm_cos_f32(leg->theta));
 
-	ch->st.FNr = my_debug.ground_det.f0r +
-				 my_debug.ground_det.tpr +
-				 test__ * (t1 + t2 + t3 + t4 + t5);
+	ch->state.FNr = Filter_Average_Update(&ground_detection_filter_r, ch->state.FNr);
 
-	ch->st.FNr = Filter_Average_Update(&ground_detection_filter_r, ch->st.FNr);
-
-	return (ch->st.FNr < GROUND_DETECTION_THRESHOLD) ? 1 : 0;
+	return (ch->state.FNr < GROUND_DETECTION_THRESHOLD) ? true : false;
 }
 
 /************************
@@ -507,22 +500,22 @@ uint8_t Ground_Detection_R(Chassis_t *ch, struct VMC_Leg *leg)
  * @param ch
  * @return uint8_t
  ************************/
-uint8_t Ground_Detection_L(Chassis_t *ch, struct VMC_Leg *leg)
+bool Ground_Detection_L(struct Chassis_State *ch, struct VMC_Leg *leg)
 {
 	my_debug.ground_det.f0l = leg->F0 * arm_cos_f32(leg->theta);
 	my_debug.ground_det.tpl = leg->Tp * arm_sin_f32(leg->theta) / leg->L0;
 
-	ch->st.FNl = my_debug.ground_det.f0l +
-				 my_debug.ground_det.tpl +
-				 test__ * (ch->IMU_DATA.az -
-						   leg->dd_L0 * arm_cos_f32(leg->theta) +
-						   2.0f * leg->d_L0 * leg->d_theta * arm_sin_f32(leg->theta) +
-						   leg->L0 * leg->dd_theta * arm_sin_f32(leg->theta) +
-						   leg->L0 * leg->d_theta * leg->d_theta * arm_cos_f32(leg->theta));
+	ch->state.FNl = my_debug.ground_det.f0l +
+					my_debug.ground_det.tpl +
+					OFFGROUND_DETECTION_ACCEL_RATIO * (ch->IMU_DATA.az +
+													   (-leg->dd_L0 * arm_cos_f32(leg->theta)) +
+													   2.0f * leg->d_L0 * leg->d_theta * arm_sin_f32(leg->theta) +
+													   leg->L0 * leg->dd_theta * arm_sin_f32(leg->theta) +
+													   leg->L0 * leg->d_theta * leg->d_theta * arm_cos_f32(leg->theta));
 
-	ch->st.FNl = Filter_Average_Update(&ground_detection_filter_l, ch->st.FNl);
+	ch->state.FNl = Filter_Average_Update(&ground_detection_filter_l, ch->state.FNl);
 
-	return (ch->st.FNl < GROUND_DETECTION_THRESHOLD) ? 1 : 0;
+	return (ch->state.FNl < GROUND_DETECTION_THRESHOLD) ? true : false;
 }
 
 float xl_target[6] = {0},
@@ -554,14 +547,7 @@ float fn_forward_l = 0;
 /// @date 2025-11-28 11:55 20:12
 /// @date 2025-11-29 23:10
 /// @date 2025-12-06 16:30 22:42
-/// @date 2025-12-07 17:26
-/// @date 2025-12-07 18:33
-/// @date 2025-12-07 18:36
-/// @date 2025-12-07 18:38
-/// @date 2025-12-07 18:43
-/// @date 2025-12-07 18:50
-/// @date 2025-12-07 18:52
-/// @date 2025-12-07 18:54
+/// @date 2025-12-07 17:26 18:54
 float lqr_coe[12][4] = {
 	{-72.020750067070409, -133.442052393281386, 314.103896441336076, -1.291623246816448},
 	{176.276906683049987, -383.972935317621193, 270.419166730327674, -5.585725556191087},
@@ -581,19 +567,20 @@ float lqr_coe[12][4] = {
  *
  * @param ch
  *************************************************/
-void Balance_Produce(Chassis_t *ch)
+void Balance_Produce(struct Chassis_State *ch)
 {
 	/* ================================ 补充控制 ================================ */
 
 	if (my_debug.no_yaw_flag)
 	{
+		set.yaw = total_yaw;
 		turn_t = 0;
 	}
 	else
 	{
-		turn_t = chassis_motor_pid[YAW_PID].Kp * (set.yaw - total_yaw) - chassis_motor_pid[YAW_PID].Kd * ch->IMU_DATA.yawspd; // 这样计算更稳一点
+		turn_t = chassis_motor_pid[YAW_PID].Kp * (set.yaw - total_yaw) - chassis_motor_pid[YAW_PID].Kd * ch->IMU_DATA.vyaw; // 这样计算更稳一点
 	}
-	// leg_tp = PID_Update(&chassis_motor_pid[TP_PID], 0.0f, ch->st.angle_err);					// 防劈叉pid计算
+	// leg_tp = PID_Update(&chassis_motor_pid[TP_PID], 0.0f, ch->state.angle_err);					// 防劈叉pid计算
 	set.roll_set_now = PID_Update(&chassis_motor_pid[ROLL_PID], set.roll, ch->IMU_DATA.roll); // roll 补偿
 
 	/* ================================ LQR 控制 ================================ */
@@ -603,47 +590,23 @@ void Balance_Produce(Chassis_t *ch)
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	xl[0] = (ch->st.thetal);
-	xl[1] = (ch->st.dThetal);
-	xl[2] = (ch->st.xl - set.position_set);
-	xl[3] = (ch->st.vl - set.speed_cmd);
-	xl[4] = (ch->st.phi);
-	xl[5] = (ch->st.dPhi);
+	xl[0] = (ch->state.thetal);
+	xl[1] = (ch->state.dThetal);
+	xl[2] = (ch->state.xl - set.position_set);
+	xl[3] = (ch->state.vl - set.speed_cmd);
+	xl[4] = (ch->state.phi);
+	xl[5] = (ch->state.dPhi);
 
-	xr[0] = (ch->st.thetar);
-	xr[1] = (ch->st.dThetar);
-	xr[2] = (ch->st.xr - set.position_set);
-	xr[3] = (ch->st.vr - set.speed_cmd);
-	xr[4] = (ch->st.phi);
-	xr[5] = (ch->st.dPhi);
+	xr[0] = (ch->state.thetar);
+	xr[1] = (ch->state.dThetar);
+	xr[2] = (ch->state.xr - set.position_set);
+	xr[3] = (ch->state.vr - set.speed_cmd);
+	xr[4] = (ch->state.phi);
+	xr[5] = (ch->state.dPhi);
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	/// @brief 核心 LQR 计算，公式 u = - K * x。分左右腿
-
-	if (my_debug.no_above_det_flag != true)
-	{
-		uint8_t i = 0;
-		if (ch->robo_status.flag.above == true)
-		{
-			for (i = 0; i < 12; i++)
-			{
-				if (i == 6 || i == 7)
-					kx[i] = KK[i % 6];
-				else
-					kx[i] = 0;
-			}
-			my_debug.no_yaw_flag = true;
-		}
-		else
-		{
-			for (i = 0; i < 12; i++)
-			{
-				kx[i] = KK[i % 6];
-			}
-			my_debug.no_yaw_flag = false;
-		}
-	}
 
 	// left
 
@@ -685,12 +648,22 @@ void Balance_Produce(Chassis_t *ch)
 
 	tplqrr = lqr_r_[6] + lqr_r_[7] + lqr_r_[8] + lqr_r_[9] + lqr_r_[10] + lqr_r_[11];
 
-	if (my_debug.torque_flag)
+	// if (my_debug.torque_flag)
+	// {
+	// 	tplqrl = my_debug.tpl;
+	// 	tplqrr = my_debug.tpr;
+	// 	tlqrl = my_debug.tl;
+	// 	tlqrr = my_debug.tr;
+	// }
+	if (my_debug.no_above_det_flag == false && ch->robo_status.flag.above == true)
 	{
-		tplqrl = my_debug.tpl;
-		tplqrr = my_debug.tpr;
-		tlqrl = my_debug.tl;
-		tlqrr = my_debug.tr;
+		// 不控制x和yaw
+		set.position_set = chassis.state.x_filter = 0;
+		set.yaw = total_yaw;
+
+		// lqr 仅控制腿 theta
+		tplqrl = lqr_l_[6] + lqr_l_[7];
+		tplqrr = lqr_r_[6] + lqr_r_[7];
 	}
 
 	/// @brief 限幅
@@ -715,88 +688,89 @@ void Balance_Produce(Chassis_t *ch)
 		set.set_cal_real[4] = tlqrr - turn_t;
 	}
 
-	/* ================================ 腿 解算 ================================ */
+	/* ================================ 腿推力 解算 ================================ */
 
-	/// @brief 腿推力 PID
 	// 重力前馈
-	if (my_debug.no_g_fn_flag == false)
-	{
-		fn_forward_l = 55.0f * arm_cos_f32(leg_l.theta);
-		fn_forward_r = 55.0f * arm_cos_f32(leg_r.theta);
-
-		// 离地
-		if (ch->robo_status.flag.above == true)
-		{
-			// 仅控制腿 theta
-			tplqrl = lqr_l_[6] + lqr_l_[7];
-			tplqrr = lqr_r_[6] + lqr_r_[7];
-
-			// 提腿前馈
-			fn_forward_l = -10.0f;
-			fn_forward_r = -10.0f;
-		}
-	}
-	else
+	if (my_debug.no_g_fn_flag == true)
 	{
 		fn_forward_l = 0;
 		fn_forward_r = 0;
 	}
-
-	// 推力计算
-	// 跳跃 计算一次跳跃参数
-	if (ch->robo_status.behavior == ROBO_BX_JUMP || jump_state != JUMP_STATE_NONE)
-	{
-		Jump_Phase(ch);
-		leg_l.F0 = fn_forward_l +
-				   PID_Update(&chassis_motor_pid[0], set.left_length, leg_l.L0);
-		leg_r.F0 = fn_forward_r +
-				   PID_Update(&chassis_motor_pid[1], set.right_length, leg_r.L0);
-	}
-	// 离地 不控制 roll
+	// 离地
 	else if (ch->robo_status.flag.above == true)
 	{
-		leg_l.F0 = fn_forward_l +
-				   PID_Update(&chassis_motor_pid[0], set.left_length, leg_l.L0);
-		leg_r.F0 = fn_forward_r +
-				   PID_Update(&chassis_motor_pid[1], set.right_length, leg_r.L0);
+		// 提腿前馈
+		fn_forward_l = -15.0f;
+		fn_forward_r = -15.0f;
 	}
-	// 正常
 	else
 	{
-		leg_l.F0 = fn_forward_l +
-				   PID_Update(&chassis_motor_pid[0], set.left_length + set.roll_set_now, leg_l.L0);
-		leg_r.F0 = fn_forward_r +
-				   PID_Update(&chassis_motor_pid[1], set.right_length - set.roll_set_now, leg_r.L0);
+		fn_forward_l = 55.0f * arm_cos_f32(leg_l.theta);
+		fn_forward_r = 55.0f * arm_cos_f32(leg_r.theta);
 	}
 
-	/// @brief 杆扭矩 PID
+	// 跳跃状态机
+	Jump_Phase(ch);
+
+	// 推力 pid
+	// 不用 yaw
+	if (jump_state == JUMP_STATE_NONE || ch->robo_status.flag.above == false)
+	{
+		set.left_length += set.roll_set_now;
+		set.right_length -= set.roll_set_now;
+	}
+	// 在空中，预留落地缓冲腿长
+	else if (jump_state == JUMP_STATE_NONE && ch->robo_status.flag.above == true)
+	{
+		set.left_length = set.left_length = 0.15f;
+	}
+
+	// 推力计算
+	leg_l.F0 = fn_forward_l +
+			   PID_Update(&chassis_motor_pid[0], set.left_length, leg_l.L0);
+	leg_r.F0 = fn_forward_r +
+			   PID_Update(&chassis_motor_pid[1], set.right_length, leg_r.L0);
+
+	/* ================================ 腿扭矩 解算 ================================ */
+
 	if (my_debug.no_tp_flag)
 	{
 		tplqrl = PID_Update(&pid_tpl, PI / 2.0f, leg_l.phi0);
 		tplqrr = PID_Update(&pid_tpr, PI / 2.0f, leg_r.phi0);
 	}
 
-	/// @brief 安全无力
-	if (ch->rc_data.rc.s[S_R] == MID)
-	{
-		tplqrl = 0.0f;
-		tplqrr = 0.0f;
-		tlqrl = 0.0f;
-		tlqrr = 0.0f;
-	}
-
 	leg_l.Tp = tplqrl * tp_ratiol;
 	leg_r.Tp = tplqrr * tp_ratior;
 
-	/// @brief 正 VMC
+	// 正 VMC
 	VMC_calc_2(&leg_l);
 	VMC_calc_2(&leg_r);
 
-	/// @brief 发送 buf
+	// 发送 buf
 	set.set_cal_real[0] = leg_r.torque_set[0];
 	set.set_cal_real[1] = leg_r.torque_set[1];
 	set.set_cal_real[3] = leg_l.torque_set[0];
 	set.set_cal_real[2] = leg_l.torque_set[1];
+
+	// 软件限位
+	// 当超过一定限定角度时，扭矩设为反向
+
+	// if (leg_l.phi1 < PI / 2)
+	// {
+	// 	set.set_cal_real[3] = -10.0f;
+	// }
+	// if (leg_l.phi4 > PI / 2)
+	// {
+	// 	set.set_cal_real[2] = 10.0f;
+	// }
+	// if (leg_r.phi1 < PI / 2)
+	// {
+	// 	set.set_cal_real[0] = -10.0f;
+	// }
+	// if (leg_r.phi4 > PI / 2)
+	// {
+	// 	set.set_cal_real[1] = 10.0f;
+	// }
 
 	/* ================================ 发送 ================================ */
 
@@ -825,69 +799,78 @@ uint32_t jump_time = 0;
 #define CLEAR(var) ((var) = 0)
 #endif
 
+#define JUMP_RETRACT_GND_LEG_LENGTH 0.12f
+#define JUMP_TAKEOFF_LEG_LENGTH 0.35f
+#define JUMP_LAND_LEG_LENGTH 0.15f
+
 /************************
  * @brief 跳跃过程
  *
  * @param ch
  ************************/
-void Jump_Phase(Chassis_t *ch)
+void Jump_Phase(struct Chassis_State *ch)
 {
+	// 不跳，检测，触发跳
 	if (ch->robo_status.last_behavior != ROBO_BX_JUMP && ch->robo_status.behavior == ROBO_BX_JUMP && jump_state == JUMP_STATE_NONE)
 	{
-		my_debug.no_yaw_flag = true;
-		my_debug.no_tp_flag = true;
-
-		// chassis_motor_pid[0].Kp = chassis_motor_pid[1].Kp = 1500.0f;
-		// chassis_motor_pid[0].Kd = chassis_motor_pid[1].Kd = 6000.0f;
-
 		jump_state = JUMP_STATE_RETRACT_GND;
 
 		CLEAR(jump_time);
 	}
-
-	/// @brief 收缩段
-	if (jump_state == JUMP_STATE_RETRACT_GND)
+	//  地面收腿
+	else if (jump_state == JUMP_STATE_RETRACT_GND)
 	{
-		set.left_length = set.right_length = 0.12f;
+		set.left_length = set.right_length = JUMP_RETRACT_GND_LEG_LENGTH;
 
-		if (jump_time >= 10)
+		if (jump_time >= 50)
 		{
+			my_debug.no_yaw_flag = true;
 			jump_state = JUMP_STATE_TAKEOFF; // 压缩完毕进入上升加速阶段
 			CLEAR(jump_time);
 		}
 	}
-	/// @brief 起跳段
+	// 起跳
 	else if (jump_state == JUMP_STATE_TAKEOFF)
 	{
-		set.left_length = set.right_length = 0.30f;
-		if (leg_l.L0 < 0.35f)
-		{
-			fn_forward_l = fn_forward_r = 150.0f;
-		}
-		my_debug.no_t_flag = true;
+		set.left_length = set.right_length = JUMP_TAKEOFF_LEG_LENGTH;
 
-		if (leg_l.L0 > 0.35f)
+		// 方式空中不离地
+		// lqr 仅控制腿 theta
+		tplqrl = lqr_l_[6] + lqr_l_[7];
+		tplqrr = lqr_r_[6] + lqr_r_[7];
+
+		fn_forward_l = fn_forward_r = 200.0f;
+
+		if (leg_l.L0 > JUMP_TAKEOFF_LEG_LENGTH)
 		{
 			jump_state = JUMP_STATE_RETRACT_AIR; // 上升完毕进入缩腿阶段
 			CLEAR(jump_time);
 		}
 	}
-	/// @brief 缩腿
+	// 空中收腿
 	else if (jump_state == JUMP_STATE_RETRACT_AIR)
 	{
-		my_debug.no_t_flag = false;
-		set.left_length = set.right_length = 0.12f;
-		fn_forward_l = fn_forward_r = -150.0f;
+		my_debug.no_t_flag = true;
+		fn_forward_l = fn_forward_r = -200.0f;
 
-		if (leg_l.L0 < 0.12f)
+		if (leg_l.L0 < JUMP_LAND_LEG_LENGTH)
 		{
-			// chassis_motor_pid[0].Kp = chassis_motor_pid[1].Kp = 500;
-			// chassis_motor_pid[0].Kd = chassis_motor_pid[1].Kd = 6000;
+			jump_state = JUMP_STATE_LAND;
+			CLEAR(jump_time);
+		}
+	}
+	// 等待落地
+	else if (jump_state == JUMP_STATE_LAND)
+	{
+		fn_forward_l = fn_forward_r = -15.0f;
+		set.left_length = set.right_length = JUMP_LAND_LEG_LENGTH;
+
+		if (chassis.robo_status.flag.above == false)
+		{
+			my_debug.no_t_flag = false;
+			my_debug.no_yaw_flag = false;
 
 			ch->robo_status.behavior = ROBO_BX_NORMAL;
-
-			my_debug.no_yaw_flag = false;
-			my_debug.no_tp_flag = false;
 
 			jump_state = JUMP_STATE_NONE;
 			CLEAR(jump_time);
