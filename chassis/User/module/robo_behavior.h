@@ -33,7 +33,6 @@ enum Robo_State
     ROBO_STATE_RUN,       // 运行
     ROBO_STATE_STOP,      // 停止
     ROBO_STATE_EMERGENCY, // 急停
-    ROBO_STATE_STAND,
 };
 
 enum Robo_Behavior

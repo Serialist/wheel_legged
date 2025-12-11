@@ -69,7 +69,6 @@ const float vaEstimateKF_H[4] = {1.0f, 0.0f,
 extern INS_t INS;
 extern struct Chassis_State chassis;
 extern struct VMC_Leg leg_l, leg_r;
-extern float total_yaw;
 extern struct Wheel_Leg_Target set;
 
 float vel_acc_l[2];
@@ -200,7 +199,7 @@ void test_task(void const *argument)
     if (chassis.rc_data.rc.s[S_L] == MID)
     {
       set.position_set = chassis.state.x_filter;
-      set.yaw = total_yaw;
+      set.yaw = chassis.IMU_DATA.total_yaw;
     }
 
     /* ================================================================ / °²È«¼ì²â ================================================================ */

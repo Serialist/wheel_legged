@@ -77,7 +77,6 @@ struct VMC_Leg leg_l, leg_r;
 
 float turn_t; // yaw轴补偿
 float leg_tp; // 防劈叉补偿
-float total_yaw;
 
 float tplqrl;
 float tplqrr;
@@ -339,8 +338,6 @@ void Phase_Update(struct Chassis_State *ch)
 
 	ch->state.d_alphal = leg_l.d_alpha;
 	ch->state.d_alphar = leg_r.d_alpha;
-
-	total_yaw = ch->IMU_DATA.total_yaw;
 }
 
 // 扭矩发送
@@ -573,12 +570,12 @@ void Balance_Produce(struct Chassis_State *ch)
 
 	if (my_debug.no_yaw_flag)
 	{
-		set.yaw = total_yaw;
+		set.yaw = chassis.IMU_DATA.total_yaw;
 		turn_t = 0;
 	}
 	else
 	{
-		turn_t = chassis_motor_pid[YAW_PID].Kp * (set.yaw - total_yaw) - chassis_motor_pid[YAW_PID].Kd * ch->IMU_DATA.vyaw; // 这样计算更稳一点
+		turn_t = chassis_motor_pid[YAW_PID].Kp * (set.yaw - chassis.IMU_DATA.total_yaw) - chassis_motor_pid[YAW_PID].Kd * ch->IMU_DATA.vyaw; // 这样计算更稳一点
 	}
 	// leg_tp = PID_Update(&chassis_motor_pid[TP_PID], 0.0f, ch->state.angle_err);					// 防劈叉pid计算
 	set.roll_set_now = PID_Update(&chassis_motor_pid[ROLL_PID], set.roll, ch->IMU_DATA.roll); // roll 补偿
@@ -659,7 +656,7 @@ void Balance_Produce(struct Chassis_State *ch)
 	{
 		// 不控制x和yaw
 		set.position_set = chassis.state.x_filter = 0;
-		set.yaw = total_yaw;
+		set.yaw = chassis.IMU_DATA.total_yaw;
 
 		// lqr 仅控制腿 theta
 		tplqrl = lqr_l_[6] + lqr_l_[7];
