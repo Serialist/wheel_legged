@@ -124,25 +124,6 @@ void test_task(void const *argument)
 
   // Buzzer_Preset();
 
-  for (i = 0; i < 4000; i += TASK_PERIOD_MS)
-  {
-    /// @brief 检测
-    RC_Offline_Detection(&rc_ctrl, TASK_PERIOD_MS);
-    Motor_Offline_Detection(&motor_status, TASK_PERIOD_MS);
-
-    /// @brief 急停判断
-    if (RC_IS_OFFLINE(&rc_ctrl) || MOTOR_IS_OFFLINE(&motor_status) || (chassis.state.thetal >= (PI / 2)) || (chassis.state.thetar >= (PI / 2)))
-    {
-      chassis.robo_status.status = ROBO_STATE_EMERGENCY;
-    }
-    else
-    {
-      chassis.robo_status.status = ROBO_STATE_RUN;
-    }
-
-    osDelayUntil(&xLastWakeTime, TASK_PERIOD_MS);
-  }
-
   while (1)
   {
     uint32_t current_time_ms = HAL_GetTick();
@@ -157,25 +138,23 @@ void test_task(void const *argument)
     vrb = wr * wheelRadius + leg_r.L0 * leg_r.d_theta * arm_cos_f32(leg_r.theta) + leg_r.d_L0 * arm_sin_f32(leg_r.theta); // 右机体速度
 
     // 左
-    wl = motor_vel_l + INS.Gyro[0] + chassis.state.d_alphal;                                                                 // 左轮速度
+    wl = motor_vel_l + INS.Gyro[0] + chassis.state.d_alphal;                                                              // 左轮速度
     vlb = wl * wheelRadius + leg_l.L0 * leg_l.d_theta * arm_cos_f32(leg_l.theta) + leg_l.d_L0 * arm_sin_f32(leg_l.theta); // 左机体速度
 
-    // 总体互补滤波
+    // 互补滤波
     aver_v = (vrb + vlb) / 2.0f;                                      // 取平均
     xvEstimateKF_Update(&vaEstimateKF, INS.MotionAccel_n[1], aver_v); // ins 加速度 轮毂反馈速度 融合滤波
 
     // 原地自转的过程中v_filter和x_filter应该都是为0
     chassis.state.v_filter = vel_acc[0]; // 得到卡尔曼滤波后的速度
 
-    position_increment = chassis.state.v_filter * (TASK_PERIOD_MS * 0.001f);
-
-    // 速度死区 //
-    // if (fabsf(chassis.state.v_filter) < 0.005f)
+    // 速度死区
+    // if (fabsf(chassis.state.v_filter) >= 0.005f)
     // {
-    //   position_increment = 0;
+    //   chassis.state.x_filter += chassis.state.v_filter * (TASK_PERIOD_MS * 0.001f);
     // }
 
-    chassis.state.x_filter += position_increment;
+    chassis.state.x_filter += chassis.state.v_filter * (TASK_PERIOD_MS * 0.001f);
 
     /* ================================================================ 安全检测 ================================================================ */
 

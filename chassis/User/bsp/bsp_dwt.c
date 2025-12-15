@@ -33,6 +33,11 @@ static void DWT_CNT_Update(void);
 
 /* ================================================================ function ================================================================*/
 
+/************************
+ * @brief 初始化 DWT
+ *
+ * @param CPU_Freq_mHz CPU 频率 MHz
+ ************************/
 void DWT_Init(uint32_t CPU_Freq_mHz)
 {
     /* 使能DWT外设 */
@@ -50,6 +55,12 @@ void DWT_Init(uint32_t CPU_Freq_mHz)
     CYCCNT_RountCount = 0;
 }
 
+/************************
+ * @brief 获取时间增量
+ *
+ * @param cnt_last
+ * @return float dt(s)
+ ************************/
 float DWT_GetDeltaT(uint32_t *cnt_last)
 {
     volatile uint32_t cnt_now = DWT->CYCCNT;
@@ -61,6 +72,12 @@ float DWT_GetDeltaT(uint32_t *cnt_last)
     return dt;
 }
 
+/************************
+ * @brief 获取时间增量（double精度）
+ *
+ * @param cnt_last
+ * @return double dt(s)
+ ************************/
 double DWT_GetDeltaT64(uint32_t *cnt_last)
 {
     volatile uint32_t cnt_now = DWT->CYCCNT;
@@ -72,6 +89,10 @@ double DWT_GetDeltaT64(uint32_t *cnt_last)
     return dt;
 }
 
+/************************
+ * @brief 更新系统时间
+ *
+ ************************/
 void DWT_SysTimeUpdate(void)
 {
     volatile uint32_t cnt_now = DWT->CYCCNT;
@@ -88,6 +109,8 @@ void DWT_SysTimeUpdate(void)
     SysTime.us = CNT_TEMP3 / CPU_FREQ_Hz_us;
 }
 
+/// @brief 获取系统时间（秒）
+/// @return float
 float DWT_GetTimeline_s(void)
 {
     DWT_SysTimeUpdate();
@@ -97,6 +120,11 @@ float DWT_GetTimeline_s(void)
     return DWT_Timelinef32;
 }
 
+/************************
+ * @brief 获取系统时间（毫秒）
+ *
+ * @return float
+ ************************/
 float DWT_GetTimeline_ms(void)
 {
     DWT_SysTimeUpdate();
@@ -106,6 +134,11 @@ float DWT_GetTimeline_ms(void)
     return DWT_Timelinef32;
 }
 
+/************************
+ * @brief 获取系统时间（微秒）
+ *
+ * @return uint64_t
+ ************************/
 uint64_t DWT_GetTimeline_us(void)
 {
     DWT_SysTimeUpdate();
@@ -115,6 +148,10 @@ uint64_t DWT_GetTimeline_us(void)
     return DWT_Timelinef32;
 }
 
+/************************
+ * @brief DWT CYCCNT寄存器溢出更新
+ *
+ ************************/
 static void DWT_CNT_Update(void)
 {
     volatile uint32_t cnt_now = DWT->CYCCNT;
@@ -125,12 +162,16 @@ static void DWT_CNT_Update(void)
     CYCCNT_LAST = cnt_now;
 }
 
+/************************
+ * @brief DWT 延时函数
+ *
+ * @param Delay 延时，单位微秒（us）
+ ************************/
 void DWT_Delay(float Delay)
 {
     uint32_t tickstart = DWT->CYCCNT;
     float wait = Delay;
 
     while ((DWT->CYCCNT - tickstart) < wait * (float)CPU_FREQ_Hz)
-    {
-    }
+        ;
 }
