@@ -60,7 +60,7 @@ void VMC_calc_1(struct VMC_Leg *vmc, struct Chassis_State *chassis, float dt) //
 	vmc->L0 = sqrt((vmc->XC - vmc->l5 / 2.0f) * (vmc->XC - vmc->l5 / 2.0f) + vmc->YC * vmc->YC);
 
 	vmc->phi0 = atan2f(vmc->YC, (vmc->XC - vmc->l5 / 2.0f)); // phi0用于计算lqr需要的theta
-	vmc->alpha = pi / 2.0f - vmc->phi0;
+	vmc->alpha = PI / 2.0f - vmc->phi0;
 
 	if (vmc->first_flag == 0)
 	{
@@ -70,7 +70,7 @@ void VMC_calc_1(struct VMC_Leg *vmc, struct Chassis_State *chassis, float dt) //
 	vmc->d_phi0 = (vmc->phi0 - vmc->last_phi0) / dt; // 计算phi0变化率，d_phi0用于计算lqr需要的d_theta
 	vmc->d_alpha = 0.0f - vmc->d_phi0;
 
-	vmc->theta = pi / 2.0f - PitchR - vmc->phi0; // 得到状态变量1
+	vmc->theta = PI / 2.0f - PitchR - vmc->phi0; // 得到状态变量1
 	vmc->d_theta = (-PithGyroR - vmc->d_phi0);	 // 得到状态变量2
 
 	vmc->last_phi0 = vmc->phi0;

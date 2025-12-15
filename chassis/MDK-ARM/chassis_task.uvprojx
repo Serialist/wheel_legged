@@ -858,6 +858,11 @@
               <FileType>1</FileType>
               <FilePath>..\User\module\robo_behavior.c</FilePath>
             </File>
+            <File>
+              <FileName>robo_interaction.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\module\robo_interaction.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

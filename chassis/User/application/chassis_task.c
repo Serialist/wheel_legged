@@ -305,10 +305,10 @@ static void Fdb_Update(struct Chassis_State *ch)
 
 void chassis_sys_calc(struct Chassis_State *ch)
 {
-	leg_l.phi1 = pi / 2.0f - ch->ak_fdb_ctrl[3].motor_ctrlpos;
-	leg_l.phi4 = pi / 2.0f - ch->ak_fdb_ctrl[2].motor_ctrlpos + 0.229f;
-	leg_r.phi1 = pi / 2.0f - ch->ak_fdb_ctrl[0].motor_ctrlpos;
-	leg_r.phi4 = pi / 2.0f - ch->ak_fdb_ctrl[1].motor_ctrlpos - 0.9f;
+	leg_l.phi1 = PI / 2.0f - ch->ak_fdb_ctrl[3].motor_ctrlpos;
+	leg_l.phi4 = PI / 2.0f - ch->ak_fdb_ctrl[2].motor_ctrlpos + 0.109f;
+	leg_r.phi1 = PI / 2.0f - ch->ak_fdb_ctrl[0].motor_ctrlpos + 0.6f;
+	leg_r.phi4 = PI / 2.0f - ch->ak_fdb_ctrl[1].motor_ctrlpos - 1.0f;
 
 	VMC_calc_1(&leg_l, &chassis, 3.0f / 1000.0f);
 	VMC_calc_1(&leg_r, &chassis, 3.0f / 1000.0f);
@@ -467,7 +467,7 @@ void Safe_Control(struct Chassis_State *ch)
 	}
 }
 
-#define OFFGROUND_DETECTION_ACCEL_RATIO 0.6f
+#define OFFGROUND_DETECTION_ACCEL_RATIO 0.3f
 
 #define GROUND_DETECTION_THRESHOLD 15.0f // threshold 阈值
 /************************
@@ -752,27 +752,27 @@ void Balance_Produce(struct Chassis_State *ch)
 	// 软件限位
 	// 当超过一定限定角度时，扭矩设为反向
 
-	// if (leg_l.phi1 < PI / 2)
-	// {
-	// 	set.set_cal_real[3] = -10.0f;
-	// }
-	// if (leg_l.phi4 > PI / 2)
-	// {
-	// 	set.set_cal_real[2] = 10.0f;
-	// }
-	// if (leg_r.phi1 < PI / 2)
-	// {
-	// 	set.set_cal_real[0] = -10.0f;
-	// }
-	// if (leg_r.phi4 > PI / 2)
-	// {
-	// 	set.set_cal_real[1] = 10.0f;
-	// }
+	if (leg_l.phi1 < PI / 2)
+	{
+		set.set_cal_real[3] = -10.0f;
+	}
+	if (leg_l.phi4 > PI / 2)
+	{
+		set.set_cal_real[2] = 10.0f;
+	}
+	if (leg_r.phi1 < PI / 2)
+	{
+		set.set_cal_real[0] = -10.0f;
+	}
+	if (leg_r.phi4 > PI / 2)
+	{
+		set.set_cal_real[1] = 10.0f;
+	}
 
 	/* ================================ 发送 ================================ */
 
 	/// @brief 限幅
-#define HIP_TORQUE_MAX 15.0f
+#define HIP_TORQUE_MAX 25.0f
 #define HUB_TORQUE_MAX 2.5f
 	set.set_cal_real[0] = LIMIT(set.set_cal_real[0], -HIP_TORQUE_MAX, HIP_TORQUE_MAX);
 	set.set_cal_real[1] = LIMIT(set.set_cal_real[1], -HIP_TORQUE_MAX, HIP_TORQUE_MAX);
@@ -848,7 +848,7 @@ void Jump_Phase(struct Chassis_State *ch)
 	else if (jump_state == JUMP_STATE_RETRACT_AIR)
 	{
 		my_debug.no_t_flag = true;
-		fn_forward_l = fn_forward_r = -200.0f;
+		fn_forward_l = fn_forward_r = -250.0f;
 
 		if (leg_l.L0 < JUMP_LAND_LEG_LENGTH)
 		{

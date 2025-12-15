@@ -64,4 +64,12 @@ struct Robo_Status
     struct Wheel_Leg_Flag flag;
 };
 
+struct Wheel_Legged_Attitude
+{
+    float x, vx;
+    float theta, vtheta;
+    float phi, vphi;
+    float length, vlength;
+};
+
 #endif
