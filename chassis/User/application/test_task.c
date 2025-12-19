@@ -108,7 +108,6 @@ void xvEstimateKF_Update(KalmanFilter_t *EstimateKF, float acc, float vel);
  ********************************/
 void test_task(void const *argument)
 {
-  uint32_t i = 0;
   TickType_t xLastWakeTime;
 
   chassis.robo_status.status = ROBO_STATE_INIT;

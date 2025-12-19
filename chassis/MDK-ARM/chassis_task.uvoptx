@@ -140,7 +140,7 @@
         <SetRegEntry>
           <Number>0</Number>
           <Key>CMSIS_AGDI</Key>
-          <Name>-X"Horco CMSIS-DAP v1" -U305410062724 -O718 -S8 -C0 -P00000000 -N00("ARM CoreSight SW-DP") -D00(2BA01477) -L00(0) -TO65554 -TC10000000 -TT10000000 -TP20 -TDS8007 -TDT0 -TDC1F -TIEFFFFFFFF -TIP8 -FO15 -FD20000000 -FC1000 -FN1 -FF0STM32F4xx_1024.FLM -FS08000000 -FL0100000 -FP0($$Device:STM32F407IGHx$CMSIS\Flash\STM32F4xx_1024.FLM)</Name>
+          <Name>-X"Horco CMSIS-DAP v2" -U305410077538 -O718 -S8 -C0 -P00000000 -N00("ARM CoreSight SW-DP") -D00(2BA01477) -L00(0) -TO65554 -TC10000000 -TT10000000 -TP20 -TDS8007 -TDT0 -TDC1F -TIEFFFFFFFF -TIP8 -FO15 -FD20000000 -FC1000 -FN1 -FF0STM32F4xx_1024.FLM -FS08000000 -FL0100000 -FP0($$Device:STM32F407IGHx$CMSIS\Flash\STM32F4xx_1024.FLM)</Name>
         </SetRegEntry>
         <SetRegEntry>
           <Number>0</Number>
@@ -285,22 +285,22 @@
         <Ww>
           <count>10</count>
           <WinNumber>2</WinNumber>
-          <ItemText>\\gimbal_task\../User/application/chassis_task.c\leg_r.phi1</ItemText>
+          <ItemText>\\gimbal_task\../User/application/chassis_task.c\leg_l.phi1</ItemText>
         </Ww>
         <Ww>
           <count>11</count>
           <WinNumber>2</WinNumber>
-          <ItemText>\\gimbal_task\../User/application/chassis_task.c\leg_r.phi4</ItemText>
+          <ItemText>\\gimbal_task\../User/application/chassis_task.c\leg_l.phi4</ItemText>
         </Ww>
         <Ww>
           <count>12</count>
           <WinNumber>2</WinNumber>
-          <ItemText>\\gimbal_task\../User/application/chassis_task.c\leg_l.phi1</ItemText>
+          <ItemText>\\gimbal_task\../User/application/chassis_task.c\leg_r.phi1</ItemText>
         </Ww>
         <Ww>
           <count>13</count>
           <WinNumber>2</WinNumber>
-          <ItemText>\\gimbal_task\../User/application/chassis_task.c\leg_l.phi4</ItemText>
+          <ItemText>\\gimbal_task\../User/application/chassis_task.c\leg_r.phi4</ItemText>
         </Ww>
       </WatchWindow2>
       <MemoryWindow1>

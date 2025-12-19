@@ -305,10 +305,10 @@ static void Fdb_Update(struct Chassis_State *ch)
 
 void chassis_sys_calc(struct Chassis_State *ch)
 {
-	leg_l.phi1 = PI / 2.0f - ch->ak_fdb_ctrl[3].motor_ctrlpos;
-	leg_l.phi4 = PI / 2.0f - ch->ak_fdb_ctrl[2].motor_ctrlpos + 0.109f;
-	leg_r.phi1 = PI / 2.0f - ch->ak_fdb_ctrl[0].motor_ctrlpos + 0.6f;
-	leg_r.phi4 = PI / 2.0f - ch->ak_fdb_ctrl[1].motor_ctrlpos - 1.0f;
+	leg_l.phi1 = PI / 2.0f - ch->ak_fdb_ctrl[3].motor_ctrlpos + 4.2132f;
+	leg_l.phi4 = PI / 2.0f - ch->ak_fdb_ctrl[2].motor_ctrlpos + 0.0410f;
+	leg_r.phi1 = PI / 2.0f - ch->ak_fdb_ctrl[0].motor_ctrlpos + 1.0744f;
+	leg_r.phi4 = PI / 2.0f - ch->ak_fdb_ctrl[1].motor_ctrlpos - 1.0363f;
 
 	VMC_calc_1(&leg_l, &chassis, 3.0f / 1000.0f);
 	VMC_calc_1(&leg_r, &chassis, 3.0f / 1000.0f);
@@ -752,22 +752,22 @@ void Balance_Produce(struct Chassis_State *ch)
 	// 软件限位
 	// 当超过一定限定角度时，扭矩设为反向
 
-	if (leg_l.phi1 < PI / 2)
-	{
-		set.set_cal_real[3] = -10.0f;
-	}
-	if (leg_l.phi4 > PI / 2)
-	{
-		set.set_cal_real[2] = 10.0f;
-	}
-	if (leg_r.phi1 < PI / 2)
-	{
-		set.set_cal_real[0] = -10.0f;
-	}
-	if (leg_r.phi4 > PI / 2)
-	{
-		set.set_cal_real[1] = 10.0f;
-	}
+	// if (leg_l.phi1 < PI / 2)
+	// {
+	// 	set.set_cal_real[3] = -10.0f;
+	// }
+	// if (leg_l.phi4 > PI / 2)
+	// {
+	// 	set.set_cal_real[2] = 10.0f;
+	// }
+	// if (leg_r.phi1 < PI / 2)
+	// {
+	// 	set.set_cal_real[0] = -10.0f;
+	// }
+	// if (leg_r.phi4 > PI / 2)
+	// {
+	// 	set.set_cal_real[1] = 10.0f;
+	// }
 
 	/* ================================ 发送 ================================ */
 
