@@ -23,9 +23,23 @@ uint32_t send_mailbox1;
 uint32_t send_mailbox2;
 uint8_t can_tx_data[8];
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////
+/************************
+ * @brief 使能电机
+ *
+ * @note
+ * 轮毂的 3508 不用初始化
+ * 髋电机需要使能
+ ************************/
+void Motor_Enable(void)
+{
+  uint8_t i;
 
-// dji motors//
+  for (i = 0; i < 4; i++)
+  {
+    controller_init(i + 1);
+    osDelay(1);
+  }
+}
 
 void TransmitChassisMotorCurrent(int16_t o1, int16_t o2)
 {
@@ -262,8 +276,8 @@ void pack_cmd(uint8_t id, float p_des, float v_des, float kp, float kd, float t_
 
 float Uint_To_Float(int x_int, float x_min, float x_max, int bits)
 {
-	// 将无符号整数转换为浮点数，给定范围和位数
-	return ((float)x_int) * (x_max - x_min) / ((float)((1 << bits) - 1)) + x_min;
+  // 将无符号整数转换为浮点数，给定范围和位数
+  return ((float)x_int) * (x_max - x_min) / ((float)((1 << bits) - 1)) + x_min;
 }
 
 void Motor_AK_MIT_Decode(struct Motor_AK_Rx_Data *rxData, uint8_t data[8], float pMax, float vMax, float tMax)

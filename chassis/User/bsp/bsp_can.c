@@ -16,6 +16,21 @@
 #include "data_transform.h"
 #include "motor.h"
 
+#define CANID_YAW
+#define CANID_PITCH
+
+#define CANID_SHOOT_A
+#define CANID_SHOOT_B
+#define CANID_FEED
+
+#define CANID_HUB_L 0x206
+#define CANID_HUB_R 0x207
+
+#define CANID_HIP_LF 0x01
+#define CANID_HIP_RF 0x02
+#define CANID_HIP_LB 0x03
+#define CANID_HIP_RB 0x04
+
 extern struct Wheel_Leg_Target set;
 extern struct Chassis_State chassis;
 
@@ -83,123 +98,123 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 			 * @date 2025-10-30
 			 */
 			/******** M3508 ********/
-			else if (rx_message.StdId == M3508_WHELL_ID_1)
+			else if (rx_message.StdId == CANID_HUB_L)
 			{
 				DJI_Motor_Receive(&m3508[0], canRxBuf);
 				motor_status.receive_flag[4] = true;
 			}
-			else if (rx_message.StdId == M3508_WHELL_ID_2)
+			else if (rx_message.StdId == CANID_HUB_R)
 			{
 				DJI_Motor_Receive(&m3508[1], canRxBuf);
 				motor_status.receive_flag[5] = true;
 			}
 			/******** / M3508 ********/
-			else if (rx_message.ExtId == 0x2967)
-			{
-				int16_t pos_int = (canRxBuf[0] << 8) | (canRxBuf[1]);
-				int16_t spd_int = (canRxBuf[2] << 8) | (canRxBuf[3]);
-				int16_t cur_int = (canRxBuf[4] << 8) | (canRxBuf[5]);
-				AK_motor[2].motor_pos = (float)(pos_int * 0.1f);  // 电机位置
-				AK_motor[2].motor_spd = (float)(spd_int * 10.0f); // 电机速度
-				AK_motor[2].motor_cur = (float)(cur_int * 0.01f); // 电机电流
-				AK_motor[2].motor_temp = canRxBuf[6];			  // 电机温度
-				AK_motor[2].motor_error = canRxBuf[7];			  // 电机故障码
-			}
-			else if (rx_message.ExtId == 0x2968)
-			{
-				int16_t pos_int = (canRxBuf[0] << 8) | (canRxBuf[1]);
-				int16_t spd_int = (canRxBuf[2] << 8) | (canRxBuf[3]);
-				int16_t cur_int = (canRxBuf[4] << 8) | (canRxBuf[5]);
-				AK_motor[3].motor_pos = (float)(pos_int * 0.1f);  // 电机位置
-				AK_motor[3].motor_spd = (float)(spd_int * 10.0f); // 电机速度
-				AK_motor[3].motor_cur = (float)(cur_int * 0.01f); // 电机电流
-				AK_motor[3].motor_temp = canRxBuf[6];			  // 电机温度
-				AK_motor[3].motor_error = canRxBuf[7];			  // 电机故障码
-			}
-			else if (rx_message.ExtId == 0x2966)
-			{
-				int16_t pos_int = (canRxBuf[0] << 8) | (canRxBuf[1]);
-				int16_t spd_int = (canRxBuf[2] << 8) | (canRxBuf[3]);
-				int16_t cur_int = (canRxBuf[4] << 8) | (canRxBuf[5]);
-				AK_motor[1].motor_pos = (float)(pos_int * 0.1f);  // 电机位置
-				AK_motor[1].motor_spd = (float)(spd_int * 10.0f); // 电机速度
-				AK_motor[1].motor_cur = (float)(cur_int * 0.01f); // 电机电流
-				AK_motor[1].motor_temp = canRxBuf[6];			  // 电机温度
-				AK_motor[1].motor_error = canRxBuf[7];			  // 电机故障码
-			}
-			else if (rx_message.ExtId == 0x2965)
-			{
-				int16_t pos_int = (canRxBuf[0] << 8) | (canRxBuf[1]);
-				int16_t spd_int = (canRxBuf[2] << 8) | (canRxBuf[3]);
-				int16_t cur_int = (canRxBuf[4] << 8) | (canRxBuf[5]);
-				AK_motor[0].motor_pos = (float)(pos_int * 0.1f);  // 电机位置
-				AK_motor[0].motor_spd = (float)(spd_int * 10.0f); // 电机速度
-				AK_motor[0].motor_cur = (float)(cur_int * 0.01f); // 电机电流
-				AK_motor[0].motor_temp = canRxBuf[6];			  // 电机温度
-				AK_motor[0].motor_error = canRxBuf[7];			  // 电机故障
-			}
-			else if (rx_message.ExtId == 0x2964)
-			{
-				int16_t pos_int = (canRxBuf[0] << 8) | (canRxBuf[1]);
-				int16_t spd_int = (canRxBuf[2] << 8) | (canRxBuf[3]);
-				int16_t cur_int = (canRxBuf[4] << 8) | (canRxBuf[5]);
-				AK_motor[4].motor_pos = (float)(pos_int * 0.1f);  // 电机位置
-				AK_motor[4].motor_spd = (float)(spd_int * 10.0f); // 电机速度
-				AK_motor[4].motor_cur = (float)(cur_int * 0.01f); // 电机电流
-				AK_motor[4].motor_temp = canRxBuf[6];			  // 电机温度
-				AK_motor[4].motor_error = canRxBuf[7];			  // 电机故障码
-			}
-			else if (rx_message.ExtId == 0x2963)
-			{
-				int16_t pos_int = (canRxBuf[0] << 8) | (canRxBuf[1]);
-				int16_t spd_int = (canRxBuf[2] << 8) | (canRxBuf[3]);
-				int16_t cur_int = (canRxBuf[4] << 8) | (canRxBuf[5]);
-				AK_motor[5].motor_pos = (float)(pos_int * 0.1f);  // 电机位置
-				AK_motor[5].motor_spd = (float)(spd_int * 10.0f); // 电机速度
-				AK_motor[5].motor_cur = (float)(cur_int * 0.01f); // 电机电流
-				AK_motor[5].motor_temp = canRxBuf[6];			  // 电机温度
-				AK_motor[5].motor_error = canRxBuf[7];			  // 电机故障码
-			}
-			else if (rx_message.StdId == 0x05)
-			{
+			// else if (rx_message.ExtId == 0x2967)
+			// {
+			// 	int16_t pos_int = (canRxBuf[0] << 8) | (canRxBuf[1]);
+			// 	int16_t spd_int = (canRxBuf[2] << 8) | (canRxBuf[3]);
+			// 	int16_t cur_int = (canRxBuf[4] << 8) | (canRxBuf[5]);
+			// 	AK_motor[2].motor_pos = (float)(pos_int * 0.1f);  // 电机位置
+			// 	AK_motor[2].motor_spd = (float)(spd_int * 10.0f); // 电机速度
+			// 	AK_motor[2].motor_cur = (float)(cur_int * 0.01f); // 电机电流
+			// 	AK_motor[2].motor_temp = canRxBuf[6];			  // 电机温度
+			// 	AK_motor[2].motor_error = canRxBuf[7];			  // 电机故障码
+			// }
+			// else if (rx_message.ExtId == 0x2968)
+			// {
+			// 	int16_t pos_int = (canRxBuf[0] << 8) | (canRxBuf[1]);
+			// 	int16_t spd_int = (canRxBuf[2] << 8) | (canRxBuf[3]);
+			// 	int16_t cur_int = (canRxBuf[4] << 8) | (canRxBuf[5]);
+			// 	AK_motor[3].motor_pos = (float)(pos_int * 0.1f);  // 电机位置
+			// 	AK_motor[3].motor_spd = (float)(spd_int * 10.0f); // 电机速度
+			// 	AK_motor[3].motor_cur = (float)(cur_int * 0.01f); // 电机电流
+			// 	AK_motor[3].motor_temp = canRxBuf[6];			  // 电机温度
+			// 	AK_motor[3].motor_error = canRxBuf[7];			  // 电机故障码
+			// }
+			// else if (rx_message.ExtId == 0x2966)
+			// {
+			// 	int16_t pos_int = (canRxBuf[0] << 8) | (canRxBuf[1]);
+			// 	int16_t spd_int = (canRxBuf[2] << 8) | (canRxBuf[3]);
+			// 	int16_t cur_int = (canRxBuf[4] << 8) | (canRxBuf[5]);
+			// 	AK_motor[1].motor_pos = (float)(pos_int * 0.1f);  // 电机位置
+			// 	AK_motor[1].motor_spd = (float)(spd_int * 10.0f); // 电机速度
+			// 	AK_motor[1].motor_cur = (float)(cur_int * 0.01f); // 电机电流
+			// 	AK_motor[1].motor_temp = canRxBuf[6];			  // 电机温度
+			// 	AK_motor[1].motor_error = canRxBuf[7];			  // 电机故障码
+			// }
+			// else if (rx_message.ExtId == 0x2965)
+			// {
+			// 	int16_t pos_int = (canRxBuf[0] << 8) | (canRxBuf[1]);
+			// 	int16_t spd_int = (canRxBuf[2] << 8) | (canRxBuf[3]);
+			// 	int16_t cur_int = (canRxBuf[4] << 8) | (canRxBuf[5]);
+			// 	AK_motor[0].motor_pos = (float)(pos_int * 0.1f);  // 电机位置
+			// 	AK_motor[0].motor_spd = (float)(spd_int * 10.0f); // 电机速度
+			// 	AK_motor[0].motor_cur = (float)(cur_int * 0.01f); // 电机电流
+			// 	AK_motor[0].motor_temp = canRxBuf[6];			  // 电机温度
+			// 	AK_motor[0].motor_error = canRxBuf[7];			  // 电机故障
+			// }
+			// else if (rx_message.ExtId == 0x2964)
+			// {
+			// 	int16_t pos_int = (canRxBuf[0] << 8) | (canRxBuf[1]);
+			// 	int16_t spd_int = (canRxBuf[2] << 8) | (canRxBuf[3]);
+			// 	int16_t cur_int = (canRxBuf[4] << 8) | (canRxBuf[5]);
+			// 	AK_motor[4].motor_pos = (float)(pos_int * 0.1f);  // 电机位置
+			// 	AK_motor[4].motor_spd = (float)(spd_int * 10.0f); // 电机速度
+			// 	AK_motor[4].motor_cur = (float)(cur_int * 0.01f); // 电机电流
+			// 	AK_motor[4].motor_temp = canRxBuf[6];			  // 电机温度
+			// 	AK_motor[4].motor_error = canRxBuf[7];			  // 电机故障码
+			// }
+			// else if (rx_message.ExtId == 0x2963)
+			// {
+			// 	int16_t pos_int = (canRxBuf[0] << 8) | (canRxBuf[1]);
+			// 	int16_t spd_int = (canRxBuf[2] << 8) | (canRxBuf[3]);
+			// 	int16_t cur_int = (canRxBuf[4] << 8) | (canRxBuf[5]);
+			// 	AK_motor[5].motor_pos = (float)(pos_int * 0.1f);  // 电机位置
+			// 	AK_motor[5].motor_spd = (float)(spd_int * 10.0f); // 电机速度
+			// 	AK_motor[5].motor_cur = (float)(cur_int * 0.01f); // 电机电流
+			// 	AK_motor[5].motor_temp = canRxBuf[6];			  // 电机温度
+			// 	AK_motor[5].motor_error = canRxBuf[7];			  // 电机故障码
+			// }
+			// else if (rx_message.StdId == 0x05)
+			// {
 
-				int id = canRxBuf[0]; // 驱动 ID 号
-				int p_int = (canRxBuf[1] << 8) | (canRxBuf[2]);
-				int v_int = (canRxBuf[3] << 4) | (canRxBuf[4] >> 4);
-				int i_int = ((canRxBuf[4] & 0xF) << 8) | (canRxBuf[5]);
-				int T_int = canRxBuf[6];
-				float p = uint_to_float(p_int, P_MIN, P_MAX, 16);
-				float v = uint_to_float(v_int, -V_MAX_2, V_MAX_2, 12);
-				float i = uint_to_float(i_int, -T_MAX_2, T_MAX_2, 12);
-				float Temp = T_int;
-				if (id == 5)
-				{
-					ak_motion[id - 1].motor_ctrlpos = -p;
-					ak_motion[id - 1].motor_ctrlspd = -v;
-					ak_motion[id - 1].motor_ctrltor = i;
-					ak_motion[id - 1].motor_ctrltemp = Temp - 40;
-				}
-			}
-			else if (rx_message.StdId == 0x06)
-			{
+			// 	int id = canRxBuf[0]; // 驱动 ID 号
+			// 	int p_int = (canRxBuf[1] << 8) | (canRxBuf[2]);
+			// 	int v_int = (canRxBuf[3] << 4) | (canRxBuf[4] >> 4);
+			// 	int i_int = ((canRxBuf[4] & 0xF) << 8) | (canRxBuf[5]);
+			// 	int T_int = canRxBuf[6];
+			// 	float p = uint_to_float(p_int, P_MIN, P_MAX, 16);
+			// 	float v = uint_to_float(v_int, -V_MAX_2, V_MAX_2, 12);
+			// 	float i = uint_to_float(i_int, -T_MAX_2, T_MAX_2, 12);
+			// 	float Temp = T_int;
+			// 	if (id == 5)
+			// 	{
+			// 		ak_motion[id - 1].motor_ctrlpos = -p;
+			// 		ak_motion[id - 1].motor_ctrlspd = -v;
+			// 		ak_motion[id - 1].motor_ctrltor = i;
+			// 		ak_motion[id - 1].motor_ctrltemp = Temp - 40;
+			// 	}
+			// }
+			// else if (rx_message.StdId == 0x06)
+			// {
 
-				int id = canRxBuf[0]; // 驱动 ID 号
-				int p_int = (canRxBuf[1] << 8) | (canRxBuf[2]);
-				int v_int = (canRxBuf[3] << 4) | (canRxBuf[4] >> 4);
-				int i_int = ((canRxBuf[4] & 0xF) << 8) | (canRxBuf[5]);
-				int T_int = canRxBuf[6];
-				float p = uint_to_float(p_int, P_MIN, P_MAX, 16);
-				float v = uint_to_float(v_int, -V_MAX_2, V_MAX_2, 12);
-				float i = uint_to_float(i_int, -T_MAX_2, T_MAX_2, 12);
-				float Temp = T_int;
-				if (id == 6)
-				{
-					ak_motion[id - 1].motor_ctrlpos = p;
-					ak_motion[id - 1].motor_ctrlspd = v;
-					ak_motion[id - 1].motor_ctrltor = i;
-					ak_motion[id - 1].motor_ctrltemp = Temp - 40;
-				}
-			}
+			// 	int id = canRxBuf[0]; // 驱动 ID 号
+			// 	int p_int = (canRxBuf[1] << 8) | (canRxBuf[2]);
+			// 	int v_int = (canRxBuf[3] << 4) | (canRxBuf[4] >> 4);
+			// 	int i_int = ((canRxBuf[4] & 0xF) << 8) | (canRxBuf[5]);
+			// 	int T_int = canRxBuf[6];
+			// 	float p = uint_to_float(p_int, P_MIN, P_MAX, 16);
+			// 	float v = uint_to_float(v_int, -V_MAX_2, V_MAX_2, 12);
+			// 	float i = uint_to_float(i_int, -T_MAX_2, T_MAX_2, 12);
+			// 	float Temp = T_int;
+			// 	if (id == 6)
+			// 	{
+			// 		ak_motion[id - 1].motor_ctrlpos = p;
+			// 		ak_motion[id - 1].motor_ctrlspd = v;
+			// 		ak_motion[id - 1].motor_ctrltor = i;
+			// 		ak_motion[id - 1].motor_ctrltemp = Temp - 40;
+			// 	}
+			// }
 
 			else if (rx_message.StdId == 0x01)
 			{
@@ -349,37 +364,6 @@ void GetChassisYSpeedSet(fp32 *set)
 void GetChassisZSpeedSet(fp32 *set)
 {
 	*set = chassis_speed_set[CHASSIS_Z];
-}
-
-void GetAKMotor1Fdb(AK_motor_fdb_t *motor1, AK_motor_ctrl_fdb_t *motor2)
-{
-	*motor1 = AK_motor[0];
-	*motor2 = ak_motion[0];
-}
-void GetAKMotor2Fdb(AK_motor_fdb_t *motor1, AK_motor_ctrl_fdb_t *motor2)
-{
-	*motor1 = AK_motor[1];
-	*motor2 = ak_motion[1];
-}
-void GetAKMotor3Fdb(AK_motor_fdb_t *motor1, AK_motor_ctrl_fdb_t *motor2)
-{
-	*motor1 = AK_motor[2];
-	*motor2 = ak_motion[2];
-}
-void GetAKMotor4Fdb(AK_motor_fdb_t *motor1, AK_motor_ctrl_fdb_t *motor2)
-{
-	*motor1 = AK_motor[3];
-	*motor2 = ak_motion[3];
-}
-void GetAKMotor5Fdb(AK_motor_fdb_t *motor1, AK_motor_ctrl_fdb_t *motor2)
-{
-	*motor1 = AK_motor[4];
-	*motor2 = ak_motion[4];
-}
-void GetAKMotor6Fdb(AK_motor_fdb_t *motor1, AK_motor_ctrl_fdb_t *motor2)
-{
-	*motor1 = AK_motor[5];
-	*motor2 = ak_motion[5];
 }
 
 float uint_to_float(int x_int, float x_min, float x_max, int bits)

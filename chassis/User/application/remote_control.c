@@ -39,13 +39,13 @@
 extern UART_HandleTypeDef huart3;
 extern DMA_HandleTypeDef hdma_usart3_rx;
 
-RC_ctrl_t rc_ctrl; // 遥控器变量
+DT7_Data rc_ctrl; // 遥控器变量
 
 uint32_t rc_time = 0;
 
 /* ================================================================ proto ================================================================ */
 
-static void Sbus_Parse(RC_ctrl_t *rc_ctrl, volatile const uint8_t *sbus_buf);
+static void Sbus_Parse(DT7_Data *rc_ctrl, volatile const uint8_t *sbus_buf);
 static uint8_t sbus_rx_buf[2][SBUS_RX_BUF_NUM]; // 接收原始数据，为18个字节，给了36个字节长度，防止DMA传输越界
 
 /* ================================================================ func ================================================================ */
@@ -63,9 +63,9 @@ void remote_control_init(void)
 /************************
  * @brief 获取遥控器数据指针
  *
- * @return const RC_ctrl_t* 遥控器数据指针
+ * @return const DT7_Data* 遥控器数据指针
  ************************/
-const RC_ctrl_t *get_remote_control_point(void)
+const DT7_Data *get_remote_control_point(void)
 {
     return &rc_ctrl;
 }
@@ -214,7 +214,7 @@ void USART3_IRQHandler(void)
  * @param sbus_buf 原数据
  * @param rc_ctrl 遥控器
  ************************/
-static void Sbus_Parse(RC_ctrl_t *rc_ctrl, volatile const uint8_t *buf)
+static void Sbus_Parse(DT7_Data *rc_ctrl, volatile const uint8_t *buf)
 {
     if (buf == NULL || rc_ctrl == NULL)
     {
@@ -256,7 +256,7 @@ static void Sbus_Parse(RC_ctrl_t *rc_ctrl, volatile const uint8_t *buf)
  * @param rc_data
  * @return uint32_t
  ************************/
-uint32_t GetRCData(RC_ctrl_t *rc_data)
+uint32_t GetRCData(DT7_Data *rc_data)
 {
     *rc_data = rc_ctrl;
     return rc_time;
@@ -269,7 +269,7 @@ uint32_t GetRCData(RC_ctrl_t *rc_data)
  * @param rc_ctrl
  * @param dt
  ************************/
-void RC_Offline_Detection(RC_ctrl_t *rc_ctrl, uint32_t dt)
+void RC_Offline_Detection(DT7_Data *rc_ctrl, uint32_t dt)
 {
     if (rc_ctrl->receive_flag)
     {

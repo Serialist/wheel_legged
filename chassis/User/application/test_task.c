@@ -155,33 +155,6 @@ void test_task(void const *argument)
 
     chassis.state.x_filter += chassis.state.v_filter * (TASK_PERIOD_MS * 0.001f);
 
-    /* ================================================================ 安全检测 ================================================================ */
-
-    /// @brief 检测
-    RC_Offline_Detection(&rc_ctrl, TASK_PERIOD_MS);
-    Motor_Offline_Detection(&motor_status, TASK_PERIOD_MS);
-
-    /// @brief 急停判断
-    if (RC_IS_OFFLINE(&rc_ctrl) || MOTOR_IS_OFFLINE(&motor_status) || (chassis.state.thetal >= (PI / 2)) || (chassis.state.thetar >= (PI / 2)))
-    {
-      chassis.robo_status.status = ROBO_STATE_EMERGENCY;
-    }
-
-    /// @brief 左摇杆在下时试图手动恢复
-    if (chassis.robo_status.status == ROBO_STATE_EMERGENCY && chassis.rc_data.rc.s[S_L] == DOWN)
-    {
-      chassis.robo_status.status = ROBO_STATE_RUN;
-    }
-
-    /// @brief 状态清零
-    if (chassis.rc_data.rc.s[S_L] == MID)
-    {
-      set.position_set = chassis.state.x_filter;
-      set.yaw = chassis.IMU_DATA.total_yaw;
-    }
-
-    /* ================================================================ / 安全检测 ================================================================ */
-
     // 精确周期控制
     vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(TASK_PERIOD_MS));
   }

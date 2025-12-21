@@ -10,8 +10,6 @@
 #define CHASSIS_Y_ID 0x304
 #define CHASSIS_Z_ID 0x303
 #define GIMBAL_TO_CHASSIS 0x302
-#define M3508_WHELL_ID_1 0x206
-#define M3508_WHELL_ID_2 0x207
 
 #define YAW_ID 0x205
 // #define MOMENTUM_WHEEL_1_ID 0x203
@@ -21,6 +19,7 @@
 
 extern struct DJI_RxData m3508[2];
 extern struct DJI_RxData yaw_data;
+extern AK_motor_ctrl_fdb_t ak_motion[6];
 
 // 获取电机数据
 // void GetMotorFdb(Motor_Feedback_t* motor, uint32_t* trans_time, uint8_t num, uint8_t start_num);

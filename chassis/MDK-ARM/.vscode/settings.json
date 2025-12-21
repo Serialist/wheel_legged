@@ -55,5 +55,6 @@
         "chassis.h": "c",
         "bsp_dwt.h": "c",
         "c2g.h": "c"
-    }
+    },
+    "files.encoding": "gb2312"
 }

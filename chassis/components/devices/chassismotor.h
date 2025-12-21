@@ -235,7 +235,6 @@ struct Chassis_State
 
 	float chassis_speed_set[2];
 	float speed_calc_sets[3];
-	AK_motor_fdb_t AK_fdb[6];
 	AK_motor_ctrl_fdb_t ak_fdb_ctrl[6];
 	CM_TRANSMIT_DATA ak_set[6];
 	float current_set[6];
@@ -258,7 +257,7 @@ struct Chassis_State
 
 	Flag no_force_mode;
 
-	RC_ctrl_t rc_data;
+	DT7_Data rc_dt7;
 
 	float middle_data;
 
@@ -279,21 +278,21 @@ typedef struct
 
 struct Wheel_Leg_Target
 {
+	float x, v;
+	float yaw, pitch, roll;
+	float vyaw, vpitch, vroll;
+	float ayaw, apitch, aroll;
+
 	float position_set; // m  期望达到的位置
 	float v_set;
 	float speed_cmd;	   // m/s 期望达到的目标前进速度
 	float speed_integral;  // m/s 速度积分项
 	float rotation_torque; // N*m 旋转力矩
-	float yaw;			   // rad 期望达到的目标航向角
-	float pitch;		   // rad 期望达到的目标俯仰角
-	float roll;			   // rad 期望达到的目标横滚角
 	float roll_set_now;
 	float leg_length;					   // m  期望达到的目标腿长
 	float left_length, right_length;	   // m  期望达到的目标腿长
 	float left_leg_angle, right_leg_angle; // rad 期望达到的目标腿角
 	float set_cal_real[6];
-
-	float vyaw;
 
 	float mode_state;
 	float rotate_state;
@@ -345,5 +344,7 @@ struct Motor_AK_Rx_Data
 float Uint_To_Float(int x_int, float x_min, float x_max, int bits);
 void Motor_AK_MIT_Decode(struct Motor_AK_Rx_Data *rxData, uint8_t data[8],
 						 float pMax, float vMax, float tMax);
+
+void Motor_Enable(void);
 
 #endif

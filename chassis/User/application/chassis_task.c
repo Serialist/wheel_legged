@@ -113,7 +113,6 @@ static bool Ground_Detection_R(struct Chassis_State *ch, struct VMC_Leg *leg);
 static void Safe_Control(struct Chassis_State *ch);
 static void Get_Order(struct Chassis_State *ch);
 static void LQR_K_Calc(float k[2][6], float coe[12][4], float len);
-static void Motor_Enable(void);
 
 /* ================================================================ function ================================================================*/
 
@@ -145,11 +144,9 @@ void chassis_task(void const *argument)
 
 		/* ================================ 控制 ================================ */
 
-		Get_Order(&chassis); // 获得控制指令
-
+		Get_Order(&chassis);	   // 获得控制指令
 		Balance_Produce(&chassis); // 平衡处理
-
-		Safe_Control(&chassis); // 安全控制
+		Safe_Control(&chassis);	   // 安全控制
 
 		/* ================================ 发送 ================================  */
 
@@ -261,57 +258,26 @@ static void Chassis_Init(void)
 }
 
 /************************
- * @brief 使能电机
- *
- * @note
- * 轮毂的 3508 不用初始化
- * 髋电机需要使能
- ************************/
-void Motor_Enable(void)
-{
-	uint8_t i;
-
-	for (i = 0; i < 4; i++)
-	{
-		controller_init(i + 1);
-		osDelay(1);
-	}
-}
-
-/************************
  * @brief 状态更新
  *
  * @param ch
  ************************/
 static void Fdb_Update(struct Chassis_State *ch)
 {
+	uint8_t i = 0;
+
 	ch->time_last = ch->time_now;
 	// 获取电机数据
-	GetAKMotor1Fdb(&ch->AK_fdb[0], &ch->ak_fdb_ctrl[0]);
-	GetAKMotor2Fdb(&ch->AK_fdb[1], &ch->ak_fdb_ctrl[1]);
-	GetAKMotor3Fdb(&ch->AK_fdb[2], &ch->ak_fdb_ctrl[2]);
-	GetAKMotor4Fdb(&ch->AK_fdb[3], &ch->ak_fdb_ctrl[3]);
-	GetAKMotor5Fdb(&ch->AK_fdb[4], &ch->ak_fdb_ctrl[4]);
-	GetAKMotor6Fdb(&ch->AK_fdb[5], &ch->ak_fdb_ctrl[5]);
+	for (i = 0; i < 4; i++)
+		ch->ak_fdb_ctrl[i] = ak_motion[i];
 
 	// 获取遥控器数据
-	ch->time_now.rc = GetRCData(&(ch->rc_data));
+	ch->time_now.rc = GetRCData(&(ch->rc_dt7));
 
 	ch->robo_status.flag.above_left = Ground_Detection_L(ch, &leg_l);
 	ch->robo_status.flag.above_right = Ground_Detection_R(ch, &leg_r);
 
 	ch->robo_status.flag.above = (ch->robo_status.flag.above_left == true) && (ch->robo_status.flag.above_right == true);
-}
-
-void chassis_sys_calc(struct Chassis_State *ch)
-{
-	leg_l.phi1 = PI / 2.0f - ch->ak_fdb_ctrl[3].motor_ctrlpos + 4.2132f;
-	leg_l.phi4 = PI / 2.0f - ch->ak_fdb_ctrl[2].motor_ctrlpos + 0.0410f;
-	leg_r.phi1 = PI / 2.0f - ch->ak_fdb_ctrl[0].motor_ctrlpos + 1.0744f;
-	leg_r.phi4 = PI / 2.0f - ch->ak_fdb_ctrl[1].motor_ctrlpos - 1.0363f;
-
-	VMC_calc_1(&leg_l, &chassis, 3.0f / 1000.0f);
-	VMC_calc_1(&leg_r, &chassis, 3.0f / 1000.0f);
 }
 
 void Phase_Update(struct Chassis_State *ch)
@@ -372,8 +338,7 @@ void chassis_torque_sent(struct Chassis_State *ch)
 					   HEXROLL_TORQUE_TO_CURRENT(ch->ak_set[5].torset),
 					   0);
 
-	// 伺服模式下电流发送
-
+	// 伺服模式下发送电流
 	//	comm_can_set_current(AK_ID_11,ch->current_set[4]);
 	//	comm_can_set_current(AK_ID_21,ch->current_set[5]);
 	//	vTaskDelay(10);
@@ -391,16 +356,16 @@ void Get_Order(struct Chassis_State *ch)
 	ch->robo_status.last_behavior = ch->robo_status.behavior;
 
 	// 无力模式
-	if (ch->rc_data.rc.s[S_R] == UP)
+	if (ch->rc_dt7.rc.s[S_R] == UP)
 	{
 		ch->robo_status.behavior = ROBO_BX_STOP;
 	}
 	// 一阶倒立摆
-	else if (ch->rc_data.rc.s[S_R] == MID) // 停止模式
+	else if (ch->rc_dt7.rc.s[S_R] == MID) // 停止模式
 	{
-		set.speed_cmd = ch->rc_data.rc.ch[L_Y] * RC_RATIO;												 // 目标速度
-		set.yaw += -ch->rc_data.rc.ch[L_X] * RC_RATIO;													 // 目标 yaw
-		set.left_length = set.right_length = VAULE_MAP(ch->rc_data.rc.ch[R_Y], -660, 660, 0.10f, 0.35f); // 目标腿长
+		set.speed_cmd = ch->rc_dt7.rc.ch[L_Y] * RC_RATIO;																  // 目标速度
+		set.yaw += -ch->rc_dt7.rc.ch[L_X] * RC_RATIO;																	  // 目标 yaw
+		set.left_length = set.right_length = VAULE_MAP(LIMIT(ch->rc_dt7.rc.ch[R_Y], -330, 660), -330, 660, 0.15f, 0.30f); // 目标腿长
 
 		// 行进时不关注位置
 		if (set.speed_cmd != 0)
@@ -408,25 +373,25 @@ void Get_Order(struct Chassis_State *ch)
 			set.position_set = ch->state.x_filter;
 		}
 
-		set.roll = ch->rc_data.rc.ch[R_X] * PI / 2 / 660 / 4;
+		set.roll = ch->rc_dt7.rc.ch[R_X] * PI / 2 / 660 / 4;
 
 		my_debug.no_tp_flag = true;
 
 		ch->robo_status.behavior = ROBO_BX_NORMAL;
 	}
 	// 二阶倒立摆
-	else if (ch->rc_data.rc.s[S_R] == DOWN)
+	else if (ch->rc_dt7.rc.s[S_R] == DOWN)
 	{
 		// 正常运行
-		if (ch->rc_data.rc.ch[R_Y] != -660)
+		if (ch->rc_dt7.rc.ch[R_Y] != -660)
 		{
 			my_debug.no_tp_flag = false;
 
 			ch->robo_status.behavior = ROBO_BX_NORMAL;
 
-			set.speed_cmd = ch->rc_data.rc.ch[L_Y] * RC_RATIO;												 // 目标速度
-			set.yaw += -ch->rc_data.rc.ch[L_X] * YAW_RATIO;													 // 目标 yaw
-			set.left_length = set.right_length = VAULE_MAP(ch->rc_data.rc.ch[R_Y], -660, 660, 0.10f, 0.30f); // 目标腿长
+			set.speed_cmd = ch->rc_dt7.rc.ch[L_Y] * RC_RATIO;																  // 目标速度
+			set.yaw += -ch->rc_dt7.rc.ch[L_X] * YAW_RATIO;																	  // 目标 yaw
+			set.left_length = set.right_length = VAULE_MAP(LIMIT(ch->rc_dt7.rc.ch[R_Y], -330, 660), -330, 660, 0.15f, 0.30f); // 目标腿长
 
 			// 行进时不关注位置
 			if (set.speed_cmd != 0)
@@ -434,7 +399,7 @@ void Get_Order(struct Chassis_State *ch)
 				set.position_set = ch->state.x_filter;
 			}
 
-			set.roll = ch->rc_data.rc.ch[R_X] * PI / 2 / 660 / 4;
+			set.roll = ch->rc_dt7.rc.ch[R_X] * PI / 2 / 660 / 4;
 		}
 		// 跳跃
 		else
@@ -459,23 +424,19 @@ void Safe_Control(struct Chassis_State *ch)
 		ch->ak_set[4].torset = 0.0f;
 		ch->ak_set[5].torset = 0.0f;
 	}
-
-	// 如果电机离线，尝试重新使能电机
-	if (ch->robo_status.status == ROBO_STATE_EMERGENCY && MOTOR_IS_OFFLINE(&motor_status))
-	{
-		Motor_Enable();
-	}
 }
 
 #define OFFGROUND_DETECTION_ACCEL_RATIO 0.3f
-
 #define GROUND_DETECTION_THRESHOLD 15.0f // threshold 阈值
-/************************
+
+/**
  * @brief 触地检测器 right
  *
  * @param ch
- * @return uint8_t 离地 1 触地 0
- ************************/
+ * @param leg
+ * @return true
+ * @return false
+ */
 bool Ground_Detection_R(struct Chassis_State *ch, struct VMC_Leg *leg)
 {
 	ch->state.FNr = leg->F0 * arm_cos_f32(leg->theta) +
@@ -491,12 +452,14 @@ bool Ground_Detection_R(struct Chassis_State *ch, struct VMC_Leg *leg)
 	return (ch->state.FNr < GROUND_DETECTION_THRESHOLD) ? true : false;
 }
 
-/************************
+/**
  * @brief 触地检测器 left
  *
  * @param ch
- * @return uint8_t
- ************************/
+ * @param leg
+ * @return true
+ * @return false
+ */
 bool Ground_Detection_L(struct Chassis_State *ch, struct VMC_Leg *leg)
 {
 	my_debug.ground_det.f0l = leg->F0 * arm_cos_f32(leg->theta);
@@ -524,8 +487,6 @@ float lqr_l_[12] = {0};
 float kx[12] = {1, 1, 1, 1, 1, 1,
 				1, 1, 1, 1, 1, 1};
 
-float KK[6] = {1, 1, 1, 1, 1, 1};
-
 // 推力前馈
 float fn_forward_r = 0;
 float fn_forward_l = 0;
@@ -545,19 +506,22 @@ float fn_forward_l = 0;
 /// @date 2025-11-29 23:10
 /// @date 2025-12-06 16:30 22:42
 /// @date 2025-12-07 17:26 18:54
+/// @date 2025-12-19 22:31 23:15
+/// @date 2025-12-20 22:42 23:29
+/// @date 2025-12-21 16:03
 float lqr_coe[12][4] = {
-	{-72.020750067070409, -133.442052393281386, 314.103896441336076, -1.291623246816448},
-	{176.276906683049987, -383.972935317621193, 270.419166730327674, -5.585725556191087},
-	{-6.371826973681856, -52.843832380562873, 71.648714252828455, -0.141254334901730},
-	{14.487886509303429, -13.249594795107299, -19.420107363462410, -0.573766034435564},
-	{-13.975495331470929, -49.462498281463347, 162.367335689228895, -4.224253743416839},
-	{149.863609149629298, -625.023094578263340, 869.764932041754264, -7.355428842314836},
-	{-11.999381932340690, -72.685447361650162, 194.075631668482714, -4.739919999837185},
-	{144.595997681058606, -594.618278708500156, 820.728866112368792, -7.032377829242853},
-	{-157.511582645597599, 277.810196525614117, -248.259570796877000, 62.973022759557168},
-	{323.246939837904222, -766.447127212351234, 771.406338302571157, 66.953913181349819},
-	{-7.744776446875450, 38.881103715924972, -70.124285703505819, 4.927318262858634},
-	{-20.639530367016270, 114.807776885591807, -170.729118893160290, 6.033005512437716}};
+	{-134.246228465676211, 10.716525769207040, 116.801981134867404, 0.588660103157824},
+	{273.171092904894920, -647.320285245547666, 524.018068874426717, -15.801702810178369},
+	{-22.543800942965930, -19.632547944507891, 31.930749782616100, 0.624084210935801},
+	{38.103594759539149, -92.646386705735637, 69.726643428400152, -2.519403596959248},
+	{-34.339048283953368, -22.375730131025740, 100.979330750248394, -5.477897963619395},
+	{203.712829511923502, -598.313276890686666, 587.660562438355669, -20.074808804763759},
+	{-23.641703178220322, -29.728018122994591, 86.812009131330441, -5.588930246601215},
+	{177.638766079621689, -542.020720389412872, 550.294150336457278, -16.533832422510301},
+	{-192.884585177243991, 179.540154401294814, -31.337487650201641, 86.282841978229200},
+	{405.579815737053423, -754.557259489523062, 541.710685854862618, 90.755937012067790},
+	{-5.937288515180397, 18.223391226601588, -22.851217221551678, 5.495357129476562},
+	{-15.803756434693080, 71.682712954084778, -83.171657493424249, 7.870173745340547}};
 
 /***********************************************
  * @brief 平衡行驶过程(左右两腿分别进行LQR运算)
@@ -772,7 +736,7 @@ void Balance_Produce(struct Chassis_State *ch)
 	/* ================================ 发送 ================================ */
 
 	/// @brief 限幅
-#define HIP_TORQUE_MAX 25.0f
+#define HIP_TORQUE_MAX 20.0f
 #define HUB_TORQUE_MAX 2.5f
 	set.set_cal_real[0] = LIMIT(set.set_cal_real[0], -HIP_TORQUE_MAX, HIP_TORQUE_MAX);
 	set.set_cal_real[1] = LIMIT(set.set_cal_real[1], -HIP_TORQUE_MAX, HIP_TORQUE_MAX);
@@ -852,27 +816,29 @@ void Jump_Phase(struct Chassis_State *ch)
 
 		if (leg_l.L0 < JUMP_LAND_LEG_LENGTH)
 		{
-			jump_state = JUMP_STATE_LAND;
-			CLEAR(jump_time);
-		}
-	}
-	// 等待落地
-	else if (jump_state == JUMP_STATE_LAND)
-	{
-		fn_forward_l = fn_forward_r = -15.0f;
-		set.left_length = set.right_length = JUMP_LAND_LEG_LENGTH;
-
-		if (chassis.robo_status.flag.above == false)
-		{
 			my_debug.no_t_flag = false;
 			my_debug.no_yaw_flag = false;
-
-			ch->robo_status.behavior = ROBO_BX_NORMAL;
 
 			jump_state = JUMP_STATE_NONE;
 			CLEAR(jump_time);
 		}
 	}
+	// // 等待落地
+	// else if (jump_state == JUMP_STATE_LAND)
+	// {
+	// 	fn_forward_l = fn_forward_r = -15.0f;
+
+	// 	if (chassis.robo_status.flag.above == false)
+	// 	{
+	// 		my_debug.no_t_flag = false;
+	// 		my_debug.no_yaw_flag = false;
+
+	// 		ch->robo_status.behavior = ROBO_BX_NORMAL;
+
+	// 		jump_state = JUMP_STATE_NONE;
+	// 		CLEAR(jump_time);
+	// 	}
+	// }
 
 	jump_time++;
 }
