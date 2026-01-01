@@ -18,6 +18,7 @@
 /* ================================================================ include ================================================================ */
 
 #include "remote_control.h"
+#include "user_lib.h"
 #include "main.h"
 #include "string.h"
 
@@ -41,10 +42,10 @@ extern DMA_HandleTypeDef hdma_usart3_rx;
 
 DT7_Data rc_ctrl; // Ò£¿ØÆ÷±äÁ¿
 
-uint32_t rc_time = 0;
-
 /* ================================================================ proto ================================================================ */
 
+static void DT7_Clear(DT7_Data *rc_ctrl);
+static bool RC_Data_Check(void);
 static void Sbus_Parse(DT7_Data *rc_ctrl, volatile const uint8_t *sbus_buf);
 static uint8_t sbus_rx_buf[2][SBUS_RX_BUF_NUM]; // ½ÓÊÕÔ­Ê¼Êý¾Ý£¬Îª18¸ö×Ö½Ú£¬¸øÁË36¸ö×Ö½Ú³¤¶È£¬·ÀÖ¹DMA´«ÊäÔ½½ç
 
@@ -56,7 +57,7 @@ static uint8_t sbus_rx_buf[2][SBUS_RX_BUF_NUM]; // ½ÓÊÕÔ­Ê¼Êý¾Ý£¬Îª18¸ö×Ö½Ú£¬¸øÁ
  ************************/
 void remote_control_init(void)
 {
-    rc_ctrl.offline_flag = 1;
+    DT7_Clear(&rc_ctrl);
     RC_Init(sbus_rx_buf[0], sbus_rx_buf[1], SBUS_RX_BUF_NUM);
 }
 
@@ -70,71 +71,60 @@ const DT7_Data *get_remote_control_point(void)
     return &rc_ctrl;
 }
 
-/************************
+/**
  * @brief ÅÐ¶ÏÒ£¿ØÆ÷Êý¾ÝÊÇ·ñ³ö´í
  *
- * @return uint8_t (True)?0:1
- ************************/
-uint8_t RC_Data_Check(void)
+ * @return true
+ * @return false
+ */
+bool RC_Data_Check(void)
 {
     // Ê¹ÓÃÁËgo toÓï¾ä ·½±ã³ö´íÍ³Ò»´¦ÀíÒ£¿ØÆ÷±äÁ¿Êý¾Ý¹éÁã
-    if (RC_ABS(rc_ctrl.rc.ch[0]) > RC_CHANNAL_ERROR_VALUE)
+    if (RC_ABS(rc_ctrl.rc.ch[0]) > RC_CHANNAL_ERROR_VALUE |
+        RC_ABS(rc_ctrl.rc.ch[1]) > RC_CHANNAL_ERROR_VALUE |
+        RC_ABS(rc_ctrl.rc.ch[2]) > RC_CHANNAL_ERROR_VALUE |
+        RC_ABS(rc_ctrl.rc.ch[3]) > RC_CHANNAL_ERROR_VALUE |
+        rc_ctrl.rc.s[0] == 0 |
+        rc_ctrl.rc.s[1] == 0)
     {
-        goto error;
+        DT7_Clear(&rc_ctrl);
+        return true;
     }
-    if (RC_ABS(rc_ctrl.rc.ch[1]) > RC_CHANNAL_ERROR_VALUE)
+    else
     {
-        goto error;
+        return false;
     }
-    if (RC_ABS(rc_ctrl.rc.ch[2]) > RC_CHANNAL_ERROR_VALUE)
-    {
-        goto error;
-    }
-    if (RC_ABS(rc_ctrl.rc.ch[3]) > RC_CHANNAL_ERROR_VALUE)
-    {
-        goto error;
-    }
-    if (rc_ctrl.rc.s[0] == 0)
-    {
-        goto error;
-    }
-    if (rc_ctrl.rc.s[1] == 0)
-    {
-        goto error;
-    }
-    return 0;
-
-error:
-    rc_ctrl.rc.ch[0] = 0;
-    rc_ctrl.rc.ch[1] = 0;
-    rc_ctrl.rc.ch[2] = 0;
-    rc_ctrl.rc.ch[3] = 0;
-    rc_ctrl.rc.ch[4] = 0;
-    //    rc_ctrl.rc.s[0] = RC_SW_UP;
-    //    rc_ctrl.rc.s[1] = RC_SW_MID;
-    rc_ctrl.mouse.x = 0;
-    rc_ctrl.mouse.y = 0;
-    rc_ctrl.mouse.z = 0;
-    rc_ctrl.mouse.press_l = 0;
-    rc_ctrl.mouse.press_r = 0;
-    rc_ctrl.key.v = 0;
-    return 1;
 }
 
-void Slove_RC_Lost(void)
+/**
+ * @brief
+ *
+ * @param dt7
+ */
+void DT7_Clear(DT7_Data *dt7)
 {
-    RC_restart(SBUS_RX_BUF_NUM);
-}
-void Slove_Data_Error(void)
-{
-    RC_restart(SBUS_RX_BUF_NUM);
+    dt7->rc.ch[0] = 0;
+    dt7->rc.ch[1] = 0;
+    dt7->rc.ch[2] = 0;
+    dt7->rc.ch[3] = 0;
+    dt7->rc.ch[4] = 0;
+    // rc_ctrl.rc.s[0] = RC_SW_UP;
+    // rc_ctrl.rc.s[1] = RC_SW_MID;
+    dt7->mouse.x = 0;
+    dt7->mouse.y = 0;
+    dt7->mouse.z = 0;
+    dt7->mouse.press_l = 0;
+    dt7->mouse.press_r = 0;
+    dt7->key.v = 0;
+    dt7->offline_flag = 1;
 }
 
-int usart3_d = 0;
-// ´®¿ÚÖÐ¶Ï
+/**
+ * @brief °Ñ´®¿ÚÖÐ¶Ï¿ØÖÆÈ¨Ö±½Ó´Ó HAL ¿ò¼ÜÊÖÀïÇÀ¹ýÀ´ÁË£¬ÊÇ·ñÓÐ¸üÃÀ¹ÛµÄ·½Ê½£¿
+ *
+ */
 void USART3_IRQHandler(void)
 {
-    usart3_d++;
     if (huart3.Instance->SR & UART_FLAG_RXNE) // ½ÓÊÕµ½Êý¾Ý
     {
         __HAL_UART_CLEAR_PEFLAG(&huart3);
@@ -148,24 +138,18 @@ void USART3_IRQHandler(void)
         if ((hdma_usart3_rx.Instance->CR & DMA_SxCR_CT) == RESET)
         {
             /* Current memory buffer used is Memory 0 */
-
-            // disable DMA
             // Ê§Ð§DMA
             __HAL_DMA_DISABLE(&hdma_usart3_rx);
 
-            // get receive data length, length = set_data_length - remain_length
             // »ñÈ¡½ÓÊÕÊý¾Ý³¤¶È,³¤¶È = Éè¶¨³¤¶È - Ê£Óà³¤¶È
             this_time_rx_len = SBUS_RX_BUF_NUM - hdma_usart3_rx.Instance->NDTR;
 
-            // reset set_data_lenght
             // ÖØÐÂÉè¶¨Êý¾Ý³¤¶È
             hdma_usart3_rx.Instance->NDTR = SBUS_RX_BUF_NUM;
 
-            // set memory buffer 1
             // Éè¶¨»º³åÇø1
             hdma_usart3_rx.Instance->CR |= DMA_SxCR_CT;
 
-            // enable DMA
             // Ê¹ÄÜDMA
             __HAL_DMA_ENABLE(&hdma_usart3_rx);
 
@@ -177,23 +161,18 @@ void USART3_IRQHandler(void)
         else
         {
             /* Current memory buffer used is Memory 1 */
-            // disable DMA
             // Ê§Ð§DMA
             __HAL_DMA_DISABLE(&hdma_usart3_rx);
 
-            // get receive data length, length = set_data_length - remain_length
             // »ñÈ¡½ÓÊÕÊý¾Ý³¤¶È,³¤¶È = Éè¶¨³¤¶È - Ê£Óà³¤¶È
             this_time_rx_len = SBUS_RX_BUF_NUM - hdma_usart3_rx.Instance->NDTR;
 
-            // reset set_data_lenght
             // ÖØÐÂÉè¶¨Êý¾Ý³¤¶È
             hdma_usart3_rx.Instance->NDTR = SBUS_RX_BUF_NUM;
 
-            // set memory buffer 0
             // Éè¶¨»º³åÇø0
             DMA1_Stream1->CR &= ~(DMA_SxCR_CT);
 
-            // enable DMA
             // Ê¹ÄÜDMA
             __HAL_DMA_ENABLE(&hdma_usart3_rx);
 
@@ -206,21 +185,20 @@ void USART3_IRQHandler(void)
     }
 }
 
-// int rem_d = 0;
-// int rem_d_d = 0;
-/************************
+/**
  * @brief Ò£¿ØÆ÷Ð­Òé½âÎö
  *
- * @param sbus_buf Ô­Êý¾Ý
- * @param rc_ctrl Ò£¿ØÆ÷
- ************************/
+ * @param rc_ctrl
+ * @param buf
+ */
 static void Sbus_Parse(DT7_Data *rc_ctrl, volatile const uint8_t *buf)
 {
     if (buf == NULL || rc_ctrl == NULL)
     {
         return;
     }
-    rc_time = xTaskGetTickCount();
+
+    rc_ctrl->time = xTaskGetTickCount();
 
     // rem_d_d++;
     rc_ctrl->rc.ch[0] = (buf[0] | (buf[1] << 8)) & 0x07ff;                         // Channel 0
@@ -259,7 +237,7 @@ static void Sbus_Parse(DT7_Data *rc_ctrl, volatile const uint8_t *buf)
 uint32_t GetRCData(DT7_Data *rc_data)
 {
     *rc_data = rc_ctrl;
-    return rc_time;
+    return rc_ctrl.time;
 }
 
 #define RC_TIMEOUT 200 // ³¬Ê±Ê±¼ä µ¥Î» ms

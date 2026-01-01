@@ -148,7 +148,7 @@ typedef __packed struct pid_t
     void (*User_Func2_f)(struct pid_t *pid);
 } PID_t;
 
-void PID_Init(
+void PID_INS_Init(
     PID_t *pid,
     float max_out,
     float intergral_limit,

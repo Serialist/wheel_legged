@@ -36,7 +36,7 @@
  * @param max_out 最大输出
  * @param max_iout 最大积分输出
  ************************/
-void PID_init(struct PID_Def *pid, enum PID_MODE mode, const float kp, const float ki, const float kd, fp32 max_out, fp32 max_iout)
+void PID_Init(struct PID_Def *pid, enum PID_MODE mode, const float kp, const float ki, const float kd, fp32 max_out, fp32 max_iout)
 {
     if (pid == NULL)
     {

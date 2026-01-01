@@ -18,6 +18,7 @@
 #include "dji_motor.h"
 #include "motor.h"
 #include "cmsis_os.h"
+#include "vmc.h"
 
 /* ================================================================ macro ================================================================*/
 
@@ -27,6 +28,7 @@
 
 extern struct Chassis_State chassis;
 extern struct Wheel_Leg_Target set;
+extern struct VMC_Leg leg_l, leg_r;
 
 /* ================================================================ prototype ================================================================*/
 

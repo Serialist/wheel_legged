@@ -223,12 +223,32 @@
         <Ww>
           <count>12</count>
           <WinNumber>1</WinNumber>
-          <ItemText>jump_state</ItemText>
+          <ItemText>jump_state,0x10</ItemText>
         </Ww>
         <Ww>
           <count>13</count>
           <WinNumber>1</WinNumber>
           <ItemText>jump_time,0x0A</ItemText>
+        </Ww>
+        <Ww>
+          <count>14</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>tlqrl</ItemText>
+        </Ww>
+        <Ww>
+          <count>15</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>tlqrr</ItemText>
+        </Ww>
+        <Ww>
+          <count>16</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>tplqrl</ItemText>
+        </Ww>
+        <Ww>
+          <count>17</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>tplqrr</ItemText>
         </Ww>
       </WatchWindow1>
       <WatchWindow2>
@@ -255,47 +275,52 @@
         <Ww>
           <count>4</count>
           <WinNumber>2</WinNumber>
-          <ItemText>jump_time</ItemText>
+          <ItemText>motor_status,0x0A</ItemText>
         </Ww>
         <Ww>
           <count>5</count>
           <WinNumber>2</WinNumber>
-          <ItemText>motor_status,0x0A</ItemText>
+          <ItemText>kx</ItemText>
         </Ww>
         <Ww>
           <count>6</count>
           <WinNumber>2</WinNumber>
-          <ItemText>kx</ItemText>
+          <ItemText>\\gimbal_task\../User/application/chassis_task.c\chassis.robo_status</ItemText>
         </Ww>
         <Ww>
           <count>7</count>
           <WinNumber>2</WinNumber>
-          <ItemText>\\gimbal_task\../User/application/chassis_task.c\chassis.robo_status</ItemText>
+          <ItemText>\\gimbal_task\../User/application/chassis_task.c\chassis.robo_status.status</ItemText>
         </Ww>
         <Ww>
           <count>8</count>
           <WinNumber>2</WinNumber>
-          <ItemText>\\gimbal_task\../User/application/chassis_task.c\chassis.robo_status.status</ItemText>
+          <ItemText>\\gimbal_task\../User/application/chassis_task.c\leg_l.phi1</ItemText>
         </Ww>
         <Ww>
           <count>9</count>
           <WinNumber>2</WinNumber>
-          <ItemText>\\gimbal_task\../User/application/chassis_task.c\leg_l.phi1</ItemText>
+          <ItemText>\\gimbal_task\../User/application/chassis_task.c\leg_l.phi4</ItemText>
         </Ww>
         <Ww>
           <count>10</count>
           <WinNumber>2</WinNumber>
-          <ItemText>\\gimbal_task\../User/application/chassis_task.c\leg_l.phi4</ItemText>
+          <ItemText>\\gimbal_task\../User/application/chassis_task.c\leg_r.phi1</ItemText>
         </Ww>
         <Ww>
           <count>11</count>
           <WinNumber>2</WinNumber>
-          <ItemText>\\gimbal_task\../User/application/chassis_task.c\leg_r.phi1</ItemText>
+          <ItemText>\\gimbal_task\../User/application/chassis_task.c\leg_r.phi4</ItemText>
         </Ww>
         <Ww>
           <count>12</count>
           <WinNumber>2</WinNumber>
-          <ItemText>\\gimbal_task\../User/application/chassis_task.c\leg_r.phi4</ItemText>
+          <ItemText>OFFGROUND_DETECTION_ACCEL_RATIO</ItemText>
+        </Ww>
+        <Ww>
+          <count>13</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>\\gimbal_task\../User/application/chassis_task.c\OFFGROUND_DETECTION_ACCEL_RATIO</ItemText>
         </Ww>
       </WatchWindow2>
       <MemoryWindow1>

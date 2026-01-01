@@ -128,7 +128,7 @@ static void f_PID_ErrorHandle(PID_t *pid);
  * @param[in]      ÂÔ
  * @retval         ·µ»Ø¿Õ      null
  */
-void PID_Init(
+void PID_INS_Init(
     PID_t *pid,
     float max_out,
     float intergral_limit,

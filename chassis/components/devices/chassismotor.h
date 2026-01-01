@@ -278,10 +278,15 @@ typedef struct
 
 struct Wheel_Leg_Target
 {
-	float x, v;
+	float x, y, z;
+	float vx, vy, vz;
+	float ax, ay, az;
+
 	float yaw, pitch, roll;
 	float vyaw, vpitch, vroll;
 	float ayaw, apitch, aroll;
+
+	
 
 	float position_set; // m  期望达到的位置
 	float v_set;
@@ -323,7 +328,7 @@ void comm_can_set_rpm(uint8_t controller_id, float rpm);
 void comm_can_set_pos(uint8_t controller_id, float pos);
 void comm_can_set_origin(uint8_t controller_id, uint8_t set_origin_mode);
 // 运控模式//
-void controller_init(uint8_t id);
+void Motor_AK10_Init(CAN_HandleTypeDef *hcan, uint8_t id);
 void controller_close(uint8_t id);
 void controller_setorigin(uint8_t id);
 int float_to_uint(float x, float x_min, float x_max, unsigned int bits);

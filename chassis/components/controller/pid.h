@@ -109,7 +109,7 @@ typedef struct
   fp32 err_boundary[2]; // Îó²î·Ö¶Îµã
 } piece3_pid_type_def;
 
-extern void PID_init(struct PID_Def *pid, enum PID_MODE mode, const float kp, const float ki, const float kd, fp32 max_out, fp32 max_iout);
+extern void PID_Init(struct PID_Def *pid, enum PID_MODE mode, const float kp, const float ki, const float kd, fp32 max_out, fp32 max_iout);
 extern fp32 PID_Update(struct PID_Def *pid, fp32 set, fp32 ref);
 
 extern fp32 anglePidCalc(struct PID_Def *pid, fp32 set, fp32 get, fp32 gyro);

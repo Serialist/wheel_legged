@@ -17,8 +17,9 @@
   @endverbatim
   ****************************(C) COPYRIGHT 2016 DJI****************************
   */
-#ifndef REMOTE_CONTROL_H
-#define REMOTE_CONTROL_H
+#ifndef __REMOTE_CONTROL_H
+#define __REMOTE_CONTROL_H
+
 #include "struct_typedef.h"
 #include "bsp_rc.h"
 
@@ -58,6 +59,8 @@
 #define KEY_PRESSED_OFFSET_V ((uint16_t)1 << 14)
 #define KEY_PRESSED_OFFSET_B ((uint16_t)1 << 15)
 
+#define DT7_GET_TIME(dt7) (dt7.time)
+
 /* ----------------------- Data Struct ------------------------------------- */
 #define R_X 0
 #define R_Y 1
@@ -88,6 +91,8 @@ typedef __packed struct
         uint8_t receive_flag;
         uint8_t offline_flag;
         uint16_t time_count;
+
+        uint32_t time;
 
 } DT7_Data;
 

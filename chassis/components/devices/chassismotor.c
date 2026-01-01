@@ -34,9 +34,9 @@ void Motor_Enable(void)
 {
   uint8_t i;
 
-  for (i = 0; i < 4; i++)
+  for (i = 1; i <= 4; i++)
   {
-    controller_init(i + 1);
+    Motor_AK10_Init(&hcan1, i);
     osDelay(1);
   }
 }
@@ -58,7 +58,7 @@ void TransmitChassisMotorCurrent(int16_t o1, int16_t o2)
 
 // cubemars motors//
 // servo mode
-void comm_can_transmit_eid(uint32_t id, const uint8_t *data, uint8_t len)
+void Comm_CAN_Transmit_EID(uint32_t id, const uint8_t *data, uint8_t len)
 {
   uint8_t i = 0;
   if (len > 8)
@@ -96,7 +96,7 @@ void comm_can_set_current(uint8_t controller_id, float current)
   int32_t send_index = 0;
   uint8_t buffer[4];
   buffer_append_int32(buffer, (int32_t)(current * 1000.0f), &send_index);
-  comm_can_transmit_eid(controller_id |
+  Comm_CAN_Transmit_EID(controller_id |
                             ((uint32_t)CAN_PACKET_SET_CURRENT << 8),
                         buffer, send_index);
 }
@@ -106,7 +106,7 @@ void comm_can_set_rpm(uint8_t controller_id, float rpm)
   int32_t send_index = 0;
   uint8_t buffer[4];
   buffer_append_int32(buffer, (int32_t)rpm, &send_index);
-  comm_can_transmit_eid(controller_id |
+  Comm_CAN_Transmit_EID(controller_id |
                             ((uint32_t)CAN_PACKET_SET_RPM << 8),
                         buffer, send_index);
 }
@@ -116,7 +116,7 @@ void comm_can_set_pos(uint8_t controller_id, float pos)
   int32_t send_index = 0;
   uint8_t buffer[4];
   buffer_append_int32(buffer, (int32_t)(pos * 10000.0f), &send_index);
-  comm_can_transmit_eid(controller_id |
+  Comm_CAN_Transmit_EID(controller_id |
                             ((uint32_t)CAN_PACKET_SET_POS << 8),
                         buffer, send_index);
 }
@@ -126,13 +126,19 @@ void comm_can_set_origin(uint8_t controller_id, uint8_t set_origin_mode)
   int32_t send_index = 0;
   uint8_t buffer;
   buffer = set_origin_mode;
-  comm_can_transmit_eid(controller_id |
+  Comm_CAN_Transmit_EID(controller_id |
                             ((uint32_t)CAN_PACKET_SET_ORIGIN_HERE << 8),
                         &buffer, send_index);
 }
 
 // motion controller
-void controller_init(uint8_t id)
+
+/**
+ * @brief AK10-9 电机初始化
+ *
+ * @param id
+ */
+void Motor_AK10_Init(CAN_HandleTypeDef *hcan, uint8_t id)
 {
   uint32_t send_mail_box = CAN_TX_MAILBOX0;
   TX_message.StdId = id;
@@ -149,7 +155,7 @@ void controller_init(uint8_t id)
   can_tx_data[6] = 0xFF;
   can_tx_data[7] = 0xFC;
 
-  HAL_CAN_AddTxMessage(&hcan1, &TX_message, can_tx_data, &send_mail_box);
+  HAL_CAN_AddTxMessage(hcan, &TX_message, can_tx_data, &send_mail_box);
 }
 
 void controller_close(uint8_t id)

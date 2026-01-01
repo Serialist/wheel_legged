@@ -85,11 +85,6 @@ float tlqrr;
 
 float lqr_k_l[2][6], lqr_k_r[2][6], xl[6], xr[6];
 
-float t_ratiol;
-float tp_ratiol;
-float t_ratior;
-float tp_ratior;
-
 /// @brief 离地检测滤波
 struct Filter_Average ground_detection_filter_l, ground_detection_filter_r;
 
@@ -113,6 +108,8 @@ static bool Ground_Detection_R(struct Chassis_State *ch, struct VMC_Leg *leg);
 static void Safe_Control(struct Chassis_State *ch);
 static void Get_Order(struct Chassis_State *ch);
 static void LQR_K_Calc(float k[2][6], float coe[12][4], float len);
+
+static void Balance_Produce_Easy(struct Chassis_State *ch);
 
 /* ================================================================ function ================================================================*/
 
@@ -144,9 +141,10 @@ void chassis_task(void const *argument)
 
 		/* ================================ 控制 ================================ */
 
-		Get_Order(&chassis);	   // 获得控制指令
-		Balance_Produce(&chassis); // 平衡处理
-		Safe_Control(&chassis);	   // 安全控制
+		Get_Order(&chassis); // 获得控制指令
+		// Balance_Produce(&chassis); // 平衡处理
+		Balance_Produce_Easy(&chassis);
+		Safe_Control(&chassis); // 安全控制
 
 		/* ================================ 发送 ================================  */
 
@@ -166,88 +164,37 @@ static void Chassis_Init(void)
 {
 	// 腿部运动PID初始化
 	// 腿长PID左
-	chassis_motor_pid[0].Kp = 500;
-	chassis_motor_pid[0].Ki = 0;
-	chassis_motor_pid[0].Kd = 6000;
-	chassis_motor_pid[0].max_out = 80;
-	chassis_motor_pid[0].max_iout = 0;
+	PID_Init(&chassis_motor_pid[0], PID_POSITION, 500, 0, 6000, 80, 0);
 	// 右
-	chassis_motor_pid[1].Kp = 500;
-	chassis_motor_pid[1].Ki = 0;
-	chassis_motor_pid[1].Kd = 6000;
-	chassis_motor_pid[1].max_out = 80;
-	chassis_motor_pid[1].max_iout = 0;
+	PID_Init(&chassis_motor_pid[1], PID_POSITION, 500, 0, 6000, 80, 0);
 
 	// 角度PID左
-	chassis_motor_pid[2].Kp = 1.65;
-	chassis_motor_pid[2].Ki = 0;
-	chassis_motor_pid[2].Kd = 11;
-	chassis_motor_pid[2].max_out = 2;
-	chassis_motor_pid[2].max_iout = 0;
+	PID_Init(&chassis_motor_pid[2], PID_POSITION, 1.65, 0, 11, 2, 0);
 	// 右
-	chassis_motor_pid[3].Kp = 1.65;
-	chassis_motor_pid[3].Ki = 0;
-	chassis_motor_pid[3].Kd = 11;
-	chassis_motor_pid[3].max_out = 2;
-	chassis_motor_pid[3].max_iout = 0;
+	PID_Init(&chassis_motor_pid[3], PID_POSITION, 1.65, 0, 11, 2, 0);
 
 	// 方向PID
-	chassis_motor_pid[YAW_PID].Kp = 0.1f;
-	chassis_motor_pid[YAW_PID].Ki = 0;
-	chassis_motor_pid[YAW_PID].Kd = 0.5f;
-	chassis_motor_pid[YAW_PID].max_out = 1.5f;
-	chassis_motor_pid[YAW_PID].max_iout = 0;
+	PID_Init(&chassis_motor_pid[YAW_PID], PID_POSITION, 0.1f, 0, 0.5f, 1.5f, 0);
 
 	// 滚转PID
-	chassis_motor_pid[ROLL_PID].Kp = 0.8;
-	chassis_motor_pid[ROLL_PID].Ki = 0;
-	chassis_motor_pid[ROLL_PID].Kd = 0;
-	chassis_motor_pid[ROLL_PID].max_out = 30;
-	chassis_motor_pid[ROLL_PID].max_iout = 0;
+	PID_Init(&chassis_motor_pid[ROLL_PID], PID_POSITION, 0.8, 0, 0, 30, 0);
 
 	// 力矩PID
-	chassis_motor_pid[TP_PID].Kp = 1.3;
-	chassis_motor_pid[TP_PID].Ki = 0;
-	chassis_motor_pid[TP_PID].Kd = 3;
-	chassis_motor_pid[TP_PID].max_out = 1.5;
-	chassis_motor_pid[TP_PID].max_iout = 0;
+	PID_Init(&chassis_motor_pid[TP_PID], PID_POSITION, 1.3, 0, 3, 1.5, 0);
 
-	chassis_motor_pid[7].Kp = 21.5;
-	chassis_motor_pid[7].Ki = 0;
-	chassis_motor_pid[7].Kd = 4;
-	chassis_motor_pid[7].max_out = 2400;
-	chassis_motor_pid[7].max_iout = 2400;
+	PID_Init(&chassis_motor_pid[7], PID_POSITION, 21.5, 0, 4, 2400, 2400);
 
-	motor_test_pid.Kp = 5;
-	motor_test_pid.Ki = 0;
-	motor_test_pid.Kd = 0.1;
-	motor_test_pid.max_out = 3000;
-	motor_test_pid.max_iout = 0;
+	PID_Init(&motor_test_pid, PID_POSITION, 5, 0, 0.1, 3000, 0);
 
 	// ================================================================
 	/**
 	 * @brief VMC腿摆角扭矩pid，用于板凳模型
 	 * @date 2025-10-16
 	 */
-	// left
-	pid_tpl.Kp = 80;
-	pid_tpl.Ki = 0;
-	pid_tpl.Kd = 400;
-	pid_tpl.max_out = 15;
-	pid_tpl.max_iout = 0;
-	// right
-	pid_tpr.Kp = 80;
-	pid_tpr.Ki = 0;
-	pid_tpr.Kd = 400;
-	pid_tpr.max_out = 15;
-	pid_tpr.max_iout = 0;
+	PID_Init(&pid_tpl, PID_POSITION, 80, 0, 400, 15, 0);
+	PID_Init(&pid_tpr, PID_POSITION, 80, 0, 400, 15, 0);
 
 	set.left_length = set.right_length = 0.12f;
-
-	tp_ratiol = 1.0f;
-	tp_ratior = 1.0f;
-	t_ratiol = 1.0f;
-	t_ratior = 1.0f;
 
 	Filter_Average_Init(&ground_detection_filter_l, 10);
 	Filter_Average_Init(&ground_detection_filter_r, 10);
@@ -426,8 +373,10 @@ void Safe_Control(struct Chassis_State *ch)
 	}
 }
 
-#define OFFGROUND_DETECTION_ACCEL_RATIO 0.3f
+// #define OFFGROUND_DETECTION_ACCEL_RATIO 0.3f
 #define GROUND_DETECTION_THRESHOLD 15.0f // threshold 阈值
+
+float OFFGROUND_DETECTION_ACCEL_RATIO = -0.5f;
 
 /**
  * @brief 触地检测器 right
@@ -509,19 +458,27 @@ float fn_forward_l = 0;
 /// @date 2025-12-19 22:31 23:15
 /// @date 2025-12-20 22:42 23:29
 /// @date 2025-12-21 16:03
+/// @date 2025-12-23 21:56
+/// @date 2025-12-23 22:46
+/// @date 2025-12-23 22:49
+/// @date 2025-12-23 22:53
+/// @date 2025-12-23 22:58
+/// @date 2025-12-23 23:00
+/// @date 2025-12-23 23:12
+/// @date 2025-12-23 23:15
 float lqr_coe[12][4] = {
-	{-134.246228465676211, 10.716525769207040, 116.801981134867404, 0.588660103157824},
-	{273.171092904894920, -647.320285245547666, 524.018068874426717, -15.801702810178369},
-	{-22.543800942965930, -19.632547944507891, 31.930749782616100, 0.624084210935801},
-	{38.103594759539149, -92.646386705735637, 69.726643428400152, -2.519403596959248},
-	{-34.339048283953368, -22.375730131025740, 100.979330750248394, -5.477897963619395},
-	{203.712829511923502, -598.313276890686666, 587.660562438355669, -20.074808804763759},
-	{-23.641703178220322, -29.728018122994591, 86.812009131330441, -5.588930246601215},
-	{177.638766079621689, -542.020720389412872, 550.294150336457278, -16.533832422510301},
-	{-192.884585177243991, 179.540154401294814, -31.337487650201641, 86.282841978229200},
-	{405.579815737053423, -754.557259489523062, 541.710685854862618, 90.755937012067790},
-	{-5.937288515180397, 18.223391226601588, -22.851217221551678, 5.495357129476562},
-	{-15.803756434693080, 71.682712954084778, -83.171657493424249, 7.870173745340547}};
+	{-79.618123251645457, -168.962972470712913, 331.326134656758427, -3.386313866814331},
+	{63.789823020405763, -134.126392145805909, 85.960919504548727, -4.476789804428815},
+	{-9.420957172797042, -56.757000404725702, 67.365099760805023, -0.357225146023340},
+	{-5.770953268098571, 10.623824046762479, -22.322513333268091, -0.223044481585281},
+	{-2.412804102666672, -72.336923663735675, 154.694394979316087, -4.797631233494437},
+	{53.178388270844941, -179.242709762704493, 218.622742025665701, -7.693152922587765},
+	{1.232343147723214, -127.541143162737001, 247.247939575631108, -7.377171610143680},
+	{74.578523650059424, -255.454304662340093, 314.303622679236412, -11.042111796148211},
+	{-226.323685463763809, 562.556139856306118, -627.278335382692148, 67.442008748518447},
+	{188.482832215526514, -433.636694199343424, 423.472919213058503, 76.347824816188790},
+	{-38.640564309268562, 109.622884399609902, -129.323284434560406, 12.149027015866720},
+	{31.644728773903811, -75.758335753380450, 77.117803147294438, 13.858788767715961}};
 
 /***********************************************
  * @brief 平衡行驶过程(左右两腿分别进行LQR运算)
@@ -625,6 +582,7 @@ void Balance_Produce(struct Chassis_State *ch)
 		// lqr 仅控制腿 theta
 		tplqrl = lqr_l_[6] + lqr_l_[7];
 		tplqrr = lqr_r_[6] + lqr_r_[7];
+		tlqrl = tlqrr = 0;
 	}
 
 	/// @brief 限幅
@@ -658,7 +616,7 @@ void Balance_Produce(struct Chassis_State *ch)
 		fn_forward_r = 0;
 	}
 	// 离地
-	else if (ch->robo_status.flag.above == true)
+	else if (my_debug.no_above_det_flag == false && ch->robo_status.flag.above == true)
 	{
 		// 提腿前馈
 		fn_forward_l = -15.0f;
@@ -666,8 +624,8 @@ void Balance_Produce(struct Chassis_State *ch)
 	}
 	else
 	{
-		fn_forward_l = 55.0f * arm_cos_f32(leg_l.theta);
-		fn_forward_r = 55.0f * arm_cos_f32(leg_r.theta);
+		fn_forward_l = 55.0f / arm_cos_f32(leg_l.theta);
+		fn_forward_r = 55.0f / arm_cos_f32(leg_r.theta);
 	}
 
 	// 跳跃状态机
@@ -675,13 +633,13 @@ void Balance_Produce(struct Chassis_State *ch)
 
 	// 推力 pid
 	// 不用 yaw
-	if (jump_state == JUMP_STATE_NONE || ch->robo_status.flag.above == false)
+	if (jump_state == JUMP_STATE_NONE || (my_debug.no_above_det_flag == false && ch->robo_status.flag.above == false))
 	{
 		set.left_length += set.roll_set_now;
 		set.right_length -= set.roll_set_now;
 	}
 	// 在空中，预留落地缓冲腿长
-	else if (jump_state == JUMP_STATE_NONE && ch->robo_status.flag.above == true)
+	else if (jump_state == JUMP_STATE_NONE && my_debug.no_above_det_flag == false && ch->robo_status.flag.above == true)
 	{
 		set.left_length = set.left_length = 0.15f;
 	}
@@ -700,8 +658,8 @@ void Balance_Produce(struct Chassis_State *ch)
 		tplqrr = PID_Update(&pid_tpr, PI / 2.0f, leg_r.phi0);
 	}
 
-	leg_l.Tp = tplqrl * tp_ratiol;
-	leg_r.Tp = tplqrr * tp_ratior;
+	leg_l.Tp = tplqrl;
+	leg_r.Tp = tplqrr;
 
 	// 正 VMC
 	VMC_calc_2(&leg_l);
@@ -713,7 +671,7 @@ void Balance_Produce(struct Chassis_State *ch)
 	set.set_cal_real[3] = leg_l.torque_set[0];
 	set.set_cal_real[2] = leg_l.torque_set[1];
 
-	// 软件限位
+	/// @todo 软件限位
 	// 当超过一定限定角度时，扭矩设为反向
 
 	// if (leg_l.phi1 < PI / 2)
@@ -874,4 +832,139 @@ void LQR_K_Calc(float k[2][6], float coe[12][4], float len)
 			k[j][i] = k_[i][j];
 		}
 	}
+}
+
+void Balance_Produce_Easy(struct Chassis_State *ch)
+{
+	/* ================================ 补充控制 ================================ */
+
+	turn_t = chassis_motor_pid[YAW_PID].Kp * (set.yaw - chassis.IMU_DATA.total_yaw) - chassis_motor_pid[YAW_PID].Kd * ch->IMU_DATA.vyaw; // 这样计算更稳一点
+	set.roll_set_now = PID_Update(&chassis_motor_pid[ROLL_PID], set.roll, ch->IMU_DATA.roll);											 // roll 补偿
+
+	/* ================================ LQR 控制 ================================ */
+
+	LQR_K_Calc(lqr_k_l, lqr_coe, leg_l.L0);
+	LQR_K_Calc(lqr_k_r, lqr_coe, leg_r.L0);
+
+	xl[0] = (ch->state.thetal);
+	xl[1] = (ch->state.dThetal);
+	xl[2] = (ch->state.xl - set.position_set);
+	xl[3] = (ch->state.vl - set.speed_cmd);
+	xl[4] = (ch->state.phi);
+	xl[5] = (ch->state.dPhi);
+
+	xr[0] = (ch->state.thetar);
+	xr[1] = (ch->state.dThetar);
+	xr[2] = (ch->state.xr - set.position_set);
+	xr[3] = (ch->state.vr - set.speed_cmd);
+	xr[4] = (ch->state.phi);
+	xr[5] = (ch->state.dPhi);
+
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	/// @brief 核心 LQR 计算，公式 u = - K * x。分左右腿
+
+	// left
+
+	lqr_l_[0] = kx[0] * xl[0] * lqr_k_l[0][0];
+	lqr_l_[1] = kx[1] * xl[1] * lqr_k_l[0][1];
+	lqr_l_[2] = kx[2] * xl[2] * lqr_k_l[0][2];
+	lqr_l_[3] = kx[3] * xl[3] * lqr_k_l[0][3];
+	lqr_l_[4] = kx[4] * xl[4] * lqr_k_l[0][4];
+	lqr_l_[5] = kx[5] * xl[5] * lqr_k_l[0][5];
+
+	tlqrl = lqr_l_[0] + lqr_l_[1] + lqr_l_[2] + lqr_l_[3] + lqr_l_[4] + lqr_l_[5];
+
+	lqr_l_[6] = kx[6] * xl[0] * lqr_k_l[1][0];
+	lqr_l_[7] = kx[7] * xl[1] * lqr_k_l[1][1];
+	lqr_l_[8] = kx[8] * xl[2] * lqr_k_l[1][2];
+	lqr_l_[9] = kx[9] * xl[3] * lqr_k_l[1][3];
+	lqr_l_[10] = kx[10] * xl[4] * lqr_k_l[1][4];
+	lqr_l_[11] = kx[11] * xl[5] * lqr_k_l[1][5];
+
+	tplqrl = lqr_l_[6] + lqr_l_[7] + lqr_l_[8] + lqr_l_[9] + lqr_l_[10] + lqr_l_[11];
+
+	// right
+
+	lqr_r_[0] = kx[0] * xr[0] * lqr_k_r[0][0];
+	lqr_r_[1] = kx[1] * xr[1] * lqr_k_r[0][1];
+	lqr_r_[2] = kx[2] * xr[2] * lqr_k_r[0][2];
+	lqr_r_[3] = kx[3] * xr[3] * lqr_k_r[0][3];
+	lqr_r_[4] = kx[4] * xr[4] * lqr_k_r[0][4];
+	lqr_r_[5] = kx[5] * xr[5] * lqr_k_r[0][5];
+
+	tlqrr = lqr_r_[0] + lqr_r_[1] + lqr_r_[2] + lqr_r_[3] + lqr_r_[4] + lqr_r_[5];
+
+	lqr_r_[6] = kx[6] * xr[0] * lqr_k_r[1][0];
+	lqr_r_[7] = kx[7] * xr[1] * lqr_k_r[1][1];
+	lqr_r_[8] = kx[8] * xr[2] * lqr_k_r[1][2];
+	lqr_r_[9] = kx[9] * xr[3] * lqr_k_r[1][3];
+	lqr_r_[10] = kx[10] * xr[4] * lqr_k_r[1][4];
+	lqr_r_[11] = kx[11] * xr[5] * lqr_k_r[1][5];
+
+	tplqrr = lqr_r_[6] + lqr_r_[7] + lqr_r_[8] + lqr_r_[9] + lqr_r_[10] + lqr_r_[11];
+
+	/// @brief 限幅
+#define TPLQR_MAX 15.0f
+#define TLQR_MAX 2.5f
+	tplqrl = LIMIT(tplqrl, -TPLQR_MAX, TPLQR_MAX);
+	tplqrr = LIMIT(tplqrr, -TPLQR_MAX, TPLQR_MAX);
+	tlqrl = LIMIT(tlqrl, -TLQR_MAX, TLQR_MAX);
+	tlqrr = LIMIT(tlqrr, -TLQR_MAX, TLQR_MAX);
+
+	/* ================================ 轮 解算 ================================ */
+
+	/// @brief 轮毂力矩计算
+	set.set_cal_real[5] = tlqrl + turn_t;
+	set.set_cal_real[4] = tlqrr - turn_t;
+
+	/* ================================ 腿推力 解算 ================================ */
+
+	// 重力前馈
+	fn_forward_l = 55.0f * arm_cos_f32(leg_l.theta);
+	fn_forward_r = 55.0f * arm_cos_f32(leg_r.theta);
+
+	set.left_length += set.roll_set_now;
+	set.right_length -= set.roll_set_now;
+
+	// 推力计算
+	leg_l.F0 = fn_forward_l +
+			   PID_Update(&chassis_motor_pid[0], set.left_length, leg_l.L0);
+	leg_r.F0 = fn_forward_r +
+			   PID_Update(&chassis_motor_pid[1], set.right_length, leg_r.L0);
+
+	/* ================================ 腿扭矩 解算 ================================ */
+
+	leg_l.Tp = tplqrl;
+	leg_r.Tp = tplqrr;
+
+	// 正 VMC
+	VMC_calc_2(&leg_l);
+	VMC_calc_2(&leg_r);
+
+	// 发送 buf
+	set.set_cal_real[0] = leg_r.torque_set[0];
+	set.set_cal_real[1] = leg_r.torque_set[1];
+	set.set_cal_real[3] = leg_l.torque_set[0];
+	set.set_cal_real[2] = leg_l.torque_set[1];
+
+	/* ================================ 发送 ================================ */
+
+	/// @brief 限幅
+#define HIP_TORQUE_MAX 20.0f
+#define HUB_TORQUE_MAX 2.5f
+	set.set_cal_real[0] = LIMIT(set.set_cal_real[0], -HIP_TORQUE_MAX, HIP_TORQUE_MAX);
+	set.set_cal_real[1] = LIMIT(set.set_cal_real[1], -HIP_TORQUE_MAX, HIP_TORQUE_MAX);
+	set.set_cal_real[2] = LIMIT(set.set_cal_real[2], -HIP_TORQUE_MAX, HIP_TORQUE_MAX);
+	set.set_cal_real[3] = LIMIT(set.set_cal_real[3], -HIP_TORQUE_MAX, HIP_TORQUE_MAX);
+	set.set_cal_real[4] = LIMIT(set.set_cal_real[4], -HUB_TORQUE_MAX, HUB_TORQUE_MAX);
+	set.set_cal_real[5] = LIMIT(set.set_cal_real[5], -HUB_TORQUE_MAX, HUB_TORQUE_MAX);
+
+	/// @brief 发送
+	ch->ak_set[0].torset = -set.set_cal_real[0];
+	ch->ak_set[1].torset = -set.set_cal_real[1];
+	ch->ak_set[2].torset = set.set_cal_real[2];
+	ch->ak_set[3].torset = set.set_cal_real[3];
+	ch->ak_set[4].torset = -set.set_cal_real[4];
+	ch->ak_set[5].torset = set.set_cal_real[5];
 }

@@ -56,5 +56,13 @@
         "bsp_dwt.h": "c",
         "c2g.h": "c"
     },
-    "files.encoding": "gb2312"
+    "files.encoding": "gb2312",
+    "files.autoSave": "onWindowChange",
+    "search.quickOpen.includeSymbols": true,
+    "files.eol": "\r\n",
+    "files.insertFinalNewline": true,
+    "files.trimTrailingWhitespace": false,
+    "files.watcherInclude": [
+        ".."
+    ]
 }

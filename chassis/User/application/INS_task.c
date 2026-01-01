@@ -60,7 +60,7 @@ void INS_Init(void)
 
     IMU_QuaternionEKF_Init(10, 0.001, 10000000, 1, 0);
     // imu heat init
-    PID_Init(&TempCtrl, 2000, 300, 0, 1000, 20, 0, 0, 0, 0, 0, 0, 0);
+    PID_INS_Init(&TempCtrl, 2000, 300, 0, 1000, 20, 0, 0, 0, 0, 0, 0, 0);
     HAL_TIM_PWM_Start(&htim10, TIM_CHANNEL_1);
 
     INS.AccelLPF = 0.0085;
