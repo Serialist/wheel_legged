@@ -109,7 +109,7 @@ static void Safe_Control(struct Chassis_State *ch);
 static void Get_Order(struct Chassis_State *ch);
 static void LQR_K_Calc(float k[2][6], float coe[12][4], float len);
 
-static void Balance_Produce_Easy(struct Chassis_State *ch);
+// static void Balance_Produce_Easy(struct Chassis_State *ch);
 
 /* ================================================================ function ================================================================*/
 
@@ -141,9 +141,9 @@ void chassis_task(void const *argument)
 
 		/* ================================ 控制 ================================ */
 
-		Get_Order(&chassis); // 获得控制指令
-		// Balance_Produce(&chassis); // 平衡处理
-		Balance_Produce_Easy(&chassis);
+		Get_Order(&chassis);	   // 获得控制指令
+		Balance_Produce(&chassis); // 平衡处理
+		// Balance_Produce_Easy(&chassis);
 		Safe_Control(&chassis); // 安全控制
 
 		/* ================================ 发送 ================================  */
@@ -272,10 +272,10 @@ void chassis_torque_sent(struct Chassis_State *ch)
 	// MIT模式下发送
 	pack_cmd(1, 0, 0, 0, 0, ch->ak_set[0].torset);
 	pack_cmd(4, 0, 0, 0, 0, ch->ak_set[3].torset);
-	delay_ms(1);
+	osDelay(1);
 	pack_cmd(2, 0, 0, 0, 0, ch->ak_set[1].torset);
 	pack_cmd(3, 0, 0, 0, 0, ch->ak_set[2].torset);
-	delay_ms(1);
+	osDelay(1);
 
 	/// @brief 用 3508
 	DJI_Motor_Transmit(&hcan1, M3508_TX_ID_2,
@@ -284,16 +284,6 @@ void chassis_torque_sent(struct Chassis_State *ch)
 					   //    PID_Update(&motor_test_pid, motor_test_speed, m3508[1].speed),
 					   HEXROLL_TORQUE_TO_CURRENT(ch->ak_set[5].torset),
 					   0);
-
-	// 伺服模式下发送电流
-	//	comm_can_set_current(AK_ID_11,ch->current_set[4]);
-	//	comm_can_set_current(AK_ID_21,ch->current_set[5]);
-	//	vTaskDelay(10);
-	//	comm_can_set_current(AK_ID_31,ch->current_set[0]);
-	//	comm_can_set_current(AK_ID_61,ch->current_set[1]);
-	//	vTaskDelay(10);
-	//	comm_can_set_current(AK_ID_41,ch->current_set[2]);
-	//	comm_can_set_current(AK_ID_51,ch->current_set[3]);
 }
 
 //************************运动控制器*********************************/
@@ -411,11 +401,8 @@ bool Ground_Detection_R(struct Chassis_State *ch, struct VMC_Leg *leg)
  */
 bool Ground_Detection_L(struct Chassis_State *ch, struct VMC_Leg *leg)
 {
-	my_debug.ground_det.f0l = leg->F0 * arm_cos_f32(leg->theta);
-	my_debug.ground_det.tpl = leg->Tp * arm_sin_f32(leg->theta) / leg->L0;
-
-	ch->state.FNl = my_debug.ground_det.f0l +
-					my_debug.ground_det.tpl +
+	ch->state.FNl = leg->F0 * arm_cos_f32(leg->theta) +
+					leg->Tp * arm_sin_f32(leg->theta) / leg->L0 +
 					OFFGROUND_DETECTION_ACCEL_RATIO * (ch->IMU_DATA.az +
 													   (-leg->dd_L0 * arm_cos_f32(leg->theta)) +
 													   2.0f * leg->d_L0 * leg->d_theta * arm_sin_f32(leg->theta) +
@@ -458,27 +445,29 @@ float fn_forward_l = 0;
 /// @date 2025-12-19 22:31 23:15
 /// @date 2025-12-20 22:42 23:29
 /// @date 2025-12-21 16:03
-/// @date 2025-12-23 21:56
-/// @date 2025-12-23 22:46
-/// @date 2025-12-23 22:49
-/// @date 2025-12-23 22:53
-/// @date 2025-12-23 22:58
-/// @date 2025-12-23 23:00
-/// @date 2025-12-23 23:12
-/// @date 2025-12-23 23:15
+/// @date 2025-12-23 21:56 23:15
+/// @date 2026-01-02 20:07 22:13
+/// @date 2026-01-07 00:23
+/// @date 2026-01-07 00:27
+/// @date 2026-01-07 00:34
+/// @date 2026-01-07 00:36
+/// @date 2026-01-07 00:39
+/// @date 2026-01-07 00:42
+/// @date 2026-01-07 00:49
+/// @date 2026-01-07 00:51
 float lqr_coe[12][4] = {
-	{-79.618123251645457, -168.962972470712913, 331.326134656758427, -3.386313866814331},
-	{63.789823020405763, -134.126392145805909, 85.960919504548727, -4.476789804428815},
-	{-9.420957172797042, -56.757000404725702, 67.365099760805023, -0.357225146023340},
-	{-5.770953268098571, 10.623824046762479, -22.322513333268091, -0.223044481585281},
-	{-2.412804102666672, -72.336923663735675, 154.694394979316087, -4.797631233494437},
-	{53.178388270844941, -179.242709762704493, 218.622742025665701, -7.693152922587765},
-	{1.232343147723214, -127.541143162737001, 247.247939575631108, -7.377171610143680},
-	{74.578523650059424, -255.454304662340093, 314.303622679236412, -11.042111796148211},
-	{-226.323685463763809, 562.556139856306118, -627.278335382692148, 67.442008748518447},
-	{188.482832215526514, -433.636694199343424, 423.472919213058503, 76.347824816188790},
-	{-38.640564309268562, 109.622884399609902, -129.323284434560406, 12.149027015866720},
-	{31.644728773903811, -75.758335753380450, 77.117803147294438, 13.858788767715961}};
+	{-126.086807507776101, 204.509936586899812, -181.637917544602686, 0.918384333930318},
+	{281.441142135013479, -897.542437351532385, 975.348398512151903, 0.026199833093510},
+	{-13.157004390531100, 1.216082559019175, -5.278404212866796, -0.053879096098510},
+	{10.730105816502300, 4.158075312277363, -27.437143787360650, -1.017391011514577},
+	{14.930724858177509, -77.578188067204778, 103.277568182448206, -12.925334588068059},
+	{323.824675264933489, -978.087712532228466, 1019.674890073867005, -29.349065347929251},
+	{11.782623203884770, -48.538397361124119, 53.529936032496757, -10.883933776276409},
+	{217.448434272664713, -627.174955455747408, 636.302911509384785, -23.115509015272551},
+	{-73.596269711749088, 147.971904243931590, -134.782623939069993, 28.150968135630301},
+	{-115.023166002981299, 536.058340653008941, -676.520885520871161, 38.295131407825018},
+	{-12.441042422010909, 30.210863545992240, -29.658309669397092, 5.206256678044403},
+	{-51.841076187063258, 174.354738948342600, -193.730993787476109, 8.390353098717023}};
 
 /***********************************************
  * @brief 平衡行驶过程(左右两腿分别进行LQR运算)
@@ -510,14 +499,14 @@ void Balance_Produce(struct Chassis_State *ch)
 
 	xl[0] = (ch->state.thetal);
 	xl[1] = (ch->state.dThetal);
-	xl[2] = (ch->state.xl - set.position_set);
+	xl[2] = (ch->state.xl - set.position_set - 0.3f);
 	xl[3] = (ch->state.vl - set.speed_cmd);
 	xl[4] = (ch->state.phi);
 	xl[5] = (ch->state.dPhi);
 
 	xr[0] = (ch->state.thetar);
 	xr[1] = (ch->state.dThetar);
-	xr[2] = (ch->state.xr - set.position_set);
+	xr[2] = (ch->state.xr - set.position_set - 0.3f);
 	xr[3] = (ch->state.vr - set.speed_cmd);
 	xr[4] = (ch->state.phi);
 	xr[5] = (ch->state.dPhi);
@@ -619,13 +608,13 @@ void Balance_Produce(struct Chassis_State *ch)
 	else if (my_debug.no_above_det_flag == false && ch->robo_status.flag.above == true)
 	{
 		// 提腿前馈
-		fn_forward_l = -15.0f;
-		fn_forward_r = -15.0f;
+		fn_forward_l = -20.0f;
+		fn_forward_r = -20.0f;
 	}
 	else
 	{
-		fn_forward_l = 55.0f / arm_cos_f32(leg_l.theta);
-		fn_forward_r = 55.0f / arm_cos_f32(leg_r.theta);
+		fn_forward_l = 55.0f * arm_cos_f32(leg_l.theta);
+		fn_forward_r = 55.0f * arm_cos_f32(leg_r.theta);
 	}
 
 	// 跳跃状态机
@@ -721,6 +710,7 @@ uint32_t jump_time = 0;
 #define JUMP_RETRACT_GND_LEG_LENGTH 0.12f
 #define JUMP_TAKEOFF_LEG_LENGTH 0.35f
 #define JUMP_LAND_LEG_LENGTH 0.15f
+#define JUMP_FORCE_FEEDFORWARD 300.0f
 
 /************************
  * @brief 跳跃过程
@@ -832,139 +822,4 @@ void LQR_K_Calc(float k[2][6], float coe[12][4], float len)
 			k[j][i] = k_[i][j];
 		}
 	}
-}
-
-void Balance_Produce_Easy(struct Chassis_State *ch)
-{
-	/* ================================ 补充控制 ================================ */
-
-	turn_t = chassis_motor_pid[YAW_PID].Kp * (set.yaw - chassis.IMU_DATA.total_yaw) - chassis_motor_pid[YAW_PID].Kd * ch->IMU_DATA.vyaw; // 这样计算更稳一点
-	set.roll_set_now = PID_Update(&chassis_motor_pid[ROLL_PID], set.roll, ch->IMU_DATA.roll);											 // roll 补偿
-
-	/* ================================ LQR 控制 ================================ */
-
-	LQR_K_Calc(lqr_k_l, lqr_coe, leg_l.L0);
-	LQR_K_Calc(lqr_k_r, lqr_coe, leg_r.L0);
-
-	xl[0] = (ch->state.thetal);
-	xl[1] = (ch->state.dThetal);
-	xl[2] = (ch->state.xl - set.position_set);
-	xl[3] = (ch->state.vl - set.speed_cmd);
-	xl[4] = (ch->state.phi);
-	xl[5] = (ch->state.dPhi);
-
-	xr[0] = (ch->state.thetar);
-	xr[1] = (ch->state.dThetar);
-	xr[2] = (ch->state.xr - set.position_set);
-	xr[3] = (ch->state.vr - set.speed_cmd);
-	xr[4] = (ch->state.phi);
-	xr[5] = (ch->state.dPhi);
-
-	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	/// @brief 核心 LQR 计算，公式 u = - K * x。分左右腿
-
-	// left
-
-	lqr_l_[0] = kx[0] * xl[0] * lqr_k_l[0][0];
-	lqr_l_[1] = kx[1] * xl[1] * lqr_k_l[0][1];
-	lqr_l_[2] = kx[2] * xl[2] * lqr_k_l[0][2];
-	lqr_l_[3] = kx[3] * xl[3] * lqr_k_l[0][3];
-	lqr_l_[4] = kx[4] * xl[4] * lqr_k_l[0][4];
-	lqr_l_[5] = kx[5] * xl[5] * lqr_k_l[0][5];
-
-	tlqrl = lqr_l_[0] + lqr_l_[1] + lqr_l_[2] + lqr_l_[3] + lqr_l_[4] + lqr_l_[5];
-
-	lqr_l_[6] = kx[6] * xl[0] * lqr_k_l[1][0];
-	lqr_l_[7] = kx[7] * xl[1] * lqr_k_l[1][1];
-	lqr_l_[8] = kx[8] * xl[2] * lqr_k_l[1][2];
-	lqr_l_[9] = kx[9] * xl[3] * lqr_k_l[1][3];
-	lqr_l_[10] = kx[10] * xl[4] * lqr_k_l[1][4];
-	lqr_l_[11] = kx[11] * xl[5] * lqr_k_l[1][5];
-
-	tplqrl = lqr_l_[6] + lqr_l_[7] + lqr_l_[8] + lqr_l_[9] + lqr_l_[10] + lqr_l_[11];
-
-	// right
-
-	lqr_r_[0] = kx[0] * xr[0] * lqr_k_r[0][0];
-	lqr_r_[1] = kx[1] * xr[1] * lqr_k_r[0][1];
-	lqr_r_[2] = kx[2] * xr[2] * lqr_k_r[0][2];
-	lqr_r_[3] = kx[3] * xr[3] * lqr_k_r[0][3];
-	lqr_r_[4] = kx[4] * xr[4] * lqr_k_r[0][4];
-	lqr_r_[5] = kx[5] * xr[5] * lqr_k_r[0][5];
-
-	tlqrr = lqr_r_[0] + lqr_r_[1] + lqr_r_[2] + lqr_r_[3] + lqr_r_[4] + lqr_r_[5];
-
-	lqr_r_[6] = kx[6] * xr[0] * lqr_k_r[1][0];
-	lqr_r_[7] = kx[7] * xr[1] * lqr_k_r[1][1];
-	lqr_r_[8] = kx[8] * xr[2] * lqr_k_r[1][2];
-	lqr_r_[9] = kx[9] * xr[3] * lqr_k_r[1][3];
-	lqr_r_[10] = kx[10] * xr[4] * lqr_k_r[1][4];
-	lqr_r_[11] = kx[11] * xr[5] * lqr_k_r[1][5];
-
-	tplqrr = lqr_r_[6] + lqr_r_[7] + lqr_r_[8] + lqr_r_[9] + lqr_r_[10] + lqr_r_[11];
-
-	/// @brief 限幅
-#define TPLQR_MAX 15.0f
-#define TLQR_MAX 2.5f
-	tplqrl = LIMIT(tplqrl, -TPLQR_MAX, TPLQR_MAX);
-	tplqrr = LIMIT(tplqrr, -TPLQR_MAX, TPLQR_MAX);
-	tlqrl = LIMIT(tlqrl, -TLQR_MAX, TLQR_MAX);
-	tlqrr = LIMIT(tlqrr, -TLQR_MAX, TLQR_MAX);
-
-	/* ================================ 轮 解算 ================================ */
-
-	/// @brief 轮毂力矩计算
-	set.set_cal_real[5] = tlqrl + turn_t;
-	set.set_cal_real[4] = tlqrr - turn_t;
-
-	/* ================================ 腿推力 解算 ================================ */
-
-	// 重力前馈
-	fn_forward_l = 55.0f * arm_cos_f32(leg_l.theta);
-	fn_forward_r = 55.0f * arm_cos_f32(leg_r.theta);
-
-	set.left_length += set.roll_set_now;
-	set.right_length -= set.roll_set_now;
-
-	// 推力计算
-	leg_l.F0 = fn_forward_l +
-			   PID_Update(&chassis_motor_pid[0], set.left_length, leg_l.L0);
-	leg_r.F0 = fn_forward_r +
-			   PID_Update(&chassis_motor_pid[1], set.right_length, leg_r.L0);
-
-	/* ================================ 腿扭矩 解算 ================================ */
-
-	leg_l.Tp = tplqrl;
-	leg_r.Tp = tplqrr;
-
-	// 正 VMC
-	VMC_calc_2(&leg_l);
-	VMC_calc_2(&leg_r);
-
-	// 发送 buf
-	set.set_cal_real[0] = leg_r.torque_set[0];
-	set.set_cal_real[1] = leg_r.torque_set[1];
-	set.set_cal_real[3] = leg_l.torque_set[0];
-	set.set_cal_real[2] = leg_l.torque_set[1];
-
-	/* ================================ 发送 ================================ */
-
-	/// @brief 限幅
-#define HIP_TORQUE_MAX 20.0f
-#define HUB_TORQUE_MAX 2.5f
-	set.set_cal_real[0] = LIMIT(set.set_cal_real[0], -HIP_TORQUE_MAX, HIP_TORQUE_MAX);
-	set.set_cal_real[1] = LIMIT(set.set_cal_real[1], -HIP_TORQUE_MAX, HIP_TORQUE_MAX);
-	set.set_cal_real[2] = LIMIT(set.set_cal_real[2], -HIP_TORQUE_MAX, HIP_TORQUE_MAX);
-	set.set_cal_real[3] = LIMIT(set.set_cal_real[3], -HIP_TORQUE_MAX, HIP_TORQUE_MAX);
-	set.set_cal_real[4] = LIMIT(set.set_cal_real[4], -HUB_TORQUE_MAX, HUB_TORQUE_MAX);
-	set.set_cal_real[5] = LIMIT(set.set_cal_real[5], -HUB_TORQUE_MAX, HUB_TORQUE_MAX);
-
-	/// @brief 发送
-	ch->ak_set[0].torset = -set.set_cal_real[0];
-	ch->ak_set[1].torset = -set.set_cal_real[1];
-	ch->ak_set[2].torset = set.set_cal_real[2];
-	ch->ak_set[3].torset = set.set_cal_real[3];
-	ch->ak_set[4].torset = -set.set_cal_real[4];
-	ch->ak_set[5].torset = set.set_cal_real[5];
 }

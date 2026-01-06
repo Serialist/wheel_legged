@@ -83,6 +83,10 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 
+
+
+
+
   chassis.robo_status.status = ROBO_STATE_INIT;
 
   /* USER CODE END 1 */

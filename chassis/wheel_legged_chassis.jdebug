@@ -33,7 +33,8 @@ void OnProjectLoad (void) {
   //
   // User settings
   //
-  Edit.SysVar (VAR_HSS_SPEED, FREQ_10_KHZ);
+  Edit.SysVar (VAR_HSS_SPEED, FREQ_5_KHZ);
+  Project.SetOSPlugin ("FreeRTOSPlugin");
   File.Open ("$(ProjectDir)/MDK-ARM/gimbal_task/gimbal_task.axf");
 }
 

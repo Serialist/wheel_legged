@@ -4,7 +4,7 @@
 clc;
 clear;
 
-L0s=0.10:0.005:0.30; % L0变化范围
+L0s=0.12:0.01:0.32; % L0变化范围
 Ks=zeros(2,6,length(L0s)); % 存放不同L0对应的K
 
 for step=1:length(L0s)
@@ -16,33 +16,21 @@ for step=1:length(L0s)
     syms T Tp N P Nm Pm Nf t;
     
     % 机器人结构参数
-    % R=0.0775;
-    % L=L0s(step)/2;
-    % Lm=L0s(step)/2;
-    % mw = 0.334;
-    % l = 0.16069;
-    % mp = 1.482;
-    % M = 14.2 / 2;
-    % Iw = 0.5 * mw * R ^ 2;
-    % Ip = mp * (( L + Lm) ^ 2 + 0.144 ^ 2) / 12.0;
-    % Im = 0.23203539;
-    % g = 9.8;
+    R = 0.0775;
+    L = L0s(step) / 2;
+    Lm = L0s(step) / 2;
+    mw = 0.334;
+    l = 0.16069;
+    mp = 1.482;
+    M = 14.2 / 2;
+    Iw = 0.5 * mw * R ^ 2;
+    Ip = mp * ((L + Lm) ^ 2 + 0.144 ^ 2) / 12.0;
+    Im = 0.23203539;
+    g = 9.8;
 
-    R=0.0775;
-    L=L0s(step)/2;
-    Lm=L0s(step)/2;
-    mw=0.25;
-    l=0.16069;
-    mp=1.482;
-    M=13.486;
-    Iw=0.5*mw*R^2;
-    Ip=mp*((L+Lm)^2+0.144^2)/12.0;
-    Im=0.23203539;
-    g=9.8;
-    
     % 进行物理计算
-    Nm=M*(x2+(L+Lm)*(theta2*cos(theta)-theta1^2*sin(theta))-l*(phi2*cos(phi)-phi1^2*sin(phi)));
-    Pm=M*g+M*((L+Lm)*(-theta1^2*cos(theta)-theta2*sin(theta))-l*(phi1^2*cos(phi)+phi2*sin(phi)));
+    Nm = M * (x2 + (L + Lm) * (theta2 * cos(theta) - theta1 ^ 2 * sin(theta)) - l * (phi2 * cos(phi) - phi1 ^ 2 * sin(phi)));
+    Pm = M * g + M * ((L + Lm) * (-theta1 ^ 2 * cos(theta) - theta2 * sin(theta))-l*(phi1^2*cos(phi)+phi2*sin(phi)));
     N=Nm+mp*(x2+L*(theta2*cos(theta)-theta1^2*sin(theta)));
     P=Pm+mp*g+mp*L*(-theta1^2*cos(theta)-theta2*sin(theta));
     
@@ -62,10 +50,10 @@ for step=1:length(L0s)
     
     % ******************************************************************
     % 定义权重矩阵Q, R
-    Q=diag([1 10 500 100 15000 1]);
+    Q=diag([500 1 500 10 300 1]);
     % [20,20,500,500,8000,300]
    
-    R=diag([1.5 0.5]);
+    R=diag([2 0.25]);
 
     % 求解反馈矩阵K
     Ks(:,:,step)=dlqr(G,H,Q,R);

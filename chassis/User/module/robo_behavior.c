@@ -10,3 +10,12 @@
  ************************/
 
 #include "robo_behavior.h"
+
+typedef struct State_Wheel_Legged_Chassis
+{
+    float vyaw;
+    float pitch;
+    float x;
+    float v;
+    float theta;
+} State_Wheel_Legged_Chassis_t;

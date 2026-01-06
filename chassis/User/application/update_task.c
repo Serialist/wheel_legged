@@ -112,10 +112,10 @@ void Update_Task(void const *argument)
 
 void chassis_sys_calc(struct Chassis_State *ch)
 {
-  leg_l.phi1 = PI / 2.0f - ch->ak_fdb_ctrl[3].motor_ctrlpos + 4.25577f;
-  leg_l.phi4 = PI / 2.0f - ch->ak_fdb_ctrl[2].motor_ctrlpos - 4.1704f;
-  leg_r.phi1 = PI / 2.0f - ch->ak_fdb_ctrl[0].motor_ctrlpos + 1.0744f;
-  leg_r.phi4 = PI / 2.0f - ch->ak_fdb_ctrl[1].motor_ctrlpos - 1.0363f;
+  leg_l.phi1 = PI / 2.0f - ch->ak_fdb_ctrl[3].motor_ctrlpos;
+  leg_l.phi4 = PI / 2.0f - ch->ak_fdb_ctrl[2].motor_ctrlpos;
+  leg_r.phi1 = PI / 2.0f - ch->ak_fdb_ctrl[0].motor_ctrlpos;
+  leg_r.phi4 = PI / 2.0f - ch->ak_fdb_ctrl[1].motor_ctrlpos;
 
   VMC_calc_1(&leg_l, &chassis, 3.0f / 1000.0f);
   VMC_calc_1(&leg_r, &chassis, 3.0f / 1000.0f);

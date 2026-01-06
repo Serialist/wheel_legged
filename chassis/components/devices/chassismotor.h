@@ -61,8 +61,8 @@
 #define V_MAX 50.0f
 #define V_MIN_2 -45.0f
 #define V_MAX_2 45.0f
-#define T_MIN -65.0f
-#define T_MAX 65.0f
+#define T_MIN -48.0f
+#define T_MAX 48.0f
 #define T_MIN_2 -15.0f
 #define T_MAX_2 15.0f
 #define Kp_MIN 0
@@ -258,10 +258,6 @@ struct Chassis_State
 	Flag no_force_mode;
 
 	DT7_Data rc_dt7;
-
-	float middle_data;
-
-	uint8_t recover_flag;
 
 	struct Wheel_Legged_State state;
 
