@@ -200,8 +200,6 @@ static void Chassis_Init(void)
 	Filter_Average_Init(&ground_detection_filter_r, 10);
 
 	Motor_Enable();
-
-	// Reg_Add();
 }
 
 /************************
@@ -447,14 +445,7 @@ float fn_forward_l = 0;
 /// @date 2025-12-21 16:03
 /// @date 2025-12-23 21:56 23:15
 /// @date 2026-01-02 20:07 22:13
-/// @date 2026-01-07 00:23
-/// @date 2026-01-07 00:27
-/// @date 2026-01-07 00:34
-/// @date 2026-01-07 00:36
-/// @date 2026-01-07 00:39
-/// @date 2026-01-07 00:42
-/// @date 2026-01-07 00:49
-/// @date 2026-01-07 00:51
+/// @date 2026-01-07 00:23 00:51
 float lqr_coe[12][4] = {
 	{-126.086807507776101, 204.509936586899812, -181.637917544602686, 0.918384333930318},
 	{281.441142135013479, -897.542437351532385, 975.348398512151903, 0.026199833093510},
@@ -499,14 +490,14 @@ void Balance_Produce(struct Chassis_State *ch)
 
 	xl[0] = (ch->state.thetal);
 	xl[1] = (ch->state.dThetal);
-	xl[2] = (ch->state.xl - set.position_set - 0.3f);
+	xl[2] = (ch->state.xl - set.position_set);
 	xl[3] = (ch->state.vl - set.speed_cmd);
 	xl[4] = (ch->state.phi);
 	xl[5] = (ch->state.dPhi);
 
 	xr[0] = (ch->state.thetar);
 	xr[1] = (ch->state.dThetar);
-	xr[2] = (ch->state.xr - set.position_set - 0.3f);
+	xr[2] = (ch->state.xr - set.position_set);
 	xr[3] = (ch->state.vr - set.speed_cmd);
 	xr[4] = (ch->state.phi);
 	xr[5] = (ch->state.dPhi);
@@ -517,51 +508,44 @@ void Balance_Produce(struct Chassis_State *ch)
 
 	// left
 
-	lqr_l_[0] = kx[0] * xl[0] * lqr_k_l[0][0];
-	lqr_l_[1] = kx[1] * xl[1] * lqr_k_l[0][1];
-	lqr_l_[2] = kx[2] * xl[2] * lqr_k_l[0][2];
-	lqr_l_[3] = kx[3] * xl[3] * lqr_k_l[0][3];
-	lqr_l_[4] = kx[4] * xl[4] * lqr_k_l[0][4];
-	lqr_l_[5] = kx[5] * xl[5] * lqr_k_l[0][5];
+	lqr_l_[0] = xl[0] * lqr_k_l[0][0];
+	lqr_l_[1] = xl[1] * lqr_k_l[0][1];
+	lqr_l_[2] = xl[2] * lqr_k_l[0][2];
+	lqr_l_[3] = xl[3] * lqr_k_l[0][3];
+	lqr_l_[4] = xl[4] * lqr_k_l[0][4];
+	lqr_l_[5] = xl[5] * lqr_k_l[0][5];
 
 	tlqrl = lqr_l_[0] + lqr_l_[1] + lqr_l_[2] + lqr_l_[3] + lqr_l_[4] + lqr_l_[5];
 
-	lqr_l_[6] = kx[6] * xl[0] * lqr_k_l[1][0];
-	lqr_l_[7] = kx[7] * xl[1] * lqr_k_l[1][1];
-	lqr_l_[8] = kx[8] * xl[2] * lqr_k_l[1][2];
-	lqr_l_[9] = kx[9] * xl[3] * lqr_k_l[1][3];
-	lqr_l_[10] = kx[10] * xl[4] * lqr_k_l[1][4];
-	lqr_l_[11] = kx[11] * xl[5] * lqr_k_l[1][5];
+	lqr_l_[6] = xl[0] * lqr_k_l[1][0];
+	lqr_l_[7] = xl[1] * lqr_k_l[1][1];
+	lqr_l_[8] = xl[2] * lqr_k_l[1][2];
+	lqr_l_[9] = xl[3] * lqr_k_l[1][3];
+	lqr_l_[10] = xl[4] * lqr_k_l[1][4];
+	lqr_l_[11] = xl[5] * lqr_k_l[1][5];
 
 	tplqrl = lqr_l_[6] + lqr_l_[7] + lqr_l_[8] + lqr_l_[9] + lqr_l_[10] + lqr_l_[11];
 
 	// right
 
-	lqr_r_[0] = kx[0] * xr[0] * lqr_k_r[0][0];
-	lqr_r_[1] = kx[1] * xr[1] * lqr_k_r[0][1];
-	lqr_r_[2] = kx[2] * xr[2] * lqr_k_r[0][2];
-	lqr_r_[3] = kx[3] * xr[3] * lqr_k_r[0][3];
-	lqr_r_[4] = kx[4] * xr[4] * lqr_k_r[0][4];
-	lqr_r_[5] = kx[5] * xr[5] * lqr_k_r[0][5];
+	lqr_r_[0] = xr[0] * lqr_k_r[0][0];
+	lqr_r_[1] = xr[1] * lqr_k_r[0][1];
+	lqr_r_[2] = xr[2] * lqr_k_r[0][2];
+	lqr_r_[3] = xr[3] * lqr_k_r[0][3];
+	lqr_r_[4] = xr[4] * lqr_k_r[0][4];
+	lqr_r_[5] = xr[5] * lqr_k_r[0][5];
 
 	tlqrr = lqr_r_[0] + lqr_r_[1] + lqr_r_[2] + lqr_r_[3] + lqr_r_[4] + lqr_r_[5];
 
-	lqr_r_[6] = kx[6] * xr[0] * lqr_k_r[1][0];
-	lqr_r_[7] = kx[7] * xr[1] * lqr_k_r[1][1];
-	lqr_r_[8] = kx[8] * xr[2] * lqr_k_r[1][2];
-	lqr_r_[9] = kx[9] * xr[3] * lqr_k_r[1][3];
-	lqr_r_[10] = kx[10] * xr[4] * lqr_k_r[1][4];
-	lqr_r_[11] = kx[11] * xr[5] * lqr_k_r[1][5];
+	lqr_r_[6] = xr[0] * lqr_k_r[1][0];
+	lqr_r_[7] = xr[1] * lqr_k_r[1][1];
+	lqr_r_[8] = xr[2] * lqr_k_r[1][2];
+	lqr_r_[9] = xr[3] * lqr_k_r[1][3];
+	lqr_r_[10] = xr[4] * lqr_k_r[1][4];
+	lqr_r_[11] = xr[5] * lqr_k_r[1][5];
 
 	tplqrr = lqr_r_[6] + lqr_r_[7] + lqr_r_[8] + lqr_r_[9] + lqr_r_[10] + lqr_r_[11];
 
-	// if (my_debug.torque_flag)
-	// {
-	// 	tplqrl = my_debug.tpl;
-	// 	tplqrr = my_debug.tpr;
-	// 	tlqrl = my_debug.tl;
-	// 	tlqrr = my_debug.tr;
-	// }
 	if (my_debug.no_above_det_flag == false && ch->robo_status.flag.above == true)
 	{
 		// 不控制x和yaw
@@ -660,30 +644,10 @@ void Balance_Produce(struct Chassis_State *ch)
 	set.set_cal_real[3] = leg_l.torque_set[0];
 	set.set_cal_real[2] = leg_l.torque_set[1];
 
-	/// @todo 软件限位
-	// 当超过一定限定角度时，扭矩设为反向
-
-	// if (leg_l.phi1 < PI / 2)
-	// {
-	// 	set.set_cal_real[3] = -10.0f;
-	// }
-	// if (leg_l.phi4 > PI / 2)
-	// {
-	// 	set.set_cal_real[2] = 10.0f;
-	// }
-	// if (leg_r.phi1 < PI / 2)
-	// {
-	// 	set.set_cal_real[0] = -10.0f;
-	// }
-	// if (leg_r.phi4 > PI / 2)
-	// {
-	// 	set.set_cal_real[1] = 10.0f;
-	// }
-
 	/* ================================ 发送 ================================ */
 
 	/// @brief 限幅
-#define HIP_TORQUE_MAX 20.0f
+#define HIP_TORQUE_MAX 48.0f
 #define HUB_TORQUE_MAX 2.5f
 	set.set_cal_real[0] = LIMIT(set.set_cal_real[0], -HIP_TORQUE_MAX, HIP_TORQUE_MAX);
 	set.set_cal_real[1] = LIMIT(set.set_cal_real[1], -HIP_TORQUE_MAX, HIP_TORQUE_MAX);
@@ -748,7 +712,7 @@ void Jump_Phase(struct Chassis_State *ch)
 		tplqrl = lqr_l_[6] + lqr_l_[7];
 		tplqrr = lqr_r_[6] + lqr_r_[7];
 
-		fn_forward_l = fn_forward_r = 200.0f;
+		fn_forward_l = fn_forward_r = 300.0f;
 
 		if (leg_l.L0 > JUMP_TAKEOFF_LEG_LENGTH)
 		{
@@ -760,7 +724,7 @@ void Jump_Phase(struct Chassis_State *ch)
 	else if (jump_state == JUMP_STATE_RETRACT_AIR)
 	{
 		my_debug.no_t_flag = true;
-		fn_forward_l = fn_forward_r = -250.0f;
+		fn_forward_l = fn_forward_r = -200.0f;
 
 		if (leg_l.L0 < JUMP_LAND_LEG_LENGTH)
 		{
@@ -771,22 +735,6 @@ void Jump_Phase(struct Chassis_State *ch)
 			CLEAR(jump_time);
 		}
 	}
-	// // 等待落地
-	// else if (jump_state == JUMP_STATE_LAND)
-	// {
-	// 	fn_forward_l = fn_forward_r = -15.0f;
-
-	// 	if (chassis.robo_status.flag.above == false)
-	// 	{
-	// 		my_debug.no_t_flag = false;
-	// 		my_debug.no_yaw_flag = false;
-
-	// 		ch->robo_status.behavior = ROBO_BX_NORMAL;
-
-	// 		jump_state = JUMP_STATE_NONE;
-	// 		CLEAR(jump_time);
-	// 	}
-	// }
 
 	jump_time++;
 }
