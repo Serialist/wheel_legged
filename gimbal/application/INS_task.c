@@ -238,7 +238,7 @@ void INS_task(void const *pvParameters)
 //		 MX_CAN2_Init();
 		 INS_Init();
 
-    PID_init(&imu_temp_pid, PID_POSITION, imu_temp_PID, TEMPERATURE_PID_MAX_OUT, TEMPERATURE_PID_MAX_IOUT);
+    PID_Init(&imu_temp_pid, PID_POSITION, imu_temp_PID, TEMPERATURE_PID_MAX_OUT, TEMPERATURE_PID_MAX_IOUT);
 		
     INS_task_local_handler = xTaskGetHandle(pcTaskGetName(NULL));
 

@@ -1,15 +1,15 @@
 {
-    "files.encoding": "gb2312",
-    "idf.pythonInstallPath": "D:\\esp-idf-app\\Espressif\\tools\\idf-python\\3.11.2\\python.exe",
-    "files.associations": {
-        "*.c": "c",
-        "main.h": "c",
-        "stdio.h": "c",
-        "gimbal_task.h": "c",
-        "remote_control.h": "c",
-        "struct_typedef.h": "c",
-        "ins_task.h": "c",
-        "vision.h": "c",
-        "random": "cpp"
-    }
+  "files.encoding": "gb2312",
+  "idf.pythonInstallPath": "D:\\esp-idf-app\\Espressif\\tools\\idf-python\\3.11.2\\python.exe",
+  "files.associations": {
+    "*.c": "c",
+    "main.h": "c",
+    "stdio.h": "c",
+    "gimbal_task.h": "c",
+    "remote_control.h": "c",
+    "struct_typedef.h": "c",
+    "ins_task.h": "c",
+    "vision.h": "c",
+    "random": "cpp"
+  }
 }

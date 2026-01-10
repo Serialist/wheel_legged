@@ -56,7 +56,7 @@ double fabs(double);
   * @param[in]      max_iout: pid最大积分输出
   * @retval         none
   */
-void PID_init(pid_type_def *pid, uint8_t mode, const fp32 PID[3], fp32 max_out, fp32 max_iout)
+void PID_Init(pid_type_def *pid, uint8_t mode, const fp32 PID[3], fp32 max_out, fp32 max_iout)
 {
     if (pid == NULL || PID == NULL)
     {
