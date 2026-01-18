@@ -1,1 +1,6 @@
-chassis/MDK-ARM/.vscode/keil-assistant.log
+*.log
+*.log.lock
+*.hex
+*.o
+*.d
+*.crf
