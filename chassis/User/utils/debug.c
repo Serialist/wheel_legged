@@ -23,6 +23,26 @@
 #define FALSE 0
 #endif
 
+#ifndef MAX
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+#endif
+
+#ifndef MIN
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#endif
+
+#ifndef VALUE_LIMIT
+#define VALUE_LIMIT(a, min, max) (MAX(min, MIN(a, max)))
+#endif
+
+#ifndef LIMIT_ABS
+#define LIMIT_ABS(a, max) (VALUE_LIMIT(a, -max, max))
+#endif
+
+#ifndef VALUE_MAP
+#define VALUE_MAP(a, inmin, intmax, outmin, outmax) (outmin + (a - inmin) * (outmax - outmin) / (intmax - inmin))
+#endif
+
 struct Wheel_Leg_Debug my_debug = {
     .tpr = FALSE,
     .tpl = FALSE,
