@@ -4,3 +4,11 @@
 *.o
 *.d
 *.crf
+*.lst
+*.htm
+*.axf
+*.map
+*.sct
+*.lnp
+*.dep
+*.iex

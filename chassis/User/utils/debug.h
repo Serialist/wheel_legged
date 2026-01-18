@@ -14,12 +14,28 @@
 
 #include "user_lib.h"
 
-#ifndef FALSE
-#define FALSE 0
+#ifndef MAX
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
 #endif
 
-#ifndef TRUE
-#define TRUE 1
+#ifndef MIN
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#endif
+
+#ifndef VALUE_LIMIT
+#define VALUE_LIMIT(a, min, max) (MAX(min, MIN(a, max)))
+#endif
+
+#ifndef VALUE_LIMIT_ABS
+#define VALUE_LIMIT_ABS(a, max) (VALUE_LIMIT(a, -max, max))
+#endif
+
+#ifndef VALUE_MAP
+#define VALUE_MAP(a, inmin, intmax, outmin, outmax) (outmin + (a - inmin) * (outmax - outmin) / (intmax - inmin))
+#endif
+
+#ifndef RAMP
+#define RAMP(prev_x, x, k_min, k_max, dt) (prev_x += VALUE_LIMIT(x - prev_x, k_min * dt, k_max * dt))
 #endif
 
 struct Wheel_Leg_Debug

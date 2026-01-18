@@ -1,0 +1,24 @@
+
+GraphedExpression="xl[0]", Color=#000000
+GraphedExpression="xl[2]", Color=#00aa00
+GraphedExpression="xl[3]", Color=#405dff
+GraphedExpression="xl[4]", Color=#ff0000
+GraphedExpression="((chassis).st).thetal", Color=#0964a0
+GraphedExpression="((chassis).st).thetar", Color=#094fa0
+OpenDocument="main.c", FilePath="E:/serialist/workspace/robomaster/project/wheel_legged_fuck/chassis/Src/main.c", Line=54
+OpenToolbar="Debug", Floating=0, x=0, y=0
+OpenWindow="Source Files", DockArea=LEFT, x=0, y=0, w=591, h=1093, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Memory 1", DockArea=BOTTOM, x=1, y=0, w=1290, h=328, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, EditorAddress=0x110
+OpenWindow="Watched Data 1", DockArea=FLOATING, x=780, y=319, w=1640, h=983, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Data Sampling", DockArea=FLOATING, x=506, y=189, w=591, h=481, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, VisibleTab=0, UniformSampleSpacing=0
+OpenWindow="Timeline", DockArea=FLOATING, x=682, y=250, w=1571, h=1015, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=1, DataPaneShown=1, PowerPaneShown=0, CodePaneShown=0, PinCursor="Cursor Movable", TimePerDiv="10 s / Div", TimeStampFormat="Time", DataGraphDrawAsPoints=0, DataGraphLegendShown=1, DataGraphUniformSampleSpacing=0, DataGraphLegendPosition="1273;746", PowerGraphDrawAsPoints=0, PowerGraphLegendShown=0, PowerGraphAvgFilterTime=Off, PowerGraphAvgFilterLen=Off, PowerGraphUniformSampleSpacing=0, PowerGraphLegendPosition="1344;-69", CodeGraphLegendShown=0, CodeGraphLegendPosition="1360;0"
+OpenWindow="Console", DockArea=BOTTOM, x=0, y=0, w=1269, h=328, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+TableHeader="Source Files", SortCol="File", SortOrder="ASCENDING", VisibleCols=["File";"Status";"Size";"#Insts";"Path"], ColWidths=[263;100;100;100;100]
+TableHeader="Data Sampling Table", SortCol="Index", SortOrder="ASCENDING", VisibleCols=["Index";"Time";" ((chassis).st).thetal";" ((chassis).st).thetar"], ColWidths=[100;100;100;100]
+TableHeader="Data Sampling Setup", SortCol="Expression", SortOrder="DESCENDING", VisibleCols=["Expression";"Type";"Value";"Min";"Max";"Average";"# Changes";"Min. Change";"Max. Change"], ColWidths=[118;100;100;100;100;100;110;126;126]
+TableHeader="Power Sampling", SortCol="Index", SortOrder="ASCENDING", VisibleCols=["Index";"Time";"Ch 0"], ColWidths=[100;100;100]
+TableHeader="Watched Data 1", SortCol="Expression", SortOrder="ASCENDING", VisibleCols=["Expression";"Value";"Location";"Refresh"], ColWidths=[315;286;104;935]
+TableHeader="RegisterSelectionDialog", SortCol="None", SortOrder="ASCENDING", VisibleCols=[], ColWidths=[]
+WatchedExpression="chassis", Window=Watched Data 1
+WatchedExpression="xl", Window=Watched Data 1
+WatchedExpression="fn_feedforward", Window=Watched Data 1
