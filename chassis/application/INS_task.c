@@ -33,20 +33,19 @@ float RefTemp = 40;
 
 static void IMU_Param_Correction(IMU_Param_t *param, float gyro[3], float accel[3]);
 
-void chassis_data_fdb(Chassis_t* ch)
+void chassis_data_fdb(Chassis_t *ch)
 {
-	ch->IMU_DATA.pitch=INS.Pitch;
-	ch->IMU_DATA.yaw=INS.Yaw;
-  ch->IMU_DATA.toatalyaw=INS.YawTotalAngle;
-	ch->IMU_DATA.roll=INS.Roll;
-	
-	ch->IMU_DATA.pitchspd=INS.Gyro[0];
-	ch->IMU_DATA.rollspd=INS.Gyro[1];
-	ch->IMU_DATA.yawspd=INS.Gyro[2];
-	
-	ch->IMU_DATA.ax=INS.Accel[0];
-	ch->IMU_DATA.az=INS.Accel[2];
+    ch->IMU_DATA.pitch = INS.Pitch;
+    ch->IMU_DATA.yaw = INS.Yaw;
+    ch->IMU_DATA.toatalyaw = INS.YawTotalAngle;
+    ch->IMU_DATA.roll = INS.Roll;
 
+    ch->IMU_DATA.pitchspd = INS.Gyro[0];
+    ch->IMU_DATA.rollspd = INS.Gyro[1];
+    ch->IMU_DATA.yawspd = INS.Gyro[2];
+
+    ch->IMU_DATA.ax = INS.Accel[0];
+    ch->IMU_DATA.az = INS.Accel[2];
 }
 
 void INS_Init(void)
@@ -112,33 +111,32 @@ void INS_Task(void)
         }
         BodyFrameToEarthFrame(INS.MotionAccel_b, INS.MotionAccel_n, INS.q); // 转换回导航系n
 
-        if(fabsf(INS.MotionAccel_n[0])<0.02f)
-		{
-		  INS.MotionAccel_n[0]=0.0f;	//x轴
-		}
-		if(fabsf(INS.MotionAccel_n[1])<0.02f)
-		{
-		  INS.MotionAccel_n[1]=0.0f;	//y轴
-		}
-		if(fabsf(INS.MotionAccel_n[2])<0.04f)
-		{
-		  INS.MotionAccel_n[2]=0.0f;//z轴
-		}
-        if(ins_time>3000.0f)
-		{
-			INS.ins_flag=1;//四元数基本收敛，加速度也基本收敛，可以开始底盘任务
-			// 获取最终数据
+        if (fabsf(INS.MotionAccel_n[0]) < 0.02f)
+        {
+            INS.MotionAccel_n[0] = 0.0f; // x轴
+        }
+        if (fabsf(INS.MotionAccel_n[1]) < 0.02f)
+        {
+            INS.MotionAccel_n[1] = 0.0f; // y轴
+        }
+        if (fabsf(INS.MotionAccel_n[2]) < 0.04f)
+        {
+            INS.MotionAccel_n[2] = 0.0f; // z轴
+        }
+        if (ins_time > 3000.0f)
+        {
+            INS.ins_flag = 1; // 四元数基本收敛，加速度也基本收敛，可以开始底盘任务
+            // 获取最终数据
             INS.Yaw = QEKF_INS.Yaw;
             INS.Pitch = QEKF_INS.Pitch;
             INS.Roll = QEKF_INS.Roll;
             INS.YawTotalAngle = QEKF_INS.YawTotalAngle;
-		}
-		else
-		{
-		 ins_time++;
-		}
+        }
+        else
+        {
+            ins_time++;
+        }
         // 获取最终数据
-
     }
 
     // temperature control
@@ -156,9 +154,9 @@ void INS_Task(void)
     count++;
 }
 
-void INS_task(void const * argument)
+void INS_task(void const *argument)
 {
-  /* USER CODE BEGIN StartINSTask */
+    /* USER CODE BEGIN StartINSTask */
     INS_Init();
     /* Infinite loop */
     for (;;)
@@ -167,7 +165,7 @@ void INS_task(void const * argument)
         chassis_data_fdb(&chassis);
         osDelay(1);
     }
-  /* USER CODE END StartINSTask */
+    /* USER CODE END StartINSTask */
 }
 /**
  * @brief          Transform 3dvector from BodyFrame to EarthFrame
@@ -283,7 +281,7 @@ static void IMU_Param_Correction(IMU_Param_t *param, float gyro[3], float accel[
 
 /**
  * @brief 温度控制
- * 
+ *
  */
 void IMU_Temperature_Ctrl(void)
 {
