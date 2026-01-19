@@ -1,0 +1,80 @@
+% 本程序用于求解LQR反馈矩阵lqr_k(L0) 对于每一个腿长L0，求解一次系统状态空间方程，然后求得反馈矩阵K
+% 对于不同的K，对L0进行拟合，得到lqr_k
+
+clc;
+clear;
+
+L0s = 0.12:0.01:0.32;          % L0变化范围
+Ks = zeros(2, 6, length(L0s)); % 存放不同L0对应的K
+
+for step=1:length(L0s)
+    
+    % 所需符号量
+    syms theta dtheta ddtheta;
+    syms x x1 x2;
+    syms phi phi1 phi2;
+    syms T Tp Nf t;
+    
+    % 机器人结构参数
+    R = 0.0775;
+    L = L0s(step) / 2;
+    Lm = L0s(step) / 2;
+    mw = 0.334 *2;
+    l = -0.004;
+    mp = 1.482 *2;
+    M = (17.5 + 0.68 - mp*2 - mw*2);
+    Iw = 0.5 * mw * R ^ 2;
+    Ip = mp * ((L + Lm) ^ 2 + 0.144 ^ 2) / 12.0;
+    Im = 0.23203539;
+    g = 9.8;
+
+    % 进行物理计算
+    Nm = M * (x2 + (L + Lm) * (ddtheta  * cos(theta) - dtheta  ^ 2 * sin(theta)) - l * (phi2 * cos(phi) - phi1 ^ 2 * sin(phi)));
+    Pm = M * g + M * ((L + Lm) * (-dtheta  ^ 2 * cos(theta) - ddtheta  * sin(theta))-l*(phi1^2*cos(phi)+phi2*sin(phi)));
+    N = Nm + mp * (x2 + L * (ddtheta  * cos(theta) - dtheta  ^ 2 * sin(theta)));
+    P = Pm + mp * g + mp * L * (-dtheta  ^ 2 * cos(theta) - ddtheta  * sin(theta));
+    
+    equ1 = x2 - (T - N * R) / (Iw / R + mw * R);
+    equ2 = (P * L + Pm * Lm) * sin(theta) - (N * L + Nm * Lm) * cos(theta) - T + Tp - Ip * ddtheta;
+    equ3 = Tp + Nm * l * cos(phi) + Pm * l * sin(phi) - Im * phi2;
+
+    [x2,ddtheta ,phi2] = solve(equ1, equ2, equ3, x2, ddtheta, phi2);
+    
+    % 求得雅克比矩阵，然后得到状态空间方程
+    Ja = jacobian( [dtheta; ddtheta; x1; x2; phi1; phi2], [theta dtheta  x x1 phi phi1]);
+    Jb = jacobian( [dtheta; ddtheta; x1; x2; phi1; phi2], [T Tp]);
+    A = vpa(subs(Ja, [theta dtheta  x x1  phi phi1], [0 0 0 0 0 0]));
+    B = vpa(subs(Jb, [theta dtheta  x x1  phi phi1], [0 0 0 0 0 0]));
+    
+    % 离散化
+    [G, H] = c2d(eval(A), eval(B), 0.005);
+    
+    % *********************************10*********************************
+    % 定义权重矩阵Q, R
+    Q=diag([1, 1, 300, 20, 8000, 1]);
+    R=diag([1 0.25]);
+
+    % 求解反馈矩阵K
+    Ks(:,:,step)=dlqr(G,H,Q,R);
+
+end
+
+% 对K的每个元素关于L0进行拟合
+K = sym('K', [2 6]);
+syms L0;
+
+for x = 1:2
+    for y = 1:6
+        p = polyfit(L0s, reshape(Ks(x,y,:), 1,length(L0s)), 3);
+        K(x, y) = p(1) * L0 ^ 3 + p(2) * L0 ^ 2 + p(3) * L0 + p(4);
+    end
+end
+
+% 输出到m函数
+matlabFunction(K, 'File', 'lqr_k');
+
+py.lqr_k_extract.LQR_K_Extract_PT()
+
+% 代入L0 = 0.20打印矩阵K 
+disp("L0 = 0.20");
+disp(vpa(subs(K, L0, 0.20)));

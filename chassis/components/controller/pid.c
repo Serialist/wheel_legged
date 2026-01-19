@@ -26,35 +26,27 @@
     }
 
 /**
- * @brief          pid struct data init
- * @param[out]     pid: PID struct data point
- * @param[in]      mode: PID_POSITION: normal pid
- *                 PID_DELTA: delta pid
- * @param[in]      PID: 0: kp, 1: ki, 2:kd
- * @param[in]      max_out: pid max out
- * @param[in]      max_iout: pid max iout
- * @retval         none
+ * @brief pid struct data init
+ *
+ * @param pid PID结构数据指针
+ * @param mode PID_POSITION:普通PID
+ *             PID_DELTA: 差分PID
+ * @param kp
+ * @param ki
+ * @param kd
+ * @param max_out 最大输出
+ * @param max_iout 最大积分输出
  */
-/**
- * @brief          pid struct data init
- * @param[out]     pid: PID结构数据指针
- * @param[in]      mode: PID_POSITION:普通PID
- *                 PID_DELTA: 差分PID
- * @param[in]      PID: 0: kp, 1: ki, 2:kd
- * @param[in]      max_out: pid最大输出
- * @param[in]      max_iout: pid最大积分输出
- * @retval         none
- */
-void PID_init(pid_type_def *pid, uint8_t mode, const fp32 PID[3], fp32 max_out, fp32 max_iout)
+void PID_init(pid_type_def *pid, uint8_t mode, const fp32 kp, const fp32 ki, const fp32 kd, fp32 max_out, fp32 max_iout)
 {
-    if (pid == NULL || PID == NULL)
+    if (pid == NULL)
     {
         return;
     }
     pid->mode = mode;
-    pid->Kp = PID[0];
-    pid->Ki = PID[1];
-    pid->Kd = PID[2];
+    pid->Kp = kp;
+    pid->Ki = ki;
+    pid->Kd = kd;
     pid->max_out = max_out;
     pid->max_iout = max_iout;
     pid->Dbuf[0] = pid->Dbuf[1] = pid->Dbuf[2] = 0.0f;

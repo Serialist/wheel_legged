@@ -111,7 +111,7 @@ void test_task(void const *argument)
 {
   TickType_t xLastWakeTime;
 
-  uint8_t i = 0;
+  uint32_t i = 0;
 
   chassis.robo_status.status = ROBO_STATUS_INIT;
 
@@ -212,12 +212,6 @@ void test_task(void const *argument)
 
     position_increment = chassis.st.v_filter * (TASK_PERIOD_MS * 0.001f);
 
-    // 速度死区 //
-    // if (fabsf(chassis.st.v_filter) < 0.005f)
-    // {
-    //   position_increment = 0;
-    // }
-
     chassis.st.x_filter += position_increment;
 
     /* ================================================================ 安全检测 ================================================================ */
@@ -241,10 +235,8 @@ void test_task(void const *argument)
     /// @brief 状态清零
     if (chassis.rc_data.rc.s[S_L] == MID)
     {
-      chassis.st.x_filter = 0;
-      set.position_set = 0;
-      total_yaw = 0;
-      set.yaw = 0;
+      set.position_set = chassis.st.x_filter;
+      set.yaw = total_yaw;
     }
 
     /* ================================================================ / 安全检测 ================================================================ */
