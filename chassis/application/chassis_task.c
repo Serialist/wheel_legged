@@ -347,7 +347,7 @@ void chassis_torque_sent(Chassis_t *ch)
 	/// @brief 用 3508
 	DJI_Motor_Transmit(&hcan1, M3508_TX_ID_2,
 					   0,
-					   HEXROLL_TORQUE_TO_CURRENT(ch->ak_set[4].torset) * 1.2,
+					   HEXROLL_TORQUE_TO_CURRENT(ch->ak_set[4].torset) * 1.2, // 这不好，但明天再改 @date 2026-01-19 -----------------------------------------------
 					   HEXROLL_TORQUE_TO_CURRENT(ch->ak_set[5].torset) * 1.2,
 					   0);
 
@@ -417,7 +417,7 @@ void mySaturate(float *in, float min, float max)
 
 #define GROUND_DETECTION_THRESHOLD 15.0f // threshold 阈值
 
-float aaa = 0.6f, bbb, ccc;
+float aaa = -0.6f, bbb, ccc;
 
 /**
  * @brief 触地检测器 right
@@ -437,7 +437,7 @@ bool Ground_Detection_R(Chassis_t *ch, struct VMC_Leg *leg)
 						leg->L0 * leg->dd_theta * arm_sin_f32(leg->theta) +
 						leg->L0 * leg->d_theta * leg->d_theta * arm_cos_f32(leg->theta));
 
-	ch->st.FNr = Filter_Average_Update(&ground_detection_filter_r, ch->st.FNr);
+	ch->st.FNr = bbb = Filter_Average_Update(&ground_detection_filter_r, ch->st.FNr);
 
 	return (ch->st.FNr < GROUND_DETECTION_THRESHOLD) ? true : false;
 }
@@ -503,6 +503,7 @@ float fn_feedforward = 0;
 /// @date 2026-01-18 00:13
 /// @date 2026-01-18 00:21
 /// @date 2026-01-19 16:32
+/// @date 2026-01-19 21:46
 float lqr_coe[12][4] = {
 	{-171.945916751900796, 349.323573064320726, -348.519788988162077, -0.485836937022621},
 	{65.601778920599898, -354.418194019372720, 492.706461260503488, 7.733631927621113},
@@ -563,46 +564,46 @@ void balancephase(Chassis_t *ch)
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	/// @brief 核心 LQR 计算，公式 u = - K * x。分左右腿
+	tlqrl = tplqrl = tlqrr = tplqrr = 0;
+	for (int i = 0; i < 6; i++)
+	{
+		tlqrl += xl[i] * lqr_k_l[0][i];
+		tplqrl += xl[i] * lqr_k_l[1][i];
+		tlqrr += xr[i] * lqr_k_r[0][i];
+		tplqrr += xr[i] * lqr_k_r[1][i];
+	}
 
+	// 老代码，用于看输出是不是合理 debug用
 	// left
-
-	lqr_l_[0] = kx[0] * xl[0] * lqr_k_l[0][0];
-	lqr_l_[1] = kx[1] * xl[1] * lqr_k_l[0][1];
-	lqr_l_[2] = kx[2] * xl[2] * lqr_k_l[0][2];
-	lqr_l_[3] = kx[3] * xl[3] * lqr_k_l[0][3];
-	lqr_l_[4] = kx[4] * xl[4] * lqr_k_l[0][4];
-	lqr_l_[5] = kx[5] * xl[5] * lqr_k_l[0][5];
-
-	tlqrl = lqr_l_[0] + lqr_l_[1] + lqr_l_[2] + lqr_l_[3] + lqr_l_[4] + lqr_l_[5];
-
-	lqr_l_[6] = kx[6] * xl[0] * lqr_k_l[1][0];
-	lqr_l_[7] = kx[7] * xl[1] * lqr_k_l[1][1];
-	lqr_l_[8] = kx[8] * xl[2] * lqr_k_l[1][2];
-	lqr_l_[9] = kx[9] * xl[3] * lqr_k_l[1][3];
-	lqr_l_[10] = kx[10] * xl[4] * lqr_k_l[1][4];
-	lqr_l_[11] = kx[11] * xl[5] * lqr_k_l[1][5];
-
-	tplqrl = lqr_l_[6] + lqr_l_[7] + lqr_l_[8] + lqr_l_[9] + lqr_l_[10] + lqr_l_[11];
-
+	// lqr_l_[0] = kx[0] * xl[0] * lqr_k_l[0][0];
+	// lqr_l_[1] = kx[1] * xl[1] * lqr_k_l[0][1];
+	// lqr_l_[2] = kx[2] * xl[2] * lqr_k_l[0][2];
+	// lqr_l_[3] = kx[3] * xl[3] * lqr_k_l[0][3];
+	// lqr_l_[4] = kx[4] * xl[4] * lqr_k_l[0][4];
+	// lqr_l_[5] = kx[5] * xl[5] * lqr_k_l[0][5];
+	// tlqrl = lqr_l_[0] + lqr_l_[1] + lqr_l_[2] + lqr_l_[3] + lqr_l_[4] + lqr_l_[5];
+	// lqr_l_[6] = kx[6] * xl[0] * lqr_k_l[1][0];
+	// lqr_l_[7] = kx[7] * xl[1] * lqr_k_l[1][1];
+	// lqr_l_[8] = kx[8] * xl[2] * lqr_k_l[1][2];
+	// lqr_l_[9] = kx[9] * xl[3] * lqr_k_l[1][3];
+	// lqr_l_[10] = kx[10] * xl[4] * lqr_k_l[1][4];
+	// lqr_l_[11] = kx[11] * xl[5] * lqr_k_l[1][5];
+	// tplqrl = lqr_l_[6] + lqr_l_[7] + lqr_l_[8] + lqr_l_[9] + lqr_l_[10] + lqr_l_[11];
 	// right
-
-	lqr_r_[0] = kx[0] * xr[0] * lqr_k_r[0][0];
-	lqr_r_[1] = kx[1] * xr[1] * lqr_k_r[0][1];
-	lqr_r_[2] = kx[2] * xr[2] * lqr_k_r[0][2];
-	lqr_r_[3] = kx[3] * xr[3] * lqr_k_r[0][3];
-	lqr_r_[4] = kx[4] * xr[4] * lqr_k_r[0][4];
-	lqr_r_[5] = kx[5] * xr[5] * lqr_k_r[0][5];
-
-	tlqrr = lqr_r_[0] + lqr_r_[1] + lqr_r_[2] + lqr_r_[3] + lqr_r_[4] + lqr_r_[5];
-
-	lqr_r_[6] = kx[6] * xr[0] * lqr_k_r[1][0];
-	lqr_r_[7] = kx[7] * xr[1] * lqr_k_r[1][1];
-	lqr_r_[8] = kx[8] * xr[2] * lqr_k_r[1][2];
-	lqr_r_[9] = kx[9] * xr[3] * lqr_k_r[1][3];
-	lqr_r_[10] = kx[10] * xr[4] * lqr_k_r[1][4];
-	lqr_r_[11] = kx[11] * xr[5] * lqr_k_r[1][5];
-
-	tplqrr = lqr_r_[6] + lqr_r_[7] + lqr_r_[8] + lqr_r_[9] + lqr_r_[10] + lqr_r_[11];
+	// lqr_r_[0] = kx[0] * xr[0] * lqr_k_r[0][0];
+	// lqr_r_[1] = kx[1] * xr[1] * lqr_k_r[0][1];
+	// lqr_r_[2] = kx[2] * xr[2] * lqr_k_r[0][2];
+	// lqr_r_[3] = kx[3] * xr[3] * lqr_k_r[0][3];
+	// lqr_r_[4] = kx[4] * xr[4] * lqr_k_r[0][4];
+	// lqr_r_[5] = kx[5] * xr[5] * lqr_k_r[0][5];
+	// tlqrr = lqr_r_[0] + lqr_r_[1] + lqr_r_[2] + lqr_r_[3] + lqr_r_[4] + lqr_r_[5];
+	// lqr_r_[6] = kx[6] * xr[0] * lqr_k_r[1][0];
+	// lqr_r_[7] = kx[7] * xr[1] * lqr_k_r[1][1];
+	// lqr_r_[8] = kx[8] * xr[2] * lqr_k_r[1][2];
+	// lqr_r_[9] = kx[9] * xr[3] * lqr_k_r[1][3];
+	// lqr_r_[10] = kx[10] * xr[4] * lqr_k_r[1][4];
+	// lqr_r_[11] = kx[11] * xr[5] * lqr_k_r[1][5];
+	// tplqrr = lqr_r_[6] + lqr_r_[7] + lqr_r_[8] + lqr_r_[9] + lqr_r_[10] + lqr_r_[11];
 
 	if (my_debug.torque_flag)
 	{
@@ -637,16 +638,14 @@ void balancephase(Chassis_t *ch)
 	/* ================================ 腿 解算 ================================ */
 
 	/// @brief 腿推力 PID
-	fn_feedforward = RAMP(fn_feedforward,
-						  (ch->robo_status.flag.above ? -20.0f : 55.0f) * arm_cos_f32(leg_r.theta),
-						  -100, 100, 0.003f);
+	fn_feedforward = 55.0f * arm_cos_f32(leg_r.theta);
 
 	leg_l.F0 = fn_feedforward +
 			   PID_Calc(&chassis_motor_pid[0], set.left_length, leg_l.L0);
 	leg_r.F0 = fn_feedforward +
 			   PID_Calc(&chassis_motor_pid[1], set.right_length, leg_r.L0);
 
-	// /// @brief 杆扭矩 PID
+	/// @brief 杆扭矩 PID
 	// if (my_debug.no_tp_flag)
 	// {
 	// 	tplqrl = PID_Calc(&pid_tpl, PI / 2.0f, leg_l.phi0);
