@@ -83,6 +83,7 @@ float rightforce;
 const float kk = 1.57079632679489661923f;
 
 float turn_t; // yaw轴补偿
+float roll_t;
 float leg_tp; // 防劈叉补偿
 float total_yaw;
 
@@ -336,20 +337,20 @@ void chassis_torque_sent(Chassis_t *ch)
 			ch->ak_set[i].torset = 0;
 	}
 
-	// MIT模式下发送
-	pack_cmd(1, 0, 0, 0, 0, ch->ak_set[0].torset);
-	pack_cmd(3, 0, 0, 0, 0, ch->ak_set[3].torset);
-	delay_ms(1);
-	pack_cmd(2, 0, 0, 0, 0, ch->ak_set[1].torset);
-	pack_cmd(4, 0, 0, 0, 0, ch->ak_set[2].torset);
-	delay_ms(1);
-
 	/// @brief 用 3508
 	DJI_Motor_Transmit(&hcan1, M3508_TX_ID_2,
 					   0,
-					   HEXROLL_TORQUE_TO_CURRENT(ch->ak_set[4].torset) * 1.2, // 这不好，但明天再改 @date 2026-01-19 -----------------------------------------------
-					   HEXROLL_TORQUE_TO_CURRENT(ch->ak_set[5].torset) * 1.2,
+					   HEXROLL_TORQUE_TO_CURRENT(ch->ak_set[4].torset), // 这不好，但明天再改 @date 2026-01-19 -----------------------------------------------
+					   HEXROLL_TORQUE_TO_CURRENT(ch->ak_set[5].torset),
 					   0);
+
+	// MIT模式下发送
+	pack_cmd(1, 0, 0, 0, 0, ch->ak_set[0].torset);
+	pack_cmd(3, 0, 0, 0, 0, ch->ak_set[3].torset);
+	vTaskDelay(6);
+	pack_cmd(2, 0, 0, 0, 0, ch->ak_set[1].torset);
+	pack_cmd(4, 0, 0, 0, 0, ch->ak_set[2].torset);
+	vTaskDelay(6);
 
 	// 伺服模式下电流发送
 
@@ -374,7 +375,7 @@ void get_order(Chassis_t *ch)
 		set.speed_cmd = ch->rc_data.rc.ch[L_Y] * 2.0f / 660.0f;
 		set.yaw -= ch->rc_data.rc.ch[L_X] * REMOTE_CHANNLE_TO_CHASSIS_SPEED * 2.0f;
 		set.left_length = set.right_length = (ch->rc_data.rc.ch[R_Y] * 0.01f) / 66 + 0.2f;
-		set.roll = ch->rc_data.rc.ch[R_X] * 45.0f / 660.0f;
+		set.roll = -ch->rc_data.rc.ch[R_X] * 45.0f / 660.0f;
 
 		if (set.speed_cmd != 0)
 			set.position_set = ch->st.x_filter;
@@ -504,19 +505,27 @@ float fn_feedforward = 0;
 /// @date 2026-01-18 00:21
 /// @date 2026-01-19 16:32
 /// @date 2026-01-19 21:46
+/// @date 2026-01-20 11:27
+/// @date 2026-01-20 11:38
+/// @date 2026-01-20 12:00
+/// @date 2026-01-20 12:04
+/// @date 2026-01-20 12:06
+/// @date 2026-01-20 12:07
+/// @date 2026-01-20 12:09
+/// @date 2026-01-20 12:13
 float lqr_coe[12][4] = {
-	{-171.945916751900796, 349.323573064320726, -348.519788988162077, -0.485836937022621},
-	{65.601778920599898, -354.418194019372720, 492.706461260503488, 7.733631927621113},
-	{-14.214619448043511, 0.439184222617310, -3.375263297223484, 0.170867899239262},
-	{11.766736188264710, -46.776815772894011, 59.199402768347603, 0.729305020652956},
-	{-95.405639317916297, 292.574615695187674, -322.221951339453199, -0.845889627336395},
-	{-22.361072772244398, -82.936747621311568, 199.049508447881209, 14.582099719181620},
-	{-55.738018181684993, 153.485891367708291, -167.193999222719413, -1.180166121390777},
-	{-18.750691501268491, -28.528131538492978, 91.873496751486215, 9.642323808339546},
-	{-503.843973362236682, 1069.032696832322017, -856.447545266351540, 103.941308624195401},
-	{861.780314226087967, -2665.128740592621853, 2923.379534650412097, 91.706457872639106},
-	{-27.711179610477171, 53.479649973995130, -40.359386143632882, 6.851774579198958},
-	{35.539285255729183, -99.622158736707178, 101.012201252803095, 4.845283321146427}};
+	{-142.492659753717305, 199.454228600215004, -180.169533346276012, -10.820719338099790},
+	{-80.716910536843784, 187.788307699207508, -160.768349323782786, 16.476777923037162},
+	{-22.732312777325880, -10.185006634516551, -2.363923827444435, -0.138043718344234},
+	{-5.235515091833566, 11.385134920656981, -8.547112320733241, 2.040283057969509},
+	{-31.491901769498710, 86.593224597372497, -83.502028593836599, -9.017117491339160},
+	{-98.526574721807052, 248.450425359999286, -225.315718234334298, 15.873962913269549},
+	{-25.103557106515989, 44.351447598177138, -39.934359479513454, -5.064881583129358},
+	{-54.213049254663638, 136.332855880863406, -123.583913890114303, 9.089058772385719},
+	{-380.063440167717999, 978.876673797293620, -900.854890361165531, 58.994247117799922},
+	{199.763531848890096, -586.483174762340582, 583.879998687691455, 137.478512708982009},
+	{-27.181777948026632, 65.869222398873063, -58.658888489809463, 4.855966081270674},
+	{14.108880013039411, -40.434213327918442, 39.602865836941433, 7.195970490909304}};
 
 /***********************************************
  * @brief 平衡行驶过程(左右两腿分别进行LQR运算)
@@ -530,7 +539,13 @@ void balancephase(Chassis_t *ch)
 	turn_t = chassis_motor_pid[YAW_PID].Kp * (set.yaw - total_yaw) - chassis_motor_pid[YAW_PID].Kd * ch->IMU_DATA.yawspd; // 这样计算更稳一点
 
 	// leg_tp = PID_Calc(&chassis_motor_pid[TP_PID], 0.0f, ch->st.angle_err);					// 防劈叉pid计算
-	set.roll_set_now = PID_Calc(&chassis_motor_pid[ROLL_PID], set.roll, ch->IMU_DATA.roll); // roll 补偿
+	roll_t = PID_Calc(&chassis_motor_pid[ROLL_PID], set.roll, ch->IMU_DATA.roll); // roll 补偿
+
+	if (ABS(leg_l.theta) > (PI / 6.0f) ||
+		ABS(leg_r.theta) > (PI / 6.0f))
+		chassis.robo_status.flag.fallen = true;
+
+	chassis.robo_status.flag.above = !(chassis.robo_status.flag.above || chassis.robo_status.flag.fallen);
 
 	/* ================================ LQR 控制 ================================ */
 
@@ -614,8 +629,8 @@ void balancephase(Chassis_t *ch)
 	}
 
 	/// @brief 限幅
-#define TPLQR_MAX 10.0f
-#define TLQR_MAX 2.0f
+#define TPLQR_MAX 20.0f
+#define TLQR_MAX 2.5f
 	mySaturate(&tplqrl, -TPLQR_MAX, TPLQR_MAX);
 	mySaturate(&tplqrr, -TPLQR_MAX, TPLQR_MAX);
 	mySaturate(&tlqrl, -TLQR_MAX, TLQR_MAX);
@@ -641,16 +656,15 @@ void balancephase(Chassis_t *ch)
 	fn_feedforward = 55.0f * arm_cos_f32(leg_r.theta);
 
 	leg_l.F0 = fn_feedforward +
-			   PID_Calc(&chassis_motor_pid[0], set.left_length, leg_l.L0);
+			   PID_Calc(&chassis_motor_pid[0], set.left_length, leg_l.L0) -
+			   roll_t;
 	leg_r.F0 = fn_feedforward +
-			   PID_Calc(&chassis_motor_pid[1], set.right_length, leg_r.L0);
+			   PID_Calc(&chassis_motor_pid[1], set.right_length, leg_r.L0) +
+			   roll_t;
 
 	/// @brief 杆扭矩 PID
-	// if (my_debug.no_tp_flag)
-	// {
-	// 	tplqrl = PID_Calc(&pid_tpl, PI / 2.0f, leg_l.phi0);
-	// 	tplqrr = PID_Calc(&pid_tpr, PI / 2.0f, leg_r.phi0);
-	// }
+	// tplqrl = PID_Calc(&pid_tpl, PI / 2.0f, leg_l.phi0);
+	// tplqrr = PID_Calc(&pid_tpr, PI / 2.0f, leg_r.phi0);
 
 	if (ch->robo_status.flag.above)
 	{
@@ -674,7 +688,7 @@ void balancephase(Chassis_t *ch)
 	/* ================================ 发送 ================================ */
 
 	/// @brief 限幅
-#define HIP_TORQUE_MAX 30.0f
+#define HIP_TORQUE_MAX 40.0f
 #define HUB_TORQUE_MAX 2.5f
 	mySaturate(&set.set_cal_real[0], -HIP_TORQUE_MAX, HIP_TORQUE_MAX);
 	mySaturate(&set.set_cal_real[1], -HIP_TORQUE_MAX, HIP_TORQUE_MAX);
@@ -690,6 +704,11 @@ void balancephase(Chassis_t *ch)
 	ch->ak_set[3].torset = set.set_cal_real[3];
 	ch->ak_set[4].torset = -set.set_cal_real[4];
 	ch->ak_set[5].torset = set.set_cal_real[5];
+
+	/// @note
+	// 倒地自起不需要检测是否离地
+	// 当两腿同时离地并且遥控器没有在控制腿的伸缩时，才认为离地
+	// 补偿pid初始化：防劈叉补偿、偏航角补偿
 }
 
 uint8_t jump_time = 0;

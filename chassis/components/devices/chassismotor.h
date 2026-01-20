@@ -2,6 +2,7 @@
 #define __CHASSISMOTOR_H__
 
 #include "stdint.h"
+#include "user_lib.h"
 #include "remote_control.h"
 #include "referee_system.h"
 #include "main.h"
@@ -283,6 +284,7 @@ struct Wheel_Leg_Flag
 	uint8_t above_left;
 	uint8_t above_right;
 	uint8_t above;
+	bool fallen;
 	uint8_t jump_v_reach;
 };
 

@@ -22,20 +22,20 @@
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #endif
 
-#ifndef VALUE_LIMIT
-#define VALUE_LIMIT(a, min, max) (MAX(min, MIN(a, max)))
+#ifndef CLAMP
+#define CLAMP(a, min, max) (MAX(min, MIN(a, max)))
 #endif
 
-#ifndef VALUE_LIMIT_ABS
-#define VALUE_LIMIT_ABS(a, max) (VALUE_LIMIT(a, -max, max))
+#ifndef CLAMP_ABS
+#define CLAMP_ABS(a, max) (CLAMP(a, -max, max))
 #endif
 
-#ifndef VALUE_MAP
-#define VALUE_MAP(a, inmin, intmax, outmin, outmax) (outmin + (a - inmin) * (outmax - outmin) / (intmax - inmin))
+#ifndef REMAP
+#define REMAP(a, inmin, intmax, outmin, outmax) (outmin + (a - inmin) * (outmax - outmin) / (intmax - inmin))
 #endif
 
 #ifndef RAMP
-#define RAMP(prev_x, x, k_min, k_max, dt) (prev_x += VALUE_LIMIT(x - prev_x, k_min * dt, k_max * dt))
+#define RAMP(prev_x, x, k_min, k_max, dt) (prev_x += CLAMP(x - prev_x, k_min * dt, k_max * dt))
 #endif
 
 struct Wheel_Leg_Debug
