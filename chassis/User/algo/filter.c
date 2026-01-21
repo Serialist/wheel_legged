@@ -19,7 +19,7 @@
  * @return true
  * @return false
  ************************/
-bool Filter_Average_Init(struct Filter_Average *filter, uint8_t width)
+bool Filter_Average_Init(Filter_Average_t *filter, uint8_t width)
 {
     if (width > FILTER_AVERAGE_FLOAT_WINDOW_MAX_SIZE || width <= 0)
     {
@@ -57,7 +57,7 @@ bool Filter_Average_Init(struct Filter_Average *filter, uint8_t width)
  * - 检查window有没有被篡改
  * - 在window在填满前不允许输出
  ************************/
-float Filter_Average_Update(struct Filter_Average *filter, float calibrate)
+float Filter_Average_Update(Filter_Average_t *filter, float calibrate)
 {
     static uint32_t reCalc_cnt = 0; // 定期重新计算计数
 

@@ -69,21 +69,11 @@ const float vaEstimateKF_H[4] = {1.0f, 0.0f,
 extern INS_t INS;
 extern Chassis_t chassis;
 extern struct VMC_Leg leg_l, leg_r;
-extern float total_yaw;
-extern struct Wheel_Leg_Target set;
+extern Wheel_Leg_Target_t set;
 
-float vel_acc_l[2];
-float vel_acc_r[2];
-float vel_filter_l;
-float vel_filter_r;
 float vel_acc[2];
 
-float speed[2];
-uint32_t OBSERVE_TIME = 4; // 任务周期是4ms
-
-float current_pos_r;
 float motor_vel_r;
-float current_pos_l;
 float motor_vel_l;
 
 float wr, wl = 0.0f;          // wheel 轮毂速度
@@ -94,11 +84,8 @@ float position_increment = 0;
 
 /**************************************************************** proto ****************************************************************/
 
-void phase_update(Chassis_t *ch);
 void xvEstimateKF_Init(KalmanFilter_t *EstimateKF);
 void xvEstimateKF_Update(KalmanFilter_t *EstimateKF, float acc, float vel);
-// static float normalize_position(float position);
-// static float calculate_velocity(VelocityCalculator *calc, float current_pos, uint32_t current_time_ms);
 
 /**************************************************************** func ****************************************************************/
 
@@ -111,10 +98,6 @@ void test_task(void const *argument)
 {
   TickType_t xLastWakeTime;
 
-  uint32_t i = 0;
-
-  chassis.robo_status.status = ROBO_STATUS_INIT;
-
   xLastWakeTime = xTaskGetTickCount();
   // 等待加速度收敛
   while (INS.ins_flag == 0)
@@ -123,68 +106,6 @@ void test_task(void const *argument)
   }
 
   xvEstimateKF_Init(&vaEstimateKF);
-
-  Buzzer_Preset();
-
-  // // 零漂校准计数器初始化
-  // uint32_t zero_drift_calibration_count = 0;
-  // const uint32_t CALIBRATION_SAMPLES = 2000; // 500个样本校准零漂
-
-  // while (1)
-  // {
-  //   uint32_t current_time_ms = HAL_GetTick();
-
-  //   // 速度弥补计算
-  //   // // 右轮
-  //   // current_pos_r = normalize_position(chassis.ak_fdb_ctrl[5].motor_ctrlpos);
-  //   motor_vel_r = calculate_velocity(&vel_calc_r, current_pos_r, current_time_ms);
-  //   // // 左轮
-  //   // current_pos_l = normalize_position(chassis.ak_fdb_ctrl[4].motor_ctrlpos);
-  //   // motor_vel_l = calculate_velocity(&vel_calc_l, current_pos_l, current_time_ms);
-
-  //   // 右轮
-  //   // current_pos_r = DJI_MOTOR_ANGLE(&m3508[0]);
-  //   // 左轮
-  //   motor_vel_r = DJI_MOTOR_SPEED(&m3508[0]);
-  //   // current_pos_l = DJI_MOTOR_ANGLE(&m3508[1]);
-  //   motor_vel_l = DJI_MOTOR_SPEED(&m3508[1]);
-
-  //   // 零漂校准阶段
-  //   if (zero_drift_calibration_count < CALIBRATION_SAMPLES)
-  //   {
-  //     // 累积零漂偏移
-  //     vel_calc_r.zero_drift_offset += motor_vel_r;
-  //     vel_calc_l.zero_drift_offset += motor_vel_l;
-
-  //     zero_drift_calibration_count++;
-  //   }
-  //   // 校准完成后计算平均值
-  //   else if (zero_drift_calibration_count == CALIBRATION_SAMPLES)
-  //   {
-  //     vel_calc_r.zero_drift_offset /= CALIBRATION_SAMPLES;
-  //     vel_calc_l.zero_drift_offset /= CALIBRATION_SAMPLES;
-  //     break;
-  //   }
-  // }
-
-  for (i = 0; i < 1000; i += TASK_PERIOD_MS)
-  {
-    /// @brief 检测
-    RC_Offline_Detection(&rc_ctrl, TASK_PERIOD_MS);
-    Motor_Offline_Detection(&motor_status, TASK_PERIOD_MS);
-
-    /// @brief 急停判断
-    if (RC_IS_OFFLINE(&rc_ctrl) || MOTOR_IS_OFFLINE(&motor_status) || (chassis.st.thetal >= (PI / 2)) || (chassis.st.thetar >= (PI / 2)))
-    {
-      chassis.robo_status.status = ROBO_STATUS_EMERGENCY;
-    }
-    else
-    {
-      chassis.robo_status.status = ROBO_STATUS_RUN;
-    }
-
-    osDelayUntil(&xLastWakeTime, TASK_PERIOD_MS);
-  }
 
   while (1)
   {
@@ -200,7 +121,7 @@ void test_task(void const *argument)
     vrb = wr * wheelRadius + leg_r.L0 * leg_r.d_theta * arm_cos_f32(leg_r.theta) + leg_r.d_L0 * arm_sin_f32(leg_r.theta); // 右机体速度
 
     // 左
-    wl = motor_vel_l + INS.Gyro[0] + chassis.st.d_alphal;                                                                 // 左轮速度
+    wl = motor_vel_l + INS.Gyro[0] + leg_l.d_alpha;                                                                       // 左轮速度
     vlb = wl * wheelRadius + leg_l.L0 * leg_l.d_theta * arm_cos_f32(leg_l.theta) + leg_l.d_L0 * arm_sin_f32(leg_l.theta); // 左机体速度
 
     // 总体互补滤波
@@ -208,36 +129,22 @@ void test_task(void const *argument)
     xvEstimateKF_Update(&vaEstimateKF, INS.MotionAccel_n[1], aver_v); // ins 加速度 轮毂反馈速度 融合滤波
 
     // 原地自转的过程中v_filter和x_filter应该都是为0
-    chassis.st.v_filter = vel_acc[0]; // 得到卡尔曼滤波后的速度
+    chassis.state.v_filter = vel_acc[0]; // 得到卡尔曼滤波后的速度
 
-    position_increment = chassis.st.v_filter * (TASK_PERIOD_MS * 0.001f);
+    position_increment = chassis.state.v_filter * (TASK_PERIOD_MS * 0.001f);
 
-    chassis.st.x_filter += position_increment;
+    chassis.state.x_filter += position_increment;
 
     /* ================================================================ 安全检测 ================================================================ */
 
     /// @brief 检测
-    RC_Offline_Detection(&rc_ctrl, TASK_PERIOD_MS);
-    Motor_Offline_Detection(&motor_status, TASK_PERIOD_MS);
-
+    // RC_Offline_Detection(&rc_ctrl, TASK_PERIOD_MS);
+    // Motor_Offline_Detection(&motor_status, TASK_PERIOD_MS);
     /// @brief 急停判断
-    if (RC_IS_OFFLINE(&rc_ctrl) || MOTOR_IS_OFFLINE(&motor_status) || (chassis.st.thetal >= (PI / 2)) || (chassis.st.thetar >= (PI / 2)))
-    {
-      chassis.robo_status.status = ROBO_STATUS_EMERGENCY;
-    }
-
-    /// @brief 左摇杆在下时试图手动恢复
-    if (chassis.robo_status.status == ROBO_STATUS_EMERGENCY && chassis.rc_data.rc.s[S_L] == DOWN)
-    {
-      chassis.robo_status.status = ROBO_STATUS_RUN;
-    }
-
-    /// @brief 状态清零
-    if (chassis.rc_data.rc.s[S_L] == MID)
-    {
-      set.position_set = chassis.st.x_filter;
-      set.yaw = total_yaw;
-    }
+    // if (RC_IS_OFFLINE(&rc_ctrl) || MOTOR_IS_OFFLINE(&motor_status) || (leg_l.theta >= (PI / 2)) || (leg_r.theta >= (PI / 2)))
+    // {
+    //   chassis.robo_status.status = ROBO_STATUS_EMERGENCY;
+    // }
 
     /* ================================================================ / 安全检测 ================================================================ */
 
@@ -274,117 +181,3 @@ void xvEstimateKF_Update(KalmanFilter_t *EstimateKF, float acc, float vel)
     vel_acc[i] = EstimateKF->FilteredValue[i];
   }
 }
-
-// 轮毂电机速度更新补偿 //周期4ms
-
-//// 区间映射函数
-// static float normalize_position(float position)
-//{
-//   // 将位置映射到 [-12.5f, 12.5f] 区间
-//   if (position > 12.5f)
-//   {
-//     position -= POSITION_RANGE; // POSITION_RANGE = 25.0f
-//   }
-//   else if (position < -12.5f)
-//   {
-//     position += POSITION_RANGE;
-//   }
-//   return position;
-// }
-
-//// 速度计算函数
-// static float calculate_velocity(VelocityCalculator *calc, float current_pos, uint32_t current_time_ms)
-//{
-//   // 1. 第一次调用时初始化
-//   if (!calc->initialized)
-//   {
-//     calc->prev_position = current_pos;
-//     calc->prev_tick = current_time_ms;
-//     calc->filtered_velocity = 0.0f;
-//     calc->zero_drift_offset = 0.0f;
-//     calc->initialized = 1;
-//     return 0.0f;
-//   }
-
-//  // 2. 计算时间差 (处理时间戳溢出)
-//  uint32_t time_delta_ms = current_time_ms - calc->prev_tick;
-
-//  // 时间差无效情况处理
-//  if (time_delta_ms < MIN_TIME_DELTA_MS || time_delta_ms > 100)
-//  {
-//    // 重置状态并返回上次滤波值
-//    calc->prev_position = current_pos;
-//    calc->prev_tick = current_time_ms;
-//    return calc->filtered_velocity;
-//  }
-
-//  // 3. 计算位置差 (使用改进的环形位置处理)
-//  float delta_pos_raw = current_pos - calc->prev_position;
-//  float delta_pos = delta_pos_raw;
-
-//  // 环形位置处理: 检测边界穿越并修正
-//  if (fabsf(delta_pos_raw) > 12.5f)
-//  {
-//    if (delta_pos_raw > 0)
-//    {
-//      delta_pos -= POSITION_RANGE; // 正向穿越处理
-//    }
-//    else
-//    {
-//      delta_pos += POSITION_RANGE; // 反向穿越处理
-//    }
-//  }
-
-//  // 4. 时间差转换为秒
-//  float delta_time = time_delta_ms * 0.001f;
-
-//  // 5. 计算原始速度
-//  float raw_velocity = delta_pos / delta_time;
-
-//  // 6. 自适应零速检测
-//  float adaptive_zero_thresh = ZERO_VELOCITY_THRESH;
-
-//  // 当速度较低时，增加零速阈值减少噪声
-//  if (fabsf(calc->filtered_velocity) < 0.5f)
-//  {
-//    adaptive_zero_thresh = ZERO_VELOCITY_THRESH * 2.0f;
-//  }
-
-//  // 零速检测: 消除微小变化引起的噪声
-//  if (fabsf(raw_velocity) < adaptive_zero_thresh)
-//  {
-//    raw_velocity = 0.0f;
-//  }
-
-//  // 7. 速度限幅: 确保在合理范围内
-//  if (fabsf(raw_velocity) > MAX_EXPECTED_VELOCITY)
-//  {
-//    raw_velocity = (raw_velocity > 0) ? MAX_EXPECTED_VELOCITY : -MAX_EXPECTED_VELOCITY;
-//  }
-
-//  // 8. 自适应滤波: 低速时使用更强滤波
-//  float adaptive_alpha = FILTER_ALPHA;
-
-//  // 当速度较低时，增加滤波强度
-//  if (fabsf(calc->filtered_velocity) < 1.0f)
-//  {
-//    adaptive_alpha = FILTER_ALPHA * 0.5f;
-//  }
-
-//  // 一阶低通滤波: 平滑速度输出
-//  calc->filtered_velocity = adaptive_alpha * raw_velocity +
-//                            (1 - adaptive_alpha) * calc->filtered_velocity;
-
-//  // 9. 零漂补偿: 持续微小补偿
-//  if (fabsf(calc->filtered_velocity) < ZERO_VELOCITY_THRESH)
-//  {
-//    calc->filtered_velocity *= (1.0f - ZERO_DRIFT_COMPENSATION);
-//  }
-
-//  // 10. 更新状态
-//  calc->prev_position = current_pos;
-//  calc->prev_tick = current_time_ms;
-
-//  // 返回滤波后的速度
-//  return calc->filtered_velocity;
-//}

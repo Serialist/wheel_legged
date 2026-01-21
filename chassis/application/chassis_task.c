@@ -42,188 +42,83 @@
 #include "filter.h"
 #include "motor.h"
 
-#ifndef LIMIT
-#define LIMIT(input, min, max) ((input) > (max)	  ? (max) \
-								: (min) < (input) ? (min) \
-												  : (input))
-#endif
+extern AK_motor_ctrl_fdb_t motorAK10[6];
 
-#ifndef ABS
-#define ABS(vaule) ((vaule) > 0 ? (vaule) : -(vaule))
-#endif
-
-/**********  变量定义 开始 *************/
 Chassis_t chassis;
-pid_type_def chassis_motor_pid[10];
 
-/**
- * @brief VMC腿摆角扭矩pid，用于板凳模型
- * @date 2025-10-16
- */
-pid_type_def pid_tpl = {0}, pid_tpr = {0};
+PID_Typedef pid_tpl = {0},
+			pid_tpr = {0},
+			leglength_pid_l = {0},
+			leglength_pid_r = {0},
+			yaw_pid = {0},
+			roll_pid = {0},
+			tp_pid = {0};
 
-pid_type_def chassis_motor_pid[10];
-
-/**********  变量定义 结束 *************/
-float T_AK_set_left[2];
-float T_AK_set_right[2];
-
-struct Wheel_Leg_Target set;
-Leg_Pos_t legpos[2];
+Wheel_Leg_Target_t set;
 struct VMC_Leg leg_l, leg_r;
 
-/* ======================== 测试代码使用的变量 ======================== */
-
-float lefttp_test;
-float leftforce_test;
-float righttp_test;
-
-float leftforce;
-float rightforce;
-const float kk = 1.57079632679489661923f;
+/* ======================== he ======================== */
 
 float turn_t; // yaw轴补偿
-float roll_t;
-float leg_tp; // 防劈叉补偿
-float total_yaw;
-
-float LEGPOS[2], LEGPOS1[2];
-float LEGSPD[2], LEGSPD1[2];
-float LEGTOR[2], LEGTOR1[2];
-
-float legL_dphi1;
-float legL_dphi4;
-float legR_dphi1;
-float legR_dphi4;
-
-float legL_phi1;
-float legL_phi4;
-float legR_phi1;
-float legR_phi4;
-
-uint8_t left_flag;
-uint8_t right_flag;
-uint8_t leg_flag;
-
-/* ======================== 测试代码使用的变量 ======================== */
 
 float tplqrl;
 float tplqrr;
 float tlqrl;
 float tlqrr;
 
-float lqr_k_l[2][6], lqr_k_r[2][6], kl[2][6], xl[6], kr[2][6], xr[6];
+float lqr_k_l[2][6], lqr_k_r[2][6], xl[6], xr[6];
 
 /// @brief 离地检测滤波
-struct Filter_Average ground_detection_filter_l, ground_detection_filter_r;
-
-// typedef uint8_t My_Status_Def;
-
-// typedef enum Robo_Status_Def_e
-// {
-// 	ROBO_INIT = 0
-// } Robo_Status_Def_e;
-
-/********** 函数声明 开始 *************/
+Filter_Average_t ground_detection_filter_l, ground_detection_filter_r;
 
 static void ChassisInit(void);
-static void Fdb_Update(Chassis_t *ch);
-void chassis_torque_sent(Chassis_t *ch);
-void balancephase(Chassis_t *ch);
-void jumpphase(Chassis_t *ch);
-bool Ground_Detection_L(Chassis_t *ch, struct VMC_Leg *leg);
-bool Ground_Detection_R(Chassis_t *ch, struct VMC_Leg *leg);
-void get_order(Chassis_t *ch);
-void mySaturate(float *in, float min, float max);
-void safe(Chassis_t *ch);
+void Chassis_Motor_Transmit(Chassis_t *ch);
+void LQR_Control(Chassis_t *ch);
+void Control_Get(Chassis_t *ch);
+void Clamp(float *in, float min, float max);
 void LQR_K_Calc(float k[2][6], float coe[12][4], float len);
 void Motor_Enable(void);
 
-/********** 函数声明 结束 *************/
-
-/* USER CODE END chassis_task */
-void chassis_task(void const *argument)
+void Chassis_Task(void const *argument)
 {
 	ChassisInit();
-	VMC_init(&leg_l);
-	VMC_init(&leg_r);
-
-	while (chassis.robo_status.status == ROBO_STATUS_INIT)
-	{
-		osDelay(1);
-	}
+	VMC_Init(&leg_l);
+	VMC_Init(&leg_r);
 
 	for (;;)
 	{
-		// Sent_YAW_Data(); // 暂时没用
+		/* ================================ 状态更新 ================================ */
 
-		// ================================ 状态更新 ================================
+		Control_Get(&chassis);
 
-		Fdb_Update(&chassis);
+		LQR_Control(&chassis);
 
-		// 控制器//
-		get_order(&chassis);
+		/* ================================ 电机控制指令 ================================ */
 
-		balancephase(&chassis);
-
-		// ================================ 电机控制指令 ================================
-		safe(&chassis);
-		chassis_torque_sent(&chassis);
-
-		// osDelay(1);
+		Chassis_Motor_Transmit(&chassis);
 	}
 	/* USER CODE END chassis_task */
 }
 
-//************************基础控制器*********************************/
-// 系统初始化
 static void ChassisInit(void)
 {
-	// 腿部运动PID初始化
-	// 腿长
-	PID_init(&chassis_motor_pid[0], PID_POSITION, 500, 0, 9000, 120, 0);
-	PID_init(&chassis_motor_pid[1], PID_POSITION, 500, 0, 9000, 120, 0);
+	PID_init(&leglength_pid_l, PID_POSITION, 500, 0, 9000, 120, 0); // 腿长 left
+	PID_init(&leglength_pid_r, PID_POSITION, 500, 0, 9000, 120, 0); // 腿长 right
+	PID_init(&yaw_pid, PID_POSITION, 0.1f, 0, 0.5f, 1.5f, 0);		// yaw
+	PID_init(&roll_pid, PID_POSITION, 0.8f, 0, 0, 30.0f, 0);		// roll
+	PID_init(&tp_pid, PID_POSITION, 1.3, 0, 3, 1.5, 0);				// 劈叉
 
-	// 方向PID
-	// PID_init(&chassis_motor_pid[YAW_PID], PID_POSITION, 0.1f, 0, 0.5f, 1.5f, 0);
-	chassis_motor_pid[YAW_PID].Kp = 0.1f;
-	chassis_motor_pid[YAW_PID].Ki = 0;
-	chassis_motor_pid[YAW_PID].Kd = 0.5f;
-	chassis_motor_pid[YAW_PID].max_out = 1.5f;
-	chassis_motor_pid[YAW_PID].max_iout = 0;
-
-	// 滚转PID
-	// PID_init(&chassis_motor_pid[ROLL_PID], PID_POSITION, 0.8f, 0, 0, 30.0f, 0);
-	chassis_motor_pid[ROLL_PID].Kp = 0.8;
-	chassis_motor_pid[ROLL_PID].Ki = 0;
-	chassis_motor_pid[ROLL_PID].Kd = 0;
-	chassis_motor_pid[ROLL_PID].max_out = 30;
-	chassis_motor_pid[ROLL_PID].max_iout = 0;
-
-	// 力矩PID
-	// PID_init(&chassis_motor_pid[TP_PID], PID_POSITION, 1.3, 0, 3, 1.5, 0);
-	chassis_motor_pid[TP_PID].Kp = 1.3;
-	chassis_motor_pid[TP_PID].Ki = 0;
-	chassis_motor_pid[TP_PID].Kd = 3;
-	chassis_motor_pid[TP_PID].max_out = 1.5;
-	chassis_motor_pid[TP_PID].max_iout = 0;
-
-	// ================================================================
-	/**
-	 * @brief VMC腿摆角扭矩pid，用于板凳模型
-	 * @date 2025-10-16
-	 */
+	// 腿摆角扭矩pid，用于板凳模型
 	PID_init(&pid_tpl, PID_POSITION, 80, 0, 400, 10, 0);
 	PID_init(&pid_tpr, PID_POSITION, 80, 0, 400, 10, 0);
 
-	set.left_length = set.right_length = 0.15f;
-
+	// 离地检测滤波
 	Filter_Average_Init(&ground_detection_filter_l, 10);
 	Filter_Average_Init(&ground_detection_filter_r, 10);
 
-	Motor_Enable();
+	set.left_length = set.right_length = 0.15f;
 
-	// Reg_Add();
+	Motor_Enable();
 }
 
 /************************
@@ -235,179 +130,78 @@ void Motor_Enable(void)
 	for (int a = 1; a <= 4; a++)
 	{
 		controller_init(a);
-		vTaskDelay(2);
+		osDelay(1);
 	}
-	// for (int bb = 4; bb < 6; bb++)
-	// {
-	// 	controller_init(bb + 1);
-	// 	controller_setorigin(bb + 1);
-	// 	vTaskDelay(2);
-	// }
-}
-
-/************************
- * @brief 状态更新
- *
- * @param ch
- ************************/
-static void Fdb_Update(Chassis_t *ch)
-{
-	ch->time_last = ch->time_now;
-	// 获取电机数据
-	GetgimbalmotorFdb(&ch->gimbal_motor_fdb);
-	GetAKMotor1Fdb(&ch->AK_fdb[0], &ch->ak_fdb_ctrl[0]);
-	GetAKMotor2Fdb(&ch->AK_fdb[1], &ch->ak_fdb_ctrl[1]);
-	GetAKMotor3Fdb(&ch->AK_fdb[2], &ch->ak_fdb_ctrl[2]);
-	GetAKMotor4Fdb(&ch->AK_fdb[3], &ch->ak_fdb_ctrl[3]);
-	GetAKMotor5Fdb(&ch->AK_fdb[4], &ch->ak_fdb_ctrl[4]);
-	GetAKMotor6Fdb(&ch->AK_fdb[5], &ch->ak_fdb_ctrl[5]);
-
-	// 获取遥控器数据
-	ch->time_now.rc = GetRCData(&(ch->rc_data));
-	// if (ch->rc_data.rc.s[0] != UP)
-	// 	ch->no_force_mode = SHUT;
-	// else
-	// 	ch->no_force_mode = OPEN;
-
-	ch->robo_status.flag.above_left = Ground_Detection_L(ch, &leg_l);
-	ch->robo_status.flag.above_right = Ground_Detection_R(ch, &leg_r);
-
-	ch->robo_status.flag.above = (ch->robo_status.flag.above_left == true) && (ch->robo_status.flag.above_right == true);
 }
 
 void chassis_sys_calc(Chassis_t *ch)
 {
-	//  const float lpfRatio = 0.5f;
-	//	float lastLeftDLength = 0, lastRightDLength = 0;
-	legR_phi1 = pi / 2.0f - ch->ak_fdb_ctrl[0].motor_ctrlpos;
-	legR_phi4 = pi / 2.0f - ch->ak_fdb_ctrl[1].motor_ctrlpos;
-
-	legL_phi1 = pi / 2.0f - ch->ak_fdb_ctrl[2].motor_ctrlpos;
-	legL_phi4 = pi / 2.0f - ch->ak_fdb_ctrl[3].motor_ctrlpos;
-
-	leg_l.phi1 = legL_phi1;
-	leg_l.phi4 = legL_phi4;
-	leg_r.phi1 = legR_phi1;
-	leg_r.phi4 = legR_phi4;
+	leg_l.phi1 = pi / 2.0f - motorAK10[2].angle;
+	leg_l.phi4 = pi / 2.0f - motorAK10[3].angle;
+	leg_r.phi1 = pi / 2.0f - motorAK10[0].angle;
+	leg_r.phi4 = pi / 2.0f - motorAK10[1].angle;
 
 	VMC_calc_1(&leg_l, &chassis, 3.0f / 1000.0f);
 	VMC_calc_1(&leg_r, &chassis, 3.0f / 1000.0f);
 }
 
-void phase_update(Chassis_t *ch)
+void Chassis_Motor_Transmit(Chassis_t *ch)
 {
-	ch->st.phi = ch->IMU_DATA.pitch;
-	ch->st.dPhi = ch->IMU_DATA.pitchspd;
-
-	ch->st.xr = ch->st.x_filter;
-	ch->st.vr = ch->st.v_filter;
-
-	ch->st.xl = ch->st.x_filter;
-	ch->st.vl = ch->st.v_filter;
-
-	ch->st.thetal = leg_l.theta;
-	ch->st.thetar = leg_r.theta;
-
-	ch->st.alphal = leg_l.alpha;
-	ch->st.alphar = leg_r.alpha;
-
-	ch->st.angle_err = leg_l.phi0 - leg_r.phi0;
-
-	ch->st.dThetal = leg_l.d_theta;
-	ch->st.dThetar = leg_r.d_theta;
-
-	ch->st.d_alphal = leg_l.d_alpha;
-	ch->st.d_alphar = leg_r.d_alpha;
-
-	total_yaw = ch->IMU_DATA.toatalyaw;
-}
-
-// 扭矩发送
-
-/************************
- * @brief oria
- *
- * @param ch
- ************************/
-void chassis_torque_sent(Chassis_t *ch)
-{
-
-	if (ch->robo_status.status != ROBO_STATUS_RUN ||
-		ch->rc_data.rc.s[S_R] == UP ||
-		ch->rc_data.rc.s[S_L] != UP)
 	{
 		for (int i = 0; i < 6; i++)
 			ch->ak_set[i].torset = 0;
 	}
 
 	/// @brief 用 3508
-	DJI_Motor_Transmit(&hcan1, M3508_TX_ID_2,
-					   0,
-					   HEXROLL_TORQUE_TO_CURRENT(ch->ak_set[4].torset),
-					   HEXROLL_TORQUE_TO_CURRENT(ch->ak_set[5].torset),
-					   0);
+	RM_Motor_Transmit(&hcan1, M3508_TX_ID_2,
+					  0,
+					  HEXROLL_TORQUE_TO_CURRENT(ch->ak_set[4].torset),
+					  HEXROLL_TORQUE_TO_CURRENT(ch->ak_set[5].torset),
+					  0);
+	osDelay(1);
 
 	// MIT模式下发送
-	pack_cmd(1, 0, 0, 0, 0, ch->ak_set[0].torset);
-	pack_cmd(3, 0, 0, 0, 0, ch->ak_set[3].torset);
+	AK_MIT_Transmit(1, 0, 0, 0, 0, ch->ak_set[0].torset);
+	AK_MIT_Transmit(3, 0, 0, 0, 0, ch->ak_set[3].torset);
 	osDelay(1);
-	pack_cmd(2, 0, 0, 0, 0, ch->ak_set[1].torset);
-	pack_cmd(4, 0, 0, 0, 0, ch->ak_set[2].torset);
+	AK_MIT_Transmit(2, 0, 0, 0, 0, ch->ak_set[1].torset);
+	AK_MIT_Transmit(4, 0, 0, 0, 0, ch->ak_set[2].torset);
 	osDelay(1);
-
-	// 伺服模式下电流发送
-
-	//	comm_can_set_current(AK_ID_11,ch->current_set[4]);
-	//	comm_can_set_current(AK_ID_21,ch->current_set[5]);
-	//	vTaskDelay(10);
-	//	comm_can_set_current(AK_ID_31,ch->current_set[0]);
-	//	comm_can_set_current(AK_ID_61,ch->current_set[1]);
-	//	vTaskDelay(10);
-	//	comm_can_set_current(AK_ID_41,ch->current_set[2]);
-	//	comm_can_set_current(AK_ID_51,ch->current_set[3]);
 }
 
-//************************运动控制器*********************************/
-// 遥控器指令
-void get_order(Chassis_t *ch)
+void Control_Get(Chassis_t *ch)
 {
 	ch->robo_status.last_behavior = ch->robo_status.behavior;
 
-	if (ch->rc_data.rc.s[S_R] == DOWN) // 正常行驶
+	if (rc_ctrl.rc.s[S_R] == DOWN) // 正常行驶
 	{
-		set.speed_cmd = ch->rc_data.rc.ch[L_Y] * 2.0f / 660.0f;
-		set.yaw -= ch->rc_data.rc.ch[L_X] * REMOTE_CHANNLE_TO_CHASSIS_SPEED * 2.0f;
-		set.left_length = set.right_length = (ch->rc_data.rc.ch[R_Y] * 0.01f) / 66 + 0.2f;
-		set.roll = -ch->rc_data.rc.ch[R_X] * 45.0f / 660.0f;
+		set.v = rc_ctrl.rc.ch[L_Y] * 1.0f / 660.0f;
+		set.yaw -= rc_ctrl.rc.ch[L_X] * REMOTE_CHANNLE_TO_CHASSIS_SPEED * 2.0f;
+		set.left_length = set.right_length = (rc_ctrl.rc.ch[R_Y] * 0.01f) / 66 + 0.2f;
+		set.roll = -rc_ctrl.rc.ch[R_X] * 45.0f / 660.0f;
 
-		if (set.speed_cmd != 0)
-			set.position_set = ch->st.x_filter;
+		if (set.v != 0)
+			set.x = ch->state.x_filter;
 	}
 	else
 	{
-		set.speed_cmd = 0;
-		set.yaw = total_yaw;
+		set.v = 0;
+		set.yaw = ch->IMU_DATA.toatalyaw;
 		set.roll = 0;
 		set.left_length = set.right_length = 0.2f;
-		set.position_set = ch->st.x_filter;
+		set.x = ch->state.x_filter;
 	}
 	/// @todo 改写成行为树
 }
 
-// 保险
-void safe(Chassis_t *ch)
-{
-	if (ch->robo_status.status == ROBO_STATUS_EMERGENCY)
-	{
-		if (MOTOR_IS_OFFLINE(&motor_status))
-		{
-			Motor_Enable();
-		}
-	}
-}
-
-// 限幅
-void mySaturate(float *in, float min, float max)
+/**
+ * @brief 限幅
+ *
+ * @param in
+ * @param min
+ * @param max
+ */
+void Clamp(float *in, float min, float max)
 {
 	if (*in < min)
 	{
@@ -419,94 +213,9 @@ void mySaturate(float *in, float min, float max)
 	}
 }
 
-#define GROUND_DETECTION_THRESHOLD 15.0f // threshold 阈值
-
-float aaa = -0.6f, bbb, ccc;
-
-/**
- * @brief 触地检测器 right
- *
- * @param ch
- * @param leg
- * @return true
- * @return false
- */
-bool Ground_Detection_R(Chassis_t *ch, struct VMC_Leg *leg)
-{
-	ch->st.FNr = leg->F0 * arm_cos_f32(leg->theta) +
-				 leg->Tp * arm_sin_f32(leg->theta) / leg->L0 +
-				 aaa * (ch->IMU_DATA.az +
-						(-leg->dd_L0 * arm_cos_f32(leg->theta)) +
-						2.0f * leg->d_L0 * leg->d_theta * arm_sin_f32(leg->theta) +
-						leg->L0 * leg->dd_theta * arm_sin_f32(leg->theta) +
-						leg->L0 * leg->d_theta * leg->d_theta * arm_cos_f32(leg->theta));
-
-	ch->st.FNr = bbb = Filter_Average_Update(&ground_detection_filter_r, ch->st.FNr);
-
-	return (ch->st.FNr < GROUND_DETECTION_THRESHOLD) ? true : false;
-}
-
-/**
- * @brief 触地检测器 left
- *
- * @param ch
- * @param leg
- * @return true
- * @return false
- */
-bool Ground_Detection_L(Chassis_t *ch, struct VMC_Leg *leg)
-{
-	ch->st.FNl = leg->F0 * arm_cos_f32(leg->theta) +
-				 leg->Tp * arm_sin_f32(leg->theta) / leg->L0 +
-				 aaa * (ch->IMU_DATA.az +
-						(-leg->dd_L0 * arm_cos_f32(leg->theta)) +
-						2.0f * leg->d_L0 * leg->d_theta * arm_sin_f32(leg->theta) +
-						leg->L0 * leg->dd_theta * arm_sin_f32(leg->theta) +
-						leg->L0 * leg->d_theta * leg->d_theta * arm_cos_f32(leg->theta));
-
-	ch->st.FNl = Filter_Average_Update(&ground_detection_filter_l, ch->st.FNl);
-
-	return (ch->st.FNl < GROUND_DETECTION_THRESHOLD) ? true : false;
-}
-
-/// @brief 定义模式宏
-// #define ONE_ROD
-// #define NO_MOVE
-// #define NO_FN_FORWORD
-
-float xl_target[6] = {0},
-	  xr_target[6] = {0};
-
-float lqr_r_[12] = {0};
-float lqr_l_[12] = {0};
-
-float kx[12] = {1, 1, 1, 1, 1, 1,
-				1, 1, 1, 1, 1, 1};
-
-float KK[6] = {1, 1, 1, 1, 1, 1};
-
-// 推力前馈
+// 支持力前馈
 float fn_feedforward = 0;
 
-/// @date 2025-11-08 22:23
-/// @date 2025-11-09 20:12 20:24
-/// @date 2025-11-14 15:07 17:27
-/// @date 2025-11-15 19:04 23:51
-/// @date 2025-11-16 15:56 18:57
-/// @date 2025-11-18 22:12 22:56
-/// @date 2025-11-19 19:24
-/// @date 2025-11-21 23:04 23:39
-/// @date 2025-11-22 18:05 19:45
-/// @date 2025-11-26 19:22
-/// @date 2025-11-27 21:42 23:01
-/// @date 2025-11-28 11:55 20:12
-/// @date 2025-11-29 23:10
-/// @date 2026-01-17 19:33 23:52
-/// @date 2026-01-18 00:13 23:05
-/// @date 2026-01-19 16:32 21:46
-/// @date 2026-01-20 11:27 20:43
-/// @date 2026-01-20 21:22
-/// @date 2026-01-20 21:25
 float lqr_coe[12][4] = {
 	{-269.302161650351081, 665.997864129000050, -684.856663249451572, -4.200874736219789},
 	{0.202747631972482, -390.940145397614401, 683.134886658680216, 35.759371905157778},
@@ -526,55 +235,24 @@ float lqr_coe[12][4] = {
  *
  * @param ch
  *************************************************/
-void balancephase(Chassis_t *ch)
+void LQR_Control(Chassis_t *ch)
 {
-	/* ================================ 补充控制 ================================ */
-
-	turn_t = chassis_motor_pid[YAW_PID].Kp * (set.yaw - total_yaw) - chassis_motor_pid[YAW_PID].Kd * ch->IMU_DATA.yawspd; // 这样计算更稳一点
-
-	leg_tp = PID_Calc(&chassis_motor_pid[TP_PID], 0.0f, ch->st.angle_err);		  // 防劈叉pid计算
-	roll_t = PID_Calc(&chassis_motor_pid[ROLL_PID], set.roll, ch->IMU_DATA.roll); // roll 补偿
-
-	chassis.robo_status.flag.fallen = (ABS(leg_l.theta) > (PI / 6.0f) ||
-									   ABS(leg_r.theta) > (PI / 6.0f))
-										  ? true
-										  : false;
-
-	// if (chassis.robo_status.flag.fallen)
-	// {
-	// 	set.left_length = set.right_length = 0.15f;
-	// }
-
-	chassis.robo_status.flag.above = chassis.robo_status.flag.above && !chassis.robo_status.flag.fallen;
-
-	/* ================================ LQR 控制 ================================ */
-
 	LQR_K_Calc(lqr_k_l, lqr_coe, leg_l.L0);
 	LQR_K_Calc(lqr_k_r, lqr_coe, leg_r.L0);
 
-	if (ch->robo_status.flag.above)
-	{
-		set.speed_cmd = 0;
-		set.yaw = total_yaw;
-		set.roll = 0;
-		set.position_set = ch->st.x_filter;
-	}
+	xl[0] = (leg_l.theta);
+	xl[1] = (leg_l.d_theta);
+	xl[2] = (ch->state.x_filter - set.x);
+	xl[3] = (ch->state.v_filter - set.v);
+	xl[4] = (ch->IMU_DATA.pitch);
+	xl[5] = (ch->IMU_DATA.pitchspd);
 
-	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	xl[0] = (ch->st.thetal);
-	xl[1] = (ch->st.dThetal);
-	xl[2] = (ch->st.x_filter - set.position_set);
-	xl[3] = (ch->st.v_filter - set.speed_cmd);
-	xl[4] = (ch->st.phi);
-	xl[5] = (ch->st.dPhi);
-
-	xr[0] = (ch->st.thetar);
-	xr[1] = (ch->st.dThetar);
-	xr[2] = (ch->st.x_filter - set.position_set);
-	xr[3] = (ch->st.v_filter - set.speed_cmd);
-	xr[4] = (ch->st.phi);
-	xr[5] = (ch->st.dPhi);
+	xr[0] = (leg_r.theta);
+	xr[1] = (leg_r.d_theta);
+	xr[2] = (ch->state.x_filter - set.x);
+	xr[3] = (ch->state.v_filter - set.v);
+	xr[4] = (ch->IMU_DATA.pitch);
+	xr[5] = (ch->IMU_DATA.pitchspd);
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -588,67 +266,10 @@ void balancephase(Chassis_t *ch)
 		tplqrr += xr[i] * lqr_k_r[1][i];
 	}
 
-	// 老代码，用于看输出是不是合理 debug用
-	// left
-	// lqr_l_[0] = kx[0] * xl[0] * lqr_k_l[0][0];
-	// lqr_l_[1] = kx[1] * xl[1] * lqr_k_l[0][1];
-	// lqr_l_[2] = kx[2] * xl[2] * lqr_k_l[0][2];
-	// lqr_l_[3] = kx[3] * xl[3] * lqr_k_l[0][3];
-	// lqr_l_[4] = kx[4] * xl[4] * lqr_k_l[0][4];
-	// lqr_l_[5] = kx[5] * xl[5] * lqr_k_l[0][5];
-	// tlqrl = lqr_l_[0] + lqr_l_[1] + lqr_l_[2] + lqr_l_[3] + lqr_l_[4] + lqr_l_[5];
-	// lqr_l_[6] = kx[6] * xl[0] * lqr_k_l[1][0];
-	// lqr_l_[7] = kx[7] * xl[1] * lqr_k_l[1][1];
-	// lqr_l_[8] = kx[8] * xl[2] * lqr_k_l[1][2];
-	// lqr_l_[9] = kx[9] * xl[3] * lqr_k_l[1][3];
-	// lqr_l_[10] = kx[10] * xl[4] * lqr_k_l[1][4];
-	// lqr_l_[11] = kx[11] * xl[5] * lqr_k_l[1][5];
-	// tplqrl = lqr_l_[6] + lqr_l_[7] + lqr_l_[8] + lqr_l_[9] + lqr_l_[10] + lqr_l_[11];
-	// right
-	// lqr_r_[0] = kx[0] * xr[0] * lqr_k_r[0][0];
-	// lqr_r_[1] = kx[1] * xr[1] * lqr_k_r[0][1];
-	// lqr_r_[2] = kx[2] * xr[2] * lqr_k_r[0][2];
-	// lqr_r_[3] = kx[3] * xr[3] * lqr_k_r[0][3];
-	// lqr_r_[4] = kx[4] * xr[4] * lqr_k_r[0][4];
-	// lqr_r_[5] = kx[5] * xr[5] * lqr_k_r[0][5];
-	// tlqrr = lqr_r_[0] + lqr_r_[1] + lqr_r_[2] + lqr_r_[3] + lqr_r_[4] + lqr_r_[5];
-	// lqr_r_[6] = kx[6] * xr[0] * lqr_k_r[1][0];
-	// lqr_r_[7] = kx[7] * xr[1] * lqr_k_r[1][1];
-	// lqr_r_[8] = kx[8] * xr[2] * lqr_k_r[1][2];
-	// lqr_r_[9] = kx[9] * xr[3] * lqr_k_r[1][3];
-	// lqr_r_[10] = kx[10] * xr[4] * lqr_k_r[1][4];
-	// lqr_r_[11] = kx[11] * xr[5] * lqr_k_r[1][5];
-	// tplqrr = lqr_r_[6] + lqr_r_[7] + lqr_r_[8] + lqr_r_[9] + lqr_r_[10] + lqr_r_[11];
-
-	if (my_debug.torque_flag)
-	{
-		tplqrl = my_debug.tpl;
-		tplqrr = my_debug.tpr;
-		tlqrl = my_debug.tl;
-		tlqrr = my_debug.tr;
-	}
-
-	/// @brief 限幅
-#define TPLQR_MAX 20.0f
-#define TLQR_MAX 2.5f
-	mySaturate(&tplqrl, -TPLQR_MAX, TPLQR_MAX);
-	mySaturate(&tplqrr, -TPLQR_MAX, TPLQR_MAX);
-	mySaturate(&tlqrl, -TLQR_MAX, TLQR_MAX);
-	mySaturate(&tlqrr, -TLQR_MAX, TLQR_MAX);
-
 	/* ================================ 轮 解算 ================================ */
-
-	/// @brief 轮毂力矩计算
-	if (my_debug.no_t_flag || ch->robo_status.flag.above)
-	{
-		set.set_cal_real[5] = 0;
-		set.set_cal_real[4] = 0;
-	}
-	else
-	{
-		set.set_cal_real[5] = tlqrl + turn_t;
-		set.set_cal_real[4] = tlqrr - turn_t;
-	}
+	turn_t = yaw_pid.Kp * (set.yaw - ch->IMU_DATA.toatalyaw) - yaw_pid.Kd * ch->IMU_DATA.yawspd; // 这样计算更稳一点
+	set.torque[5] = tlqrl + turn_t;
+	set.torque[4] = tlqrr - turn_t;
 
 	/* ================================ 腿 解算 ================================ */
 
@@ -656,21 +277,9 @@ void balancephase(Chassis_t *ch)
 	fn_feedforward = 55.0f * arm_cos_f32(leg_r.theta);
 
 	leg_l.F0 = fn_feedforward +
-			   PID_Calc(&chassis_motor_pid[0], set.left_length, leg_l.L0) -
-			   roll_t;
+			   PID_Calc(&leglength_pid_l, set.left_length, leg_l.L0);
 	leg_r.F0 = fn_feedforward +
-			   PID_Calc(&chassis_motor_pid[1], set.right_length, leg_r.L0) +
-			   roll_t;
-
-	/// @brief 杆扭矩 PID
-	// tplqrl = PID_Calc(&pid_tpl, PI / 2.0f, leg_l.phi0);
-	// tplqrr = PID_Calc(&pid_tpr, PI / 2.0f, leg_r.phi0);
-
-	if (ch->robo_status.flag.above)
-	{
-		tplqrl = lqr_l_[6] + lqr_l_[7];
-		tplqrr = lqr_r_[6] + lqr_r_[7];
-	}
+			   PID_Calc(&leglength_pid_r, set.right_length, leg_r.L0);
 
 	leg_l.Tp = tplqrl;
 	leg_r.Tp = tplqrr;
@@ -680,106 +289,35 @@ void balancephase(Chassis_t *ch)
 	VMC_calc_2(&leg_r);
 
 	/// @brief 发送 buf
-	set.set_cal_real[0] = leg_r.torque_set[0];
-	set.set_cal_real[1] = leg_r.torque_set[1];
-	set.set_cal_real[3] = leg_l.torque_set[0];
-	set.set_cal_real[2] = leg_l.torque_set[1];
+	set.torque[0] = leg_r.torque_set[0];
+	set.torque[1] = leg_r.torque_set[1];
+	set.torque[3] = leg_l.torque_set[0];
+	set.torque[2] = leg_l.torque_set[1];
 
-	/* ================================ 发送 ================================ */
+/* ================================ 发送 ================================ */
 
-	/// @brief 限幅
+/// @brief 限幅
 #define HIP_TORQUE_MAX 40.0f
 #define HUB_TORQUE_MAX 2.5f
-	mySaturate(&set.set_cal_real[0], -HIP_TORQUE_MAX, HIP_TORQUE_MAX);
-	mySaturate(&set.set_cal_real[1], -HIP_TORQUE_MAX, HIP_TORQUE_MAX);
-	mySaturate(&set.set_cal_real[2], -HIP_TORQUE_MAX, HIP_TORQUE_MAX);
-	mySaturate(&set.set_cal_real[3], -HIP_TORQUE_MAX, HIP_TORQUE_MAX);
-	mySaturate(&set.set_cal_real[4], -HUB_TORQUE_MAX, HUB_TORQUE_MAX);
-	mySaturate(&set.set_cal_real[5], -HUB_TORQUE_MAX, HUB_TORQUE_MAX);
+	Clamp(&set.torque[0], -HIP_TORQUE_MAX, HIP_TORQUE_MAX);
+	Clamp(&set.torque[1], -HIP_TORQUE_MAX, HIP_TORQUE_MAX);
+	Clamp(&set.torque[2], -HIP_TORQUE_MAX, HIP_TORQUE_MAX);
+	Clamp(&set.torque[3], -HIP_TORQUE_MAX, HIP_TORQUE_MAX);
+	Clamp(&set.torque[4], -HUB_TORQUE_MAX, HUB_TORQUE_MAX);
+	Clamp(&set.torque[5], -HUB_TORQUE_MAX, HUB_TORQUE_MAX);
 
 	/// @brief 发送
-	ch->ak_set[0].torset = -set.set_cal_real[0];
-	ch->ak_set[1].torset = -set.set_cal_real[1];
-	ch->ak_set[2].torset = set.set_cal_real[2];
-	ch->ak_set[3].torset = set.set_cal_real[3];
-	ch->ak_set[4].torset = -set.set_cal_real[4];
-	ch->ak_set[5].torset = set.set_cal_real[5];
+	ch->ak_set[0].torset = -set.torque[0];
+	ch->ak_set[1].torset = -set.torque[1];
+	ch->ak_set[2].torset = set.torque[2];
+	ch->ak_set[3].torset = set.torque[3];
+	ch->ak_set[4].torset = -set.torque[4];
+	ch->ak_set[5].torset = set.torque[5];
 
 	/// @note
 	// 倒地自起不需要检测是否离地
 	// 当两腿同时离地并且遥控器没有在控制腿的伸缩时，才认为离地
 	// 补偿pid初始化：防劈叉补偿、偏航角补偿
-}
-
-uint8_t jump_time = 0;
-uint8_t jump_status = 0;
-Robo_Behavior_Def last_jump_flag = ROBO_BX_FOLLOW;
-/************************
- * @brief 跳跃过程
- *
- * @param ch
- ************************/
-void jumpphase(Chassis_t *ch)
-{
-	if (ch->robo_status.last_behavior != ROBO_BX_JUMP && ch->robo_status.behavior == ROBO_BX_JUMP)
-	{
-		jump_status = 1;
-		chassis_motor_pid[0].Kp = chassis_motor_pid[1].Kp = 1500.0f;
-		chassis_motor_pid[0].Kd = chassis_motor_pid[1].Kd = 2000.0f;
-	}
-
-	/// @brief 收缩段
-	if (jump_status == 1)
-	{
-		set.left_length = set.right_length = 0.1f;
-
-		if (leg_r.L0 < 0.2f && leg_l.L0 < 0.2f)
-		{
-			jump_time++;
-		}
-		if (jump_time >= 40)
-		{
-			jump_time = 0;
-			jump_status = 2; // 压缩完毕进入上升加速阶段
-		}
-	}
-	/// @brief 起跳段
-	else if (jump_status == 2)
-	{
-		set.left_length = set.right_length = 0.3f;
-		fn_feedforward = 100.0f;
-
-		if (leg_r.L0 > 0.25f && leg_l.L0 > 0.25f)
-		{
-			jump_time++;
-		}
-		if (jump_time >= 1)
-		{
-			jump_time = 0;
-			jump_status = 3; // 上升完毕进入缩腿阶段
-		}
-	}
-	/// @brief 缩腿
-	else if (jump_status == 3)
-	{
-		set.left_length = set.right_length = 0.15f;
-		fn_feedforward = -10.0f;
-
-		if (leg_r.L0 < 0.15f && leg_l.L0 < 0.15f)
-		{
-			jump_time++;
-		}
-		if (jump_time >= 80)
-		{
-			jump_time = 0;
-			jump_status = 0;
-
-			ch->robo_status.behavior = ROBO_BX_FOLLOW;
-
-			chassis_motor_pid[0].Kp = chassis_motor_pid[1].Kp = 500;
-			chassis_motor_pid[0].Kd = chassis_motor_pid[1].Kd = 6000;
-		}
-	}
 }
 
 /************************

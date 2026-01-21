@@ -54,7 +54,7 @@ typedef struct M3508_RxData_Def_t
 
 /* ================================================================ proto ================================================================ */
 
-void DJI_Motor_Transmit(CAN_HandleTypeDef *hcan, uint32_t tx_id, int16_t current1, int16_t current2, int16_t current3, int16_t current4);
+void RM_Motor_Transmit(CAN_HandleTypeDef *hcan, uint32_t tx_id, int16_t current1, int16_t current2, int16_t current3, int16_t current4);
 
 void DJI_Motor_Receive(DJI_RxData_Def_t *rxData, uint8_t *data);
 

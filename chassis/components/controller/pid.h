@@ -54,7 +54,7 @@ typedef struct
   float err_up;
   int cnt_ki;
   int max_cnt_ki;
-} pid_type_def;
+} PID_Typedef;
 
 typedef struct
 {
@@ -118,7 +118,7 @@ typedef struct
  * @param max_out 最大输出
  * @param max_iout 最大积分输出
  */
-void PID_init(pid_type_def *pid, uint8_t mode, const fp32 kp, const fp32 ki, const fp32 kd, fp32 max_out, fp32 max_iout);
+void PID_init(PID_Typedef *pid, uint8_t mode, const fp32 kp, const fp32 ki, const fp32 kd, fp32 max_out, fp32 max_iout);
 
 /**
  * @brief          pid calculate
@@ -134,12 +134,12 @@ void PID_init(pid_type_def *pid, uint8_t mode, const fp32 kp, const fp32 ki, con
  * @param[in]      set: 设定值
  * @retval         pid输出
  */
-// extern fp32 PID_Calc(pid_type_def *pid, fp32 ref, fp32 set);
-extern fp32 PID_Calc(pid_type_def *pid, fp32 set, fp32 ref);
-extern fp32 anglePidCalc(pid_type_def *pid, fp32 set, fp32 get, fp32 gyro);
+// extern fp32 PID_Calc(PID_Typedef *pid, fp32 ref, fp32 set);
+extern fp32 PID_Calc(PID_Typedef *pid, fp32 set, fp32 ref);
+extern fp32 anglePidCalc(PID_Typedef *pid, fp32 set, fp32 get, fp32 gyro);
 extern fp32 Piece2_PID_Calc(piece2_pid_type_def *pid, fp32 set, fp32 ref);
 extern fp32 Piece3_PID_Calc(piece3_pid_type_def *pid, fp32 set, fp32 ref);
-extern fp32 ExpKp_PID_Calc(pid_type_def *pid, fp32 set, fp32 ref);
+extern fp32 ExpKp_PID_Calc(PID_Typedef *pid, fp32 set, fp32 ref);
 /**
  * @brief          pid out clear
  * @param[out]     pid: PID struct data point
@@ -150,6 +150,6 @@ extern fp32 ExpKp_PID_Calc(pid_type_def *pid, fp32 set, fp32 ref);
  * @param[out]     pid: PID结构数据指针
  * @retval         none
  */
-extern void PID_clear(pid_type_def *pid);
+extern void PID_clear(PID_Typedef *pid);
 
 #endif

@@ -99,7 +99,7 @@ typedef struct
 
 typedef struct
 {
-	float motor_ctrlpos;   // 电机位置
+	float angle;		   // 电机位置
 	float motor_ctrlspd;   // 电机速度
 	float motor_ctrltor;   // 电机扭矩
 	float motor_ctrltemp;  // 电机温度
@@ -150,15 +150,6 @@ typedef struct
 
 } MOTOR_RECEIVE_DATA;
 
-typedef struct
-{
-
-	int16_t motor_speed_set;
-	int16_t motor_current_set;
-	int16_t motor_speed_set_calc;
-
-} MOTOR_TRANSMIT_DATA;
-
 //**********************************************************//
 // config//
 typedef struct
@@ -172,16 +163,6 @@ typedef struct
 	uint32_t imu;
 	uint32_t rc;
 } Time_t;
-
-typedef struct
-{
-	float omni_motor_cur[2];
-	// float momentum_motor_cur[2];
-	float cur_sum;
-	float cur_filter; // 滤波后的结果
-
-	float adc_scale;
-} Chassis_Current_t;
 
 #ifdef OPEN_SUPER_POWER
 typedef struct // 超级电容数据
@@ -302,42 +283,11 @@ struct Robo_Status
 
 typedef struct
 {
-	MOTOR_RECEIVE_DATA gimbal_motor_fdb;
-	//	Motor_Feedback_t momentum_motor_fdb[2];
-	//	Motor_Set_t momentum_motor_set[2];
-
-	float chassis_speed_set[2];
-	float speed_calc_sets[3];
-	AK_motor_fdb_t AK_fdb[6];
-	AK_motor_ctrl_fdb_t ak_fdb_ctrl[6];
 	CM_TRANSMIT_DATA ak_set[6];
-	float current_set[6];
-
-	Power_Heat_Data_t power_data;
-
-	Game_Robot_Status_t status;
-
-	Chassis_Current_t current;
-
-	Time_t time_now;
-	Time_t time_last;
-	Time_t time_error;
-
-#ifdef OPEN_SUPER_POWER
-	Super_Power_t super_power;
-#endif
 
 	IMU_FDB IMU_DATA;
 
-	Flag no_force_mode;
-
-	RC_ctrl_t rc_data;
-
-	float middle_data;
-
-	uint8_t recover_flag;
-
-	State_Var_s st;
+	State_Var_s state;
 
 	struct Robo_Status robo_status;
 
@@ -345,34 +295,14 @@ typedef struct
 
 typedef struct
 {
-	float kRatio[2][6];
-	float LQR_Tp_ratio;
-	float LQR_T_ratio;
-	float length_ratio;
-} Ratio_t;
-
-struct Wheel_Leg_Target
-{
-	float position_set; // m  期望达到的位置
-	float v_set;
-	float speed_cmd;	   // m/s 期望达到的目标前进速度
-	float speed_integral;  // m/s 速度积分项
-	float rotation_torque; // N*m 旋转力矩
-	float yaw;			   // rad 期望达到的目标航向角
-	float pitch;		   // rad 期望达到的目标俯仰角
-	float roll;			   // rad 期望达到的目标横滚角
-	float roll_set_now;
-	float leg_length;					   // m  期望达到的目标腿长
-	float left_length, right_length;	   // m  期望达到的目标腿长
-	float left_leg_angle, right_leg_angle; // rad 期望达到的目标腿角
-	float set_cal_real[6];
-
-	float v_yaw;
-
-	float mode_state;
-	float rotate_state;
-	float shoot_state;
-};
+	float x;						 // m   期望位置
+	float v;						 // m/s 期望速度
+	float yaw;						 // rad 期望 yaw
+	float pitch;					 // rad 期望 pitch
+	float roll;						 // rad 期望 roll
+	float left_length, right_length; // m  期望腿长
+	float torque[6];
+} Wheel_Leg_Target_t;
 
 /**
  * 古代代码，不建议使用
@@ -385,7 +315,7 @@ typedef struct
 
 } Leg_Pos_t;
 
-extern void chassis_task(void const *argument);
+extern void Chassis_Task(void const *argument);
 
 // DJI motor//
 void TransmitChassisMotorCurrent(int16_t o1, int16_t o2);
@@ -402,7 +332,7 @@ void controller_init(uint8_t id);
 void controller_close(uint8_t id);
 void controller_setorigin(uint8_t id);
 int float_to_uint(float x, float x_min, float x_max, unsigned int bits);
-void pack_cmd(uint8_t id, float p_des, float v_des, float kp, float kd, float t_ff);
+void AK_MIT_Transmit(uint8_t id, float p_des, float v_des, float kp, float kd, float t_ff);
 
 /* ================================ new motor program ================================ */
 

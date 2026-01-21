@@ -1,6 +1,6 @@
 #include "DM_VMC_test.h"
 
-void VMC_init(struct VMC_Leg *vmc) // 给杆长赋值
+void VMC_Init(struct VMC_Leg *vmc) // 给杆长赋值
 {
 	vmc->l5 = 0.15f; // AE长度 //单位为m
 	vmc->l1 = 0.15f; // 单位为m

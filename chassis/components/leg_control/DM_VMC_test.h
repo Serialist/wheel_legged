@@ -60,7 +60,7 @@ struct VMC_Leg
 	uint8_t leg_flag; // 腿长完成标志
 };
 
-extern void VMC_init(struct VMC_Leg *vmc); // 给杆长赋值
+extern void VMC_Init(struct VMC_Leg *vmc); // 给杆长赋值
 
 extern void VMC_calc_1(struct VMC_Leg *vmc, Chassis_t *cha, float dt); // 计算theta和d_theta给lqr用，同时也计算腿长L0
 extern void VMC_calc_2(struct VMC_Leg *vmc);						   // 计算期望的关节输出力矩

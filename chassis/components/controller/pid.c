@@ -37,7 +37,7 @@
  * @param max_out 最大输出
  * @param max_iout 最大积分输出
  */
-void PID_init(pid_type_def *pid, uint8_t mode, const fp32 kp, const fp32 ki, const fp32 kd, fp32 max_out, fp32 max_iout)
+void PID_init(PID_Typedef *pid, uint8_t mode, const fp32 kp, const fp32 ki, const fp32 kd, fp32 max_out, fp32 max_iout)
 {
     if (pid == NULL)
     {
@@ -67,9 +67,9 @@ void PID_init(pid_type_def *pid, uint8_t mode, const fp32 kp, const fp32 ki, con
  * @param[in]      set: 设定值
  * @retval         pid输出
  */
-// fp32 PID_Calc(pid_type_def *pid, fp32 ref, fp32 set)
+// fp32 PID_Calc(PID_Typedef *pid, fp32 ref, fp32 set)
 
-fp32 PID_Calc(pid_type_def *pid, fp32 set, fp32 ref)
+fp32 PID_Calc(PID_Typedef *pid, fp32 set, fp32 ref)
 {
     if (pid == NULL)
     {
@@ -128,7 +128,7 @@ float a_k = 1;
 float b_k = 1;
 int n_d = 3;
 float kp;
-fp32 ExpKp_PID_Calc(pid_type_def *pid, fp32 set, fp32 ref)
+fp32 ExpKp_PID_Calc(PID_Typedef *pid, fp32 set, fp32 ref)
 {
     if (pid == NULL)
     {
@@ -269,7 +269,7 @@ fp32 Piece3_PID_Calc(piece3_pid_type_def *pid3, fp32 set, fp32 ref)
     return pid3->out;
 }
 
-fp32 anglePidCalc(pid_type_def *pid, fp32 set, fp32 get, fp32 gyro)
+fp32 anglePidCalc(PID_Typedef *pid, fp32 set, fp32 get, fp32 gyro)
 {
     if (pid == NULL)
     {
@@ -307,7 +307,7 @@ fp32 anglePidCalc(pid_type_def *pid, fp32 set, fp32 get, fp32 gyro)
  * @param[out]     pid: PID结构数据指针
  * @retval         none
  */
-void PID_clear(pid_type_def *pid)
+void PID_clear(PID_Typedef *pid)
 {
     if (pid == NULL)
     {

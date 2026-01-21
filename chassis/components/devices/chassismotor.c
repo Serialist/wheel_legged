@@ -206,7 +206,7 @@ int float_to_uint(float x, float x_min, float x_max, unsigned int bits)
  * @param kd ÄÚÖÃ PID
  * @param t_ff Á¦¾ØÇ°À¡
  ************************/
-void pack_cmd(uint8_t id, float p_des, float v_des, float kp, float kd, float t_ff)
+void AK_MIT_Transmit(uint8_t id, float p_des, float v_des, float kp, float kd, float t_ff)
 {
   CAN_TxHeaderTypeDef header;
   uint8_t data[8];

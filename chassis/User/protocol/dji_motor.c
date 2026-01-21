@@ -23,7 +23,7 @@
 
 /* ================================================================ function ================================================================ */
 
-void DJI_Motor_Transmit(CAN_HandleTypeDef *hcan, uint32_t tx_id, int16_t current1, int16_t current2, int16_t current3, int16_t current4)
+void RM_Motor_Transmit(CAN_HandleTypeDef *hcan, uint32_t tx_id, int16_t current1, int16_t current2, int16_t current3, int16_t current4)
 {
     uint8_t buf[8] = {0};
 

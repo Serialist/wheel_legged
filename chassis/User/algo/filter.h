@@ -20,16 +20,16 @@
 
 #define FILTER_AVERAGE_UPDATA_WEIGHTED(filter, calibrate, weight) Filter_Average_Update((filter), ((calibrate) * (weight)))
 
-struct Filter_Average
+typedef struct
 {
     float window[FILTER_AVERAGE_FLOAT_WINDOW_MAX_SIZE];
     float average;
     uint8_t width;
     uint8_t index;
-};
+} Filter_Average_t;
 
-bool Filter_Average_Init(struct Filter_Average *filter, uint8_t width);
+bool Filter_Average_Init(Filter_Average_t *filter, uint8_t width);
 
-float Filter_Average_Update(struct Filter_Average *filter, float calibrate);
+float Filter_Average_Update(Filter_Average_t *filter, float calibrate);
 
 #endif

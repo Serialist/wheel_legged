@@ -250,18 +250,6 @@ static void Sbus_Parse(RC_ctrl_t *rc_ctrl, volatile const uint8_t *buf)
     rc_ctrl->receive_flag = 1;
 }
 
-/************************
- * @brief 获取遥控器数据
- *
- * @param rc_data
- * @return uint32_t
- ************************/
-uint32_t GetRCData(RC_ctrl_t *rc_data)
-{
-    *rc_data = rc_ctrl;
-    return rc_time;
-}
-
 #define RC_TIMEOUT 200 // 超时时间 单位 ms
 /************************
  * @brief 离线检测

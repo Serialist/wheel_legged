@@ -12,37 +12,17 @@
 #include "DM_VMC_test.h"
 
 extern Chassis_t chassis;
-extern Leg_Pos_t legpos[2];
-extern struct Wheel_Leg_Target set;
+extern Wheel_Leg_Target_t set;
 extern struct VMC_Leg leg_l, leg_r;
 
-static int32_t last_pos = 0; // 唯一状态变量
-float v;
-/**********  函数声明 开始 *************/
 void chassis_sys_calc(Chassis_t *ch);
-void phase_update(Chassis_t *ch);
-float GetSpeed(float current_pos);
-/**********  函数声明 结束 *************/
 
 void update_task(void const *argument)
 {
 
   while (1)
   {
-    // vTaskDelay(pdMS_TO_TICKS(3));
     chassis_sys_calc(&chassis);
-    phase_update(&chassis);
     osDelay(3);
   }
-}
-
-// 轮腿系统参量计算
-
-// 姿态更新
-
-float GetSpeed(float current_pos)
-{
-  float speed = (current_pos - last_pos) * 200.0f; // 假设200Hz固定频率
-  last_pos = current_pos;
-  return (speed * speed < 0.0025f) ? 0.0f : speed; // 平方比较避免浮点abs
 }
