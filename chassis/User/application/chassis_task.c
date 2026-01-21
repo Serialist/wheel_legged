@@ -22,7 +22,6 @@
 #include "bsp_delay.h"
 #include "cmsis_os.h"
 #include "bsp_can.h"
-#include "bsp_usart.h"
 #include "constrain_calc.h"
 #include "data_transform.h"
 #include "pid.h"
@@ -31,12 +30,8 @@
 #include <math.h>
 #include "bsp_dwt.h"
 #include "remote_control.h"
-#include "leg_conv_1.h"
-#include "leg_spd_1.h"
-#include "leg_pos_1.h"
-#include "LQR_K.h"
 #include "user_lib.h"
-#include "DM_VMC_test.h"
+#include "vmc-dm.h"
 #include "can.h"
 #include "debug.h"
 #include "filter.h"
@@ -90,14 +85,12 @@ void Chassis_Task(void const *argument)
 		/* ================================ 状态更新 ================================ */
 
 		Control_Get(&chassis);
-
 		LQR_Control(&chassis);
 
 		/* ================================ 电机控制指令 ================================ */
 
 		Chassis_Motor_Transmit(&chassis);
 	}
-	/* USER CODE END chassis_task */
 }
 
 static void ChassisInit(void)
@@ -136,17 +129,18 @@ void Motor_Enable(void)
 
 void chassis_sys_calc(Chassis_t *ch)
 {
+	VMC_calc_1(&leg_l, &chassis, 3.0f / 1000.0f);
 	leg_l.phi1 = pi / 2.0f - motorAK10[2].angle;
 	leg_l.phi4 = pi / 2.0f - motorAK10[3].angle;
+
+	VMC_calc_1(&leg_r, &chassis, 3.0f / 1000.0f);
 	leg_r.phi1 = pi / 2.0f - motorAK10[0].angle;
 	leg_r.phi4 = pi / 2.0f - motorAK10[1].angle;
-
-	VMC_calc_1(&leg_l, &chassis, 3.0f / 1000.0f);
-	VMC_calc_1(&leg_r, &chassis, 3.0f / 1000.0f);
 }
 
 void Chassis_Motor_Transmit(Chassis_t *ch)
 {
+	if (rc_ctrl.rc.s[S_R] != DOWN)
 	{
 		for (int i = 0; i < 6; i++)
 			ch->ak_set[i].torset = 0;
@@ -180,8 +174,7 @@ void Control_Get(Chassis_t *ch)
 		set.left_length = set.right_length = (rc_ctrl.rc.ch[R_Y] * 0.01f) / 66 + 0.2f;
 		set.roll = -rc_ctrl.rc.ch[R_X] * 45.0f / 660.0f;
 
-		if (set.v != 0)
-			set.x = ch->state.x_filter;
+		set.x = (set.v != 0) ? ch->state.x_filter : 0;
 	}
 	else
 	{
@@ -191,16 +184,9 @@ void Control_Get(Chassis_t *ch)
 		set.left_length = set.right_length = 0.2f;
 		set.x = ch->state.x_filter;
 	}
-	/// @todo 改写成行为树
 }
 
-/**
- * @brief 限幅
- *
- * @param in
- * @param min
- * @param max
- */
+/// @brief 限幅
 void Clamp(float *in, float min, float max)
 {
 	if (*in < min)
@@ -313,11 +299,6 @@ void LQR_Control(Chassis_t *ch)
 	ch->ak_set[3].torset = set.torque[3];
 	ch->ak_set[4].torset = -set.torque[4];
 	ch->ak_set[5].torset = set.torque[5];
-
-	/// @note
-	// 倒地自起不需要检测是否离地
-	// 当两腿同时离地并且遥控器没有在控制腿的伸缩时，才认为离地
-	// 补偿pid初始化：防劈叉补偿、偏航角补偿
 }
 
 /************************

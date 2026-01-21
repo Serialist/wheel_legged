@@ -3,7 +3,6 @@
 #define __CHASSIS_TASK_H
 
 #include "main.h"
-#include "referee_system.h"
 #include "remote_control.h"
 #include "bsp_can.h"
 

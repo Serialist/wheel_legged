@@ -4,7 +4,6 @@
 #include "stdint.h"
 #include "user_lib.h"
 #include "remote_control.h"
-#include "referee_system.h"
 #include "main.h"
 #include "struct_typedef.h"
 // #include "bsp_usart.h"

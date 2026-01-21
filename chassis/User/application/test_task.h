@@ -23,7 +23,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "math.h"
-#include "DM_VMC_test.h"
+#include "vmc-dm.h"
 
 /**************************************************************** define ****************************************************************/
 

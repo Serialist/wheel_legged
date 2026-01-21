@@ -1,4 +1,4 @@
-#include "DM_VMC_test.h"
+#include "vmc-dm.h"
 
 void VMC_Init(struct VMC_Leg *vmc) // ¸ø¸Ë³¤¸³Öµ
 {
