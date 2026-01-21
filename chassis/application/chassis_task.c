@@ -170,7 +170,7 @@ void chassis_task(void const *argument)
 		safe(&chassis);
 		chassis_torque_sent(&chassis);
 
-		osDelay(1);
+		// osDelay(1);
 	}
 	/* USER CODE END chassis_task */
 }
@@ -181,10 +181,11 @@ static void ChassisInit(void)
 {
 	// 腿部运动PID初始化
 	// 腿长
-	PID_init(&chassis_motor_pid[0], PID_POSITION, 500, 0, 6000, 80, 0);
-	PID_init(&chassis_motor_pid[1], PID_POSITION, 500, 0, 6000, 80, 0);
+	PID_init(&chassis_motor_pid[0], PID_POSITION, 500, 0, 9000, 120, 0);
+	PID_init(&chassis_motor_pid[1], PID_POSITION, 500, 0, 9000, 120, 0);
 
 	// 方向PID
+	// PID_init(&chassis_motor_pid[YAW_PID], PID_POSITION, 0.1f, 0, 0.5f, 1.5f, 0);
 	chassis_motor_pid[YAW_PID].Kp = 0.1f;
 	chassis_motor_pid[YAW_PID].Ki = 0;
 	chassis_motor_pid[YAW_PID].Kd = 0.5f;
@@ -192,6 +193,7 @@ static void ChassisInit(void)
 	chassis_motor_pid[YAW_PID].max_iout = 0;
 
 	// 滚转PID
+	// PID_init(&chassis_motor_pid[ROLL_PID], PID_POSITION, 0.8f, 0, 0, 30.0f, 0);
 	chassis_motor_pid[ROLL_PID].Kp = 0.8;
 	chassis_motor_pid[ROLL_PID].Ki = 0;
 	chassis_motor_pid[ROLL_PID].Kd = 0;
@@ -199,6 +201,7 @@ static void ChassisInit(void)
 	chassis_motor_pid[ROLL_PID].max_iout = 0;
 
 	// 力矩PID
+	// PID_init(&chassis_motor_pid[TP_PID], PID_POSITION, 1.3, 0, 3, 1.5, 0);
 	chassis_motor_pid[TP_PID].Kp = 1.3;
 	chassis_motor_pid[TP_PID].Ki = 0;
 	chassis_motor_pid[TP_PID].Kd = 3;
@@ -213,7 +216,7 @@ static void ChassisInit(void)
 	PID_init(&pid_tpl, PID_POSITION, 80, 0, 400, 10, 0);
 	PID_init(&pid_tpr, PID_POSITION, 80, 0, 400, 10, 0);
 
-	set.left_length = set.right_length = 0.2f;
+	set.left_length = set.right_length = 0.15f;
 
 	Filter_Average_Init(&ground_detection_filter_l, 10);
 	Filter_Average_Init(&ground_detection_filter_r, 10);
@@ -340,17 +343,17 @@ void chassis_torque_sent(Chassis_t *ch)
 	/// @brief 用 3508
 	DJI_Motor_Transmit(&hcan1, M3508_TX_ID_2,
 					   0,
-					   HEXROLL_TORQUE_TO_CURRENT(ch->ak_set[4].torset), // 这不好，但明天再改 @date 2026-01-19 -----------------------------------------------
+					   HEXROLL_TORQUE_TO_CURRENT(ch->ak_set[4].torset),
 					   HEXROLL_TORQUE_TO_CURRENT(ch->ak_set[5].torset),
 					   0);
 
 	// MIT模式下发送
 	pack_cmd(1, 0, 0, 0, 0, ch->ak_set[0].torset);
 	pack_cmd(3, 0, 0, 0, 0, ch->ak_set[3].torset);
-	vTaskDelay(6);
+	osDelay(1);
 	pack_cmd(2, 0, 0, 0, 0, ch->ak_set[1].torset);
 	pack_cmd(4, 0, 0, 0, 0, ch->ak_set[2].torset);
-	vTaskDelay(6);
+	osDelay(1);
 
 	// 伺服模式下电流发送
 
@@ -498,34 +501,25 @@ float fn_feedforward = 0;
 /// @date 2025-11-27 21:42 23:01
 /// @date 2025-11-28 11:55 20:12
 /// @date 2025-11-29 23:10
-/// @date 2026-01-17 19:33
-/// @date 2026-01-17 23:46
-/// @date 2026-01-17 23:52
-/// @date 2026-01-18 00:13
-/// @date 2026-01-18 00:21
-/// @date 2026-01-19 16:32
-/// @date 2026-01-19 21:46
-/// @date 2026-01-20 11:27
-/// @date 2026-01-20 11:38
-/// @date 2026-01-20 12:00
-/// @date 2026-01-20 12:04
-/// @date 2026-01-20 12:06
-/// @date 2026-01-20 12:07
-/// @date 2026-01-20 12:09
-/// @date 2026-01-20 12:13
+/// @date 2026-01-17 19:33 23:52
+/// @date 2026-01-18 00:13 23:05
+/// @date 2026-01-19 16:32 21:46
+/// @date 2026-01-20 11:27 20:43
+/// @date 2026-01-20 21:22
+/// @date 2026-01-20 21:25
 float lqr_coe[12][4] = {
-	{-142.492659753717305, 199.454228600215004, -180.169533346276012, -10.820719338099790},
-	{-80.716910536843784, 187.788307699207508, -160.768349323782786, 16.476777923037162},
-	{-22.732312777325880, -10.185006634516551, -2.363923827444435, -0.138043718344234},
-	{-5.235515091833566, 11.385134920656981, -8.547112320733241, 2.040283057969509},
-	{-31.491901769498710, 86.593224597372497, -83.502028593836599, -9.017117491339160},
-	{-98.526574721807052, 248.450425359999286, -225.315718234334298, 15.873962913269549},
-	{-25.103557106515989, 44.351447598177138, -39.934359479513454, -5.064881583129358},
-	{-54.213049254663638, 136.332855880863406, -123.583913890114303, 9.089058772385719},
-	{-380.063440167717999, 978.876673797293620, -900.854890361165531, 58.994247117799922},
-	{199.763531848890096, -586.483174762340582, 583.879998687691455, 137.478512708982009},
-	{-27.181777948026632, 65.869222398873063, -58.658888489809463, 4.855966081270674},
-	{14.108880013039411, -40.434213327918442, 39.602865836941433, 7.195970490909304}};
+	{-269.302161650351081, 665.997864129000050, -684.856663249451572, -4.200874736219789},
+	{0.202747631972482, -390.940145397614401, 683.134886658680216, 35.759371905157778},
+	{-16.516861525373891, -0.942134815925538, 3.974845965259497, 0.265827713709572},
+	{18.375954258041411, -68.491264611158840, 81.298928448795564, 0.726732173939417},
+	{-76.112409385061156, 220.240793342385388, -233.015175620739200, -0.658140709766848},
+	{-19.375627199363102, -82.822537693160456, 185.120778564919590, 14.323121345883600},
+	{-58.281246706424803, 169.280863067695009, -184.276455227029288, -2.706827504553039},
+	{-62.752923129447581, 75.534969412225422, -6.207037353844792, 17.977268348363861},
+	{-369.000277243575681, 611.569111135693220, -347.327805218386516, 92.806369486766101},
+	{766.796342216858989, -2211.317977874311964, 2298.843592794516098, 78.491909876644897},
+	{-24.855149986034782, 44.390123129392293, -31.389305835818501, 6.678577363723454},
+	{40.558751559830981, -111.267255137396901, 111.505935959337293, 3.487975843682994}};
 
 /***********************************************
  * @brief 平衡行驶过程(左右两腿分别进行LQR运算)
@@ -538,14 +532,20 @@ void balancephase(Chassis_t *ch)
 
 	turn_t = chassis_motor_pid[YAW_PID].Kp * (set.yaw - total_yaw) - chassis_motor_pid[YAW_PID].Kd * ch->IMU_DATA.yawspd; // 这样计算更稳一点
 
-	// leg_tp = PID_Calc(&chassis_motor_pid[TP_PID], 0.0f, ch->st.angle_err);					// 防劈叉pid计算
+	leg_tp = PID_Calc(&chassis_motor_pid[TP_PID], 0.0f, ch->st.angle_err);		  // 防劈叉pid计算
 	roll_t = PID_Calc(&chassis_motor_pid[ROLL_PID], set.roll, ch->IMU_DATA.roll); // roll 补偿
 
-	if (ABS(leg_l.theta) > (PI / 6.0f) ||
-		ABS(leg_r.theta) > (PI / 6.0f))
-		chassis.robo_status.flag.fallen = true;
+	chassis.robo_status.flag.fallen = (ABS(leg_l.theta) > (PI / 6.0f) ||
+									   ABS(leg_r.theta) > (PI / 6.0f))
+										  ? true
+										  : false;
 
-	chassis.robo_status.flag.above = !(chassis.robo_status.flag.above || chassis.robo_status.flag.fallen);
+	// if (chassis.robo_status.flag.fallen)
+	// {
+	// 	set.left_length = set.right_length = 0.15f;
+	// }
+
+	chassis.robo_status.flag.above = chassis.robo_status.flag.above && !chassis.robo_status.flag.fallen;
 
 	/* ================================ LQR 控制 ================================ */
 

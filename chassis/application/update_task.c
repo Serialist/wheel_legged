@@ -29,10 +29,10 @@ void update_task(void const *argument)
 
   while (1)
   {
-    vTaskDelay(pdMS_TO_TICKS(3));
+    // vTaskDelay(pdMS_TO_TICKS(3));
     chassis_sys_calc(&chassis);
     phase_update(&chassis);
-    osDelay(1);
+    osDelay(3);
   }
 }
 

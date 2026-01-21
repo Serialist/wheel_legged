@@ -27,7 +27,7 @@
 
 /******************************** 轮毂电机准确速度获取 ********************************/
 
-#define TASK_PERIOD_MS 4                // 任务周期4ms
+#define TASK_PERIOD_MS 3                // 任务周期4ms
 #define POSITION_RANGE 25.0f            // 位置范围25弧度（-12.5到12.5）
 #define MAX_EXPECTED_VELOCITY 30.0f     // 最大预期速度(rad/s)
 #define MIN_DELTA_POS_THRESH 0.001f     // 最小位置变化阈值(rad)
