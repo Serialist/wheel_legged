@@ -175,10 +175,10 @@ void Control_Get(Chassis_t *ch)
 	else
 	{
 		set.v = 0;
-		set.yaw = ch->IMU_DATA.toatalyaw;
+		set.yaw = chassis.IMU_DATA.toatalyaw;
 		set.roll = 0;
 		set.left_length = set.right_length = 0.2f;
-		set.x = ch->state.x_filter;
+		set.x = chassis.state.x_filter;
 	}
 }
 
