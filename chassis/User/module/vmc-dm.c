@@ -9,6 +9,9 @@ void VMC_Init(VMC_t *vmc) // 给杆长赋值
 	vmc->l4 = 0.15f; // 单位为m
 
 	vmc->first_flag = 0;
+
+	vmc->is_offground = false;
+	Filter_Average_Init(&vmc->filter, 10);
 }
 
 void VMC_calc_1(VMC_t *vmc, Chassis_t *cha, float dt) // 计算theta和d_theta给lqr用，同时也计算腿长L0
@@ -73,8 +76,21 @@ void VMC_calc_2(VMC_t *vmc) // 计算期望的关节输出力矩
 	vmc->torque_set[1] = vmc->j21 * vmc->F0 + vmc->j22 * vmc->Tp; // 得到RightBack的输出轴期望力矩，Tp为沿中心轴的力矩
 }
 
-float LQR_K_calc(float *coe, float len)
-{
+#define GROUND_DETECTION_THRESHOLD 15.0f
+#define OFFGROUND_A_RATIO -0.6f
 
-	return coe[0] * len + coe[1] * len * len + coe[2] * len * len * len + coe[3];
+bool OffGround_Detection(VMC_t *leg)
+{
+	float fn = leg->F0 * arm_cos_f32(leg->theta) +
+			   leg->Tp * arm_sin_f32(leg->theta) / leg->L0 +
+			   -0.6f * (chassis.IMU_DATA.az +
+						(-leg->dd_L0 * arm_cos_f32(leg->theta)) +
+						2.0f * leg->d_L0 * leg->d_theta * arm_sin_f32(leg->theta) +
+						leg->L0 * leg->dd_theta * arm_sin_f32(leg->theta) +
+						leg->L0 * leg->d_theta * leg->d_theta * arm_cos_f32(leg->theta));
+
+	leg->fn = Filter_Average_Update(&leg->filter, fn);
+	leg->is_offground = leg->fn < GROUND_DETECTION_THRESHOLD;
+
+	return leg->is_offground;
 }

@@ -1,24 +1,39 @@
 
-GraphedExpression="tplqrl", Color=#000000
-GraphedExpression="tplqrr", Color=#00aa00
-OpenDocument="stm32f4xx_hal_spi.c", FilePath="E:/serialist/workspace/robomaster/project/wheel_legged_fuck/chassis/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_spi.c", Line=1209
-OpenDocument="main.c", FilePath="E:/serialist/workspace/robomaster/project/wheel_legged_fuck/chassis/Src/main.c", Line=54
+
+GraphedExpression="xl[0]", Color=#a00909
+GraphedExpression="xl[1]", Color=#09a01b
+GraphedExpression="xl[2]", Color=#09a087
+GraphedExpression="xl[3]", Color=#0984a0
+GraphedExpression="xl[4]", Color=#0964a0
+GraphedExpression="xl[5]", Color=#094fa0
+GraphedExpression="xr[0]", Color=#0940a0
+GraphedExpression="xr[1]", Color=#0934a0
+GraphedExpression="xr[2]", Color=#092ca0
+GraphedExpression="xr[3]", Color=#0925a0
+GraphedExpression="xr[4]", Color=#0920a0
+GraphedExpression="xr[5]", Color=#091ba0
+GraphedExpression="(leg_r).fn", Color=#0916a0
+GraphedExpression="(leg_r).is_offground", Color=#0913a0
+GraphedExpression="(leg_l).fn", Color=#090ea0
+GraphedExpression="(leg_l).is_offground", Color=#090ba0
+GraphedExpression="(leg_l).F0", Color=#0909a0
+GraphedExpression="(leg_l).Tp", Color=#0909a0
+GraphedExpression="(leg_r).F0", Color=#0b09a0
+GraphedExpression="(leg_r).Tp", Color=#0e09a0
+OpenDocument="Ozone_DataSampling_260122.csv", FilePath="E:/Desktop/Ozone_DataSampling_260122.csv", Line=0
+OpenDocument="main.c", FilePath="E:/serialist/workspace/robomaster/project/wheel_legged_fuck/chassis/Src/main.c", Line=53
 OpenToolbar="Debug", Floating=0, x=0, y=0
 OpenWindow="Source Files", DockArea=LEFT, x=0, y=0, w=591, h=1093, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
-OpenWindow="Memory 1", DockArea=BOTTOM, x=1, y=0, w=1290, h=328, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, EditorAddress=0x110
-OpenWindow="Watched Data 1", DockArea=FLOATING, x=780, y=319, w=1640, h=983, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
-OpenWindow="Data Sampling", DockArea=FLOATING, x=506, y=189, w=591, h=481, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, VisibleTab=0, UniformSampleSpacing=0
-OpenWindow="Timeline", DockArea=FLOATING, x=682, y=250, w=1571, h=1015, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=1, DataPaneShown=1, PowerPaneShown=0, CodePaneShown=0, PinCursor="Cursor Movable", TimePerDiv="5 s / Div", TimeStampFormat="Time", DataGraphDrawAsPoints=0, DataGraphLegendShown=1, DataGraphUniformSampleSpacing=0, DataGraphLegendPosition="1247;698", PowerGraphDrawAsPoints=0, PowerGraphLegendShown=0, PowerGraphAvgFilterTime=Off, PowerGraphAvgFilterLen=Off, PowerGraphUniformSampleSpacing=0, PowerGraphLegendPosition="70;20", CodeGraphLegendShown=0, CodeGraphLegendPosition="80;20"
-OpenWindow="Console", DockArea=BOTTOM, x=0, y=0, w=1269, h=328, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Memory 1", DockArea=BOTTOM, x=1, y=0, w=1143, h=328, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, EditorAddress=0x110
+OpenWindow="Data Sampling", DockArea=FLOATING, x=477, y=240, w=1322, h=804, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, VisibleTab=1, UniformSampleSpacing=0
+OpenWindow="Console", DockArea=BOTTOM, x=0, y=0, w=1416, h=328, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 TableHeader="Source Files", SortCol="File", SortOrder="ASCENDING", VisibleCols=["File";"Status";"Size";"#Insts";"Path"], ColWidths=[263;100;100;100;1150]
-TableHeader="Data Sampling Table", SortCol="None", SortOrder="ASCENDING", VisibleCols=["Index";"Time";" tplqrl";" tplqrr"], ColWidths=[100;100;100;100]
-TableHeader="Data Sampling Setup", SortCol="Expression", SortOrder="DESCENDING", VisibleCols=["Expression";"Type";"Value";"Min";"Max";"Average";"# Changes";"Min. Change";"Max. Change"], ColWidths=[118;100;114;100;100;124;110;126;126]
 TableHeader="Power Sampling", SortCol="Index", SortOrder="ASCENDING", VisibleCols=["Index";"Time";"Ch 0"], ColWidths=[100;100;100]
-TableHeader="Watched Data 1", SortCol="Expression", SortOrder="ASCENDING", VisibleCols=["Expression";"Value";"Location";"Refresh"], ColWidths=[315;286;104;935]
 TableHeader="RegisterSelectionDialog", SortCol="None", SortOrder="ASCENDING", VisibleCols=[], ColWidths=[]
 TableHeader="TargetExceptionDialog", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Value";"Address";"Description"], ColWidths=[26;26;26;26]
-WatchedExpression="chassis", Window=Watched Data 1
+TableHeader="Data Sampling Setup", SortCol="Expression", SortOrder="DESCENDING", VisibleCols=["Expression";"Type";"Value";"Min";"Max";"Average";"# Changes";"Min. Change";"Max. Change"], ColWidths=[174;100;164;134;124;154;110;134;228]
+TableHeader="Data Sampling Table", SortCol="None", SortOrder="ASCENDING", VisibleCols=["Index";"Time";" xl[0]";" xl[1]";" xl[2]";" xl[3]";" xl[4]";" xl[5]";" xr[0]";" xr[1]";" xr[2]";" xr[3]";" xr[4]";" xr[5]";" (leg_r).fn";" (leg_r).is_offground";" (leg_l).fn";" (leg_l).is_offground";" (leg_l).F0";" (leg_l).Tp";" (leg_r).F0";" (leg_r).Tp"], ColWidths=[100;100;100;100;100;100;100;100;100;100;100;100;100;100;100;100;100;100;100;100;100;100]
+WatchedExpression="leg_r", Window=Watched Data 1
 WatchedExpression="xl", Window=Watched Data 1
-WatchedExpression="fn_feedforward", Window=Watched Data 1
-WatchedExpression="tplqrl", Window=Watched Data 1
-WatchedExpression="tplqrr", Window=Watched Data 1
+WatchedExpression="xr", Window=Watched Data 1
+WatchedExpression="leg_l", Window=Watched Data 1

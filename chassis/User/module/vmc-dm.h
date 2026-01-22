@@ -4,6 +4,8 @@
 #include "main.h"
 #include "INS_task.h"
 #include "wheel_legged_chassis.h"
+#include "filter.h"
+#include "user_lib.h"
 
 #define pi 3.1415926f
 #define LEG_PID_KP 350.0f
@@ -55,20 +57,17 @@ typedef struct
 	float last_L0;
 	float last_d_L0;
 
-	float FN; // 支持力
-
 	uint8_t first_flag;
 	uint8_t leg_flag; // 腿长完成标志
+
+	float fn; // 支持力
+	float is_offground;
+	Filter_Average_t filter;
 } VMC_t;
 
-extern void VMC_Init(VMC_t *vmc); // 给杆长赋值
-
+extern void VMC_Init(VMC_t *vmc);							  // 给杆长赋值
 extern void VMC_calc_1(VMC_t *vmc, Chassis_t *cha, float dt); // 计算theta和d_theta给lqr用，同时也计算腿长L0
 extern void VMC_calc_2(VMC_t *vmc);							  // 计算期望的关节输出力矩
-
-// extern uint8_t ground_detectionR(VMC_t *vmc,INS_t *ins);//右腿离地检测
-// extern uint8_t ground_detectionL(VMC_t *vmc,INS_t *ins);//左腿离地检测
-
-extern float LQR_K_calc(float *coe, float len);
+bool OffGround_Detection(VMC_t *leg);
 
 #endif

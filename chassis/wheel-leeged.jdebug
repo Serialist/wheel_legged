@@ -5,7 +5,7 @@
 **********************************************************************
 
 File          : E:/serialist/workspace/robomaster/project/wheel_legged_fuck/chassis/wheel-leeged.jdebug
-Created       : 18 Jan 2026 19:00
+Created       : 22 Jan 2026 21:28
 Ozone Version : V3.24
 */
 
@@ -33,7 +33,6 @@ void OnProjectLoad (void) {
   //
   // User settings
   //
-  Edit.SysVar (VAR_HSS_SPEED, 1000000);
   File.Open ("$(ProjectDir)/MDK-ARM/gimbal_task/gimbal_task.axf");
 }
 

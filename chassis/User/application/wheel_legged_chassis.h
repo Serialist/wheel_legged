@@ -78,7 +78,7 @@
 #define L_X 2
 #define L_Y 3
 #define L_Z 4
-////定义OPEN_SUPER_POWER打开超级电容
-// #define OPEN_SUPER_POWER
+
+extern Chassis_t chassis;
 
 #endif

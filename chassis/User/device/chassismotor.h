@@ -268,7 +268,7 @@ struct Wheel_Leg_Flag
 	uint8_t jump_v_reach;
 };
 
-struct Robo_Status
+typedef struct
 {
 	Robo_Status_Def status;
 
@@ -276,7 +276,7 @@ struct Robo_Status
 	Robo_Behavior_Def behavior;
 
 	struct Wheel_Leg_Flag flag;
-};
+} Robo_Status_t;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -288,7 +288,7 @@ typedef struct
 
 	State_Var_s state;
 
-	struct Robo_Status robo_status;
+	Robo_Status_t robo_status;
 
 } Chassis_t;
 

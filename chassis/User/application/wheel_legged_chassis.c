@@ -58,9 +58,6 @@ float tlqrr;
 
 float lqr_k_l[2][6], lqr_k_r[2][6], xl[6], xr[6];
 
-/// @brief 离地检测滤波
-Filter_Average_t ground_detection_filter_l, ground_detection_filter_r;
-
 static void ChassisInit(void);
 void Chassis_Motor_Transmit(Chassis_t *ch);
 void LQR_Control(Chassis_t *ch);
@@ -100,10 +97,6 @@ static void ChassisInit(void)
 	PID_init(&pid_tpl, PID_POSITION, 80, 0, 400, 10, 0);
 	PID_init(&pid_tpr, PID_POSITION, 80, 0, 400, 10, 0);
 
-	// 离地检测滤波
-	Filter_Average_Init(&ground_detection_filter_l, 10);
-	Filter_Average_Init(&ground_detection_filter_r, 10);
-
 	set.left_length = set.right_length = 0.15f;
 
 	Motor_Enable();
@@ -131,6 +124,10 @@ void chassis_sys_calc(Chassis_t *ch)
 
 	VMC_calc_1(&leg_l, &chassis, 3.0f / 1000.0f);
 	VMC_calc_1(&leg_r, &chassis, 3.0f / 1000.0f);
+
+	OffGround_Detection(&leg_l);
+	OffGround_Detection(&leg_r);
+	chassis.robo_status.flag.above = leg_l.is_offground && leg_r.is_offground;
 }
 
 void Chassis_Motor_Transmit(Chassis_t *ch)
@@ -239,6 +236,20 @@ void LQR_Control(Chassis_t *ch)
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+	if (chassis.robo_status.flag.above)
+	{
+		for (int i = 0; i < 6; i++)
+		{
+			lqr_k_l[0][i] = 0.0f;
+			lqr_k_r[0][i] = 0.0f;
+			if (i != 0 && i != 1)
+			{
+				lqr_k_l[1][i] = 0.0f;
+				lqr_k_r[1][i] = 0.0f;
+			}
+		}
+	}
+
 	/// @brief 核心 LQR 计算，公式 u = - K * x。分左右腿
 	tlqrl = tplqrl = tlqrr = tplqrr = 0;
 	for (int i = 0; i < 6; i++)
@@ -251,6 +262,8 @@ void LQR_Control(Chassis_t *ch)
 
 	/* ================================ 轮 解算 ================================ */
 	turn_t = yaw_pid.Kp * (set.yaw - ch->IMU_DATA.toatalyaw) - yaw_pid.Kd * ch->IMU_DATA.yawspd; // 这样计算更稳一点
+	if (ch->robo_status.flag.above)
+		turn_t = 0;
 	set.torque[5] = tlqrl + turn_t;
 	set.torque[4] = tlqrr - turn_t;
 
