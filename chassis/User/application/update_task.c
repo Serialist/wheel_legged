@@ -1,6 +1,6 @@
 #include "update_task.h"
 #include "cmsis_os.h"
-#include "chassis_task.h"
+#include "wheel_legged_chassis.h"
 
 extern Chassis_t chassis;
 

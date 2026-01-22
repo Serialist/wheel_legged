@@ -27,7 +27,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
-#include "chassis_task.h"
+#include "wheel_legged_chassis.h"
 #include "INS_task.h"
 #include "update_task.h"
 /* USER CODE END Includes */
@@ -64,7 +64,7 @@ osThreadId updateTaskHandle;
 
 /* USER CODE END FunctionPrototypes */
 
-void test_task(void const *argument);
+void observer(void const *argument);
 void update_task(void const *argument);
 extern void INS_task(void const *argument);
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
@@ -130,7 +130,7 @@ void MX_FREERTOS_Init(void)
 
   /* Create the thread(s) */
   /* definition and creation of test */
-  osThreadDef(test, test_task, osPriorityHigh, 0, 512);
+  osThreadDef(test, observer, osPriorityHigh, 0, 512);
   testHandle = osThreadCreate(osThread(test), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
@@ -155,16 +155,16 @@ void MX_FREERTOS_Init(void)
  * @retval None
  */
 /* USER CODE END Header_test_task */
-__weak void test_task(void const *argument)
+__weak void observer(void const *argument)
 {
 
-  /* USER CODE BEGIN test_task */
+  /* USER CODE BEGIN observer */
   /* Infinite loop */
   for (;;)
   {
     osDelay(1);
   }
-  /* USER CODE END test_task */
+  /* USER CODE END observer */
 }
 
 /* Private application code --------------------------------------------------*/

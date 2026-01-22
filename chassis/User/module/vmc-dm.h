@@ -3,7 +3,7 @@
 
 #include "main.h"
 #include "INS_task.h"
-#include "chassis_task.h"
+#include "wheel_legged_chassis.h"
 
 #define pi 3.1415926f
 #define LEG_PID_KP 350.0f
@@ -12,7 +12,7 @@
 #define LEG_PID_MAX_OUT 90.0f // 90牛
 #define LEG_PID_MAX_IOUT 0.0f
 
-struct VMC_Leg
+typedef struct
 {
 	/*左右两腿的公共参数，固定不变*/
 	float l5; // AE长度 //单位为m
@@ -26,6 +26,7 @@ struct VMC_Leg
 
 	float XC, YC;	// C点的直角坐标
 	float L0, phi0; // C点的极坐标
+
 	float alpha;
 	float d_alpha;
 
@@ -58,15 +59,15 @@ struct VMC_Leg
 
 	uint8_t first_flag;
 	uint8_t leg_flag; // 腿长完成标志
-};
+} VMC_t;
 
-extern void VMC_Init(struct VMC_Leg *vmc); // 给杆长赋值
+extern void VMC_Init(VMC_t *vmc); // 给杆长赋值
 
-extern void VMC_calc_1(struct VMC_Leg *vmc, Chassis_t *cha, float dt); // 计算theta和d_theta给lqr用，同时也计算腿长L0
-extern void VMC_calc_2(struct VMC_Leg *vmc);						   // 计算期望的关节输出力矩
+extern void VMC_calc_1(VMC_t *vmc, Chassis_t *cha, float dt); // 计算theta和d_theta给lqr用，同时也计算腿长L0
+extern void VMC_calc_2(VMC_t *vmc);							  // 计算期望的关节输出力矩
 
-// extern uint8_t ground_detectionR(struct VMC_Leg *vmc,INS_t *ins);//右腿离地检测
-// extern uint8_t ground_detectionL(struct VMC_Leg *vmc,INS_t *ins);//左腿离地检测
+// extern uint8_t ground_detectionR(VMC_t *vmc,INS_t *ins);//右腿离地检测
+// extern uint8_t ground_detectionL(VMC_t *vmc,INS_t *ins);//左腿离地检测
 
 extern float LQR_K_calc(float *coe, float len);
 

@@ -1,6 +1,6 @@
 #include "vmc-dm.h"
 
-void VMC_Init(struct VMC_Leg *vmc) // 给杆长赋值
+void VMC_Init(VMC_t *vmc) // 给杆长赋值
 {
 	vmc->l5 = 0.15f; // AE长度 //单位为m
 	vmc->l1 = 0.15f; // 单位为m
@@ -11,7 +11,7 @@ void VMC_Init(struct VMC_Leg *vmc) // 给杆长赋值
 	vmc->first_flag = 0;
 }
 
-void VMC_calc_1(struct VMC_Leg *vmc, Chassis_t *cha, float dt) // 计算theta和d_theta给lqr用，同时也计算腿长L0
+void VMC_calc_1(VMC_t *vmc, Chassis_t *cha, float dt) // 计算theta和d_theta给lqr用，同时也计算腿长L0
 {
 	static float PitchR = 0.0f;
 	static float PithGyroR = 0.0f;
@@ -62,7 +62,7 @@ void VMC_calc_1(struct VMC_Leg *vmc, Chassis_t *cha, float dt) // 计算theta和d_t
 	vmc->last_d_theta = vmc->d_theta;
 }
 
-void VMC_calc_2(struct VMC_Leg *vmc) // 计算期望的关节输出力矩
+void VMC_calc_2(VMC_t *vmc) // 计算期望的关节输出力矩
 {
 	vmc->j11 = (vmc->l1 * arm_sin_f32(vmc->phi0 - vmc->phi3) * arm_sin_f32(vmc->phi1 - vmc->phi2)) / arm_sin_f32(vmc->phi3 - vmc->phi2);
 	vmc->j12 = (vmc->l1 * arm_cos_f32(vmc->phi0 - vmc->phi3) * arm_sin_f32(vmc->phi1 - vmc->phi2)) / (vmc->L0 * arm_sin_f32(vmc->phi3 - vmc->phi2));

@@ -36,7 +36,7 @@
 #include "bsp_can.h"
 #include "bsp_delay.h"
 #include "chassismotor.h"
-#include "chassis_task.h"
+#include "wheel_legged_chassis.h"
 #include "INS_task.h"
 #include "bsp_dwt.h"
 /* USER CODE END Includes */
