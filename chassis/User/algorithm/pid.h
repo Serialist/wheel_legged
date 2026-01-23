@@ -135,11 +135,12 @@ void PID_init(PID_Typedef *pid, uint8_t mode, const fp32 kp, const fp32 ki, cons
  * @retval         pidÊä³ö
  */
 // extern fp32 PID_Calc(PID_Typedef *pid, fp32 ref, fp32 set);
-extern fp32 PID_Calc(PID_Typedef *pid, fp32 set, fp32 ref);
-extern fp32 anglePidCalc(PID_Typedef *pid, fp32 set, fp32 get, fp32 gyro);
-extern fp32 Piece2_PID_Calc(piece2_pid_type_def *pid, fp32 set, fp32 ref);
-extern fp32 Piece3_PID_Calc(piece3_pid_type_def *pid, fp32 set, fp32 ref);
-extern fp32 ExpKp_PID_Calc(PID_Typedef *pid, fp32 set, fp32 ref);
+fp32 PID_Calc(PID_Typedef *pid, fp32 set, fp32 ref);
+void PID_Set(PID_Typedef *pid, const fp32 kp, const fp32 ki, const fp32 kd, fp32 max_out, fp32 max_iout);
+fp32 anglePidCalc(PID_Typedef *pid, fp32 set, fp32 get, fp32 gyro);
+fp32 Piece2_PID_Calc(piece2_pid_type_def *pid, fp32 set, fp32 ref);
+fp32 Piece3_PID_Calc(piece3_pid_type_def *pid, fp32 set, fp32 ref);
+fp32 ExpKp_PID_Calc(PID_Typedef *pid, fp32 set, fp32 ref);
 /**
  * @brief          pid out clear
  * @param[out]     pid: PID struct data point

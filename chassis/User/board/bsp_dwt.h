@@ -24,6 +24,13 @@ typedef struct
 } DWT_Time_t;
 
 void DWT_Init(uint32_t CPU_Freq_mHz);
+
+/**
+ * @brief DWT获取时间差
+ *
+ * @param cnt_last 上一次时间戳
+ * @return float 时间差，单位 s
+ */
 float DWT_GetDeltaT(uint32_t *cnt_last);
 double DWT_GetDeltaT64(uint32_t *cnt_last);
 float DWT_GetTimeline_s(void);

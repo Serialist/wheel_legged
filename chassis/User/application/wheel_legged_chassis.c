@@ -50,6 +50,7 @@ VMC_t leg_l, leg_r;
 /* ======================== he ======================== */
 
 float turn_t; // yaw轴补偿
+float jump_force = 0;
 
 float tplqrl;
 float tplqrr;
@@ -65,6 +66,7 @@ void Control_Get(Chassis_t *ch);
 void Clamp(float *in, float min, float max);
 void LQR_K_Calc(float k[2][6], float coe[12][4], float len);
 void Motor_Enable(void);
+void Jump_Control(void);
 
 void Chassis_Task(void const *argument)
 {
@@ -87,8 +89,8 @@ void Chassis_Task(void const *argument)
 
 static void ChassisInit(void)
 {
-	PID_init(&leglength_pid_l, PID_POSITION, 500, 0, 9000, 120, 0); // 腿长 left
-	PID_init(&leglength_pid_r, PID_POSITION, 500, 0, 9000, 120, 0); // 腿长 right
+	PID_init(&leglength_pid_l, PID_POSITION, 1100, 0, 11000, 500, 0); // 腿长 left
+	PID_init(&leglength_pid_r, PID_POSITION, 1100, 0, 11000, 500, 0); // 腿长 right
 	PID_init(&yaw_pid, PID_POSITION, 0.1f, 0, 0.5f, 1.5f, 0);		// yaw
 	PID_init(&roll_pid, PID_POSITION, 0.8f, 0, 0, 30.0f, 0);		// roll
 	PID_init(&tp_pid, PID_POSITION, 1.3, 0, 3, 1.5, 0);				// 劈叉
@@ -128,6 +130,7 @@ void chassis_sys_calc(Chassis_t *ch)
 	OffGround_Detection(&leg_l);
 	OffGround_Detection(&leg_r);
 	chassis.robo_status.flag.above = leg_l.is_offground && leg_r.is_offground;
+	// chassis.robo_status.flag.above = false;
 }
 
 void Chassis_Motor_Transmit(Chassis_t *ch)
@@ -260,6 +263,8 @@ void LQR_Control(Chassis_t *ch)
 		tplqrr += xr[i] * lqr_k_r[1][i];
 	}
 
+	Jump_Control();
+
 	/* ================================ 轮 解算 ================================ */
 	turn_t = yaw_pid.Kp * (set.yaw - ch->IMU_DATA.toatalyaw) - yaw_pid.Kd * ch->IMU_DATA.yawspd; // 这样计算更稳一点
 	if (ch->robo_status.flag.above)
@@ -273,9 +278,11 @@ void LQR_Control(Chassis_t *ch)
 	fn_feedforward = 55.0f * arm_cos_f32(leg_r.theta);
 
 	leg_l.F0 = fn_feedforward +
-			   PID_Calc(&leglength_pid_l, set.left_length, leg_l.L0);
+			   PID_Calc(&leglength_pid_l, set.left_length, leg_l.L0) +
+			   jump_force;
 	leg_r.F0 = fn_feedforward +
-			   PID_Calc(&leglength_pid_r, set.right_length, leg_r.L0);
+			   PID_Calc(&leglength_pid_r, set.right_length, leg_r.L0) +
+			   jump_force;
 
 	leg_l.Tp = tplqrl;
 	leg_r.Tp = tplqrr;
@@ -309,6 +316,85 @@ void LQR_Control(Chassis_t *ch)
 	ch->ak_set[3].torset = set.torque[3];
 	ch->ak_set[4].torset = -set.torque[4];
 	ch->ak_set[5].torset = set.torque[5];
+}
+
+#define JUMP_STATE_NONE 0
+#define JUMP_STATE_PRE 1
+#define JUMP_STATE_TAKEOFF 2
+#define JUMP_STATE_FLIGHT 3
+#define JUMP_STATE_RETRACT 4
+#define JUMP_STATE_LANDING 5
+
+uint8_t jump_state = JUMP_STATE_NONE;
+
+void Jump_Control(void)
+{
+	static float last_time = 0;
+	float dt = 0;
+
+	dt = DWT_GetTimeline_ms() - last_time;
+
+	switch (jump_state)
+	{
+	case JUMP_STATE_NONE:
+	{
+		// none
+		if (rc_ctrl.rc.ch[L_Z] == -660)
+		{
+			last_time = DWT_GetTimeline_ms();
+			jump_state = JUMP_STATE_PRE;
+		}
+		break;
+	}
+	case JUMP_STATE_PRE:
+	{
+		set.left_length = set.right_length = 0.15f;
+		if (dt > 300)
+		{
+			PID_Set(&leglength_pid_l, 1200.0f, 0.0f, 9000.0f, 1000.0f, 0);
+			PID_Set(&leglength_pid_r, 1200.0f, 0.0f, 9000.0f, 1000.0f, 0);
+			last_time = DWT_GetTimeline_ms();
+			jump_state = JUMP_STATE_TAKEOFF;
+		}
+		break;
+	}
+	case JUMP_STATE_TAKEOFF:
+	{
+		set.left_length = set.right_length = 0.35f;
+		jump_force = 500.0f;
+		if (/* dt > 300 &&  */ leg_l.L0 > 0.35f && leg_r.L0 > 0.35f)
+		{
+			last_time = DWT_GetTimeline_ms();
+			jump_state = JUMP_STATE_RETRACT;
+		}
+		break;
+	}
+	case JUMP_STATE_RETRACT:
+	{
+		set.left_length = set.right_length = 0.15f;
+		jump_force = -200.0f;
+		chassis.robo_status.flag.above = true;
+		if (dt > 300 /* leg_l.L0 < 0.16f || leg_r.L0 < 0.16f */)
+		{
+			PID_Set(&leglength_pid_l, 500, 0, 9000, 300, 0); // 腿长 left
+			PID_Set(&leglength_pid_r, 500, 0, 9000, 300, 0); // 腿长 right
+			jump_force = 0;
+			last_time = DWT_GetTimeline_ms();
+			jump_state = JUMP_STATE_LANDING;
+		}
+		break;
+	}
+	case JUMP_STATE_LANDING:
+	{
+		set.left_length = set.right_length = 0.25f;
+		if (dt > 200)
+		{
+			last_time = DWT_GetTimeline_ms();
+			jump_state = JUMP_STATE_NONE;
+		}
+		break;
+	}
+	}
 }
 
 /************************

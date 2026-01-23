@@ -190,6 +190,16 @@
           <WinNumber>1</WinNumber>
           <ItemText>leg_r</ItemText>
         </Ww>
+        <Ww>
+          <count>6</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>\\gimbal_task\../User/application/wheel_legged_chassis.c\leg_r.fn</ItemText>
+        </Ww>
+        <Ww>
+          <count>7</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>\\gimbal_task\../User/application/wheel_legged_chassis.c\leg_l.fn</ItemText>
+        </Ww>
       </WatchWindow1>
       <MemoryWindow1>
         <Mm>

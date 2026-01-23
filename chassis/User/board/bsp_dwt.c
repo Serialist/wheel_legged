@@ -36,6 +36,12 @@ void DWT_Init(uint32_t CPU_Freq_mHz)
     CYCCNT_RountCount = 0;
 }
 
+/**
+ * @brief DWT获取时间差
+ *
+ * @param cnt_last 上一次时间戳
+ * @return float 时间差，单位 s
+ */
 float DWT_GetDeltaT(uint32_t *cnt_last)
 {
     volatile uint32_t cnt_now = DWT->CYCCNT;

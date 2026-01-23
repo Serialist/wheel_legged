@@ -76,7 +76,7 @@ void VMC_calc_2(VMC_t *vmc) // 计算期望的关节输出力矩
 	vmc->torque_set[1] = vmc->j21 * vmc->F0 + vmc->j22 * vmc->Tp; // 得到RightBack的输出轴期望力矩，Tp为沿中心轴的力矩
 }
 
-#define GROUND_DETECTION_THRESHOLD 15.0f
+#define GROUND_DETECTION_THRESHOLD 0.0f
 #define OFFGROUND_A_RATIO -0.6f
 
 bool OffGround_Detection(VMC_t *leg)
@@ -89,7 +89,8 @@ bool OffGround_Detection(VMC_t *leg)
 						leg->L0 * leg->dd_theta * arm_sin_f32(leg->theta) +
 						leg->L0 * leg->d_theta * leg->d_theta * arm_cos_f32(leg->theta));
 
-	leg->fn = Filter_Average_Update(&leg->filter, fn);
+	// fn = Filter_Average_Update(&leg->filter, fn);
+	leg->fn = fn;
 	leg->is_offground = leg->fn < GROUND_DETECTION_THRESHOLD;
 
 	return leg->is_offground;

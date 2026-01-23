@@ -10,7 +10,7 @@
  ************************/
 
 #include "pid.h"
-#include "main.h"
+#include "user_lib.h"
 #include "math.h"
 
 #define LimitMax(input, max)   \
@@ -51,6 +51,19 @@ void PID_init(PID_Typedef *pid, uint8_t mode, const fp32 kp, const fp32 ki, cons
     pid->max_iout = max_iout;
     pid->Dbuf[0] = pid->Dbuf[1] = pid->Dbuf[2] = 0.0f;
     pid->error[0] = pid->error[1] = pid->error[2] = pid->Pout = pid->Iout = pid->Dout = pid->out = 0.0f;
+}
+
+void PID_Set(PID_Typedef *pid, const fp32 kp, const fp32 ki, const fp32 kd, fp32 max_out, fp32 max_iout)
+{
+    if (pid == NULL)
+    {
+        return;
+    }
+    pid->Kp = kp;
+    pid->Ki = ki;
+    pid->Kd = kd;
+    pid->max_out = max_out;
+    pid->max_iout = max_iout;
 }
 
 /**
